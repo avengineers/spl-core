@@ -1,0 +1,9 @@
+[
+  {
+    "name": "production"
+  },
+  {
+    "name": "test",
+    "toolchainFile": "tools/toolchains/gcc/toolchain.cmake"
+  }
+]

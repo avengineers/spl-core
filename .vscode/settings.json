@@ -1,0 +1,37 @@
+{
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./test",
+        "-p",
+        "test_*.py"
+    ],
+    "python.testing.pytestEnabled": false,
+    "python.testing.unittestEnabled": true,
+    "python.formatting.provider": "autopep8",
+    "cmake.configureOnOpen": false,
+    "cmake.buildDirectory": "${workspaceFolder}/build/${variant:variant}",
+    "cmake.configureSettings": {
+        "BUILD_KIT": "${buildKit}"
+    },
+    "cmake.generator": "Ninja",
+    "cmake.debugConfig": {
+        "MIMode": "gdb",
+        "miDebuggerPath": "gdb",
+        "stopAtEntry": true
+    },
+    "cmake.configureOnEdit": true,
+    "cmake.buildBeforeRun": false,
+    "cmake.environment": {},
+    "cmake.buildToolArgs": [],
+    "git.ignoreLimitWarning": true,
+    "C_Cpp.errorSquiggles": "Enabled",
+    "C_Cpp.default.cStandard": "gnu17",
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "files.associations": {
+        "*.h": "c",
+        "*.c": "c",
+        "Jenkinsfile": "groovy",
+        "*.py": "python"
+    }
+}
