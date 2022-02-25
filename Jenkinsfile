@@ -17,10 +17,7 @@ def init() {
 def test() {
     stage('test') {
         try {
-            bat '''
-call spl.bat --installMandatory || exit /b 1
-call spl.bat --build --target selftests || exit /b 1
-'''
+            bat 'call build.bat --target selftests --installMandatory'
         } catch (e) {
             echo 'One or more selftests failed.'
         }

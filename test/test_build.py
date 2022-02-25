@@ -20,8 +20,7 @@ class TestBuild(unittest.TestCase):
         """build wrapper shall build the default target and related outputs."""
 
         exit_code = run_process([
-            'spl.bat',
-            '--build',
+            'build.bat',
             '--variants', variant,
             '--target', target,
             '--reconfigure'
@@ -35,7 +34,7 @@ class TestBuild(unittest.TestCase):
         self.expect_binary(variant)
 
     def expect_binary(self, variant, binType='exe'):
-        """Hex file of given variant shall exist."""
+        """bin file of given variant shall exist."""
         self.assert_expected_file_exists(
             'build/{variant}/{variant_underscore}.{bin}'.format(variant=variant, variant_underscore=variant.replace('/', '_'), bin=binType))
 

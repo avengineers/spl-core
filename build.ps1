@@ -7,32 +7,13 @@
 
 [CmdletBinding(DefaultParameterSetName = 'Build')]
 param(
-    [Parameter(
-        Mandatory = $true,
-        ParameterSetName = 'Build',
-        Position = 0
-    )]
-    [switch]$build ## Select for building the software
-    , [Parameter(
-        Mandatory = $true,
-        ParameterSetName = 'Build'
-    )]
-    [ValidateNotNullOrEmpty()]
     [string]$target = "" ## Target to be built
-    , [Parameter(ParameterSetName = 'Build')]
-    [string[]]$variants = "" ## Variants (projects) to be built ('all' for automatic build of all variants)
-    , [Parameter(ParameterSetName = 'Build')]
-    [string]$ninjaArgs = "" ## Additional build arguments for Ninja (e.g., "-d explain -d keepdepfile" for debugging purposes)
-    , [Parameter(ParameterSetName = 'Build')]
-    [switch]$clean ## Delete build directory
-    , [Parameter(ParameterSetName = 'Build')]
-    [switch]$reconfigure ## Delete CMake cache and reconfigure
-    , [Parameter(ParameterSetName = 'Build')]
-    [Parameter(ParameterSetName = 'Install')]
-    [switch]$installMandatory ## install mandatory packages (e.g., CMake, Ninja, ...)
-    , [Parameter(ParameterSetName = 'Build')]
-    [Parameter(ParameterSetName = 'Install')]
-    [switch]$installOptional ## install optional packages (e.g., VS Code)
+    , [string[]]$variants = "" ## Variants (projects) to be built ('all' for automatic build of all variants)
+    , [string]$ninjaArgs = "" ## Additional build arguments for Ninja (e.g., "-d explain -d keepdepfile" for debugging purposes)
+    , [switch]$clean ## Delete build directory
+    , [switch]$reconfigure ## Delete CMake cache and reconfigure
+    , [switch]$installMandatory ## install mandatory packages (e.g., CMake, Ninja, ...)
+    , [switch]$installOptional ## install optional packages (e.g., VS Code)
 )
 
 
@@ -104,7 +85,7 @@ if ($installOptional) {
     ScoopInstall(Get-Content 'install-optional.list')
 }
 
-if ($build) {
+if ($target) {
     # Read build environment definitions from VSCode config
     $settingsJSON = Get-Content -Raw -Path .vscode/settings.json | ConvertFrom-Json
 
@@ -123,9 +104,6 @@ if ($build) {
                 Remove-Item $BuildFolder -Force -Recurse
             }
         }
-
-        Invoke-CommandLine -CommandLine "scoop list"
-        Invoke-CommandLine -CommandLine "where ninja"
 
         Invoke-CommandLine -CommandLine "python -m pip install --quiet --trusted-host pypi.org --trusted-host files.pythonhosted.org python-certifi-win32"
         Invoke-CommandLine -CommandLine "python -m pip install --quiet xmlrunner==1.7.7 autopep8==1.6.0 gcovr==5.0.0"

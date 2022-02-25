@@ -17,7 +17,7 @@ jobs:
         submodules: true
 
     - name: install tools and run selftests
-      run: .\spl.ps1 -build -target selftests -installMandatory
+      run: .\build.ps1 -target selftests -installMandatory
       shell: powershell
 
     - uses: actions/upload-artifact@v2
@@ -26,3 +26,4 @@ jobs:
         retention-days: 90
         path: build/**/coverage/*
         if-no-files-found: error
+        

@@ -64,7 +64,10 @@ def execute_test_cases(suite, test_report):
 
     tmp_report.close()  # this also removes the temporary file
 
-    return test_result.wasSuccessful()
+    if test_result.wasSuccessful():
+        return 0
+    else:
+        return 1
 
 
 def main():
@@ -90,9 +93,8 @@ def main():
 
     # Execute all tests
     os.chdir('..')
-    execute_test_cases(my_suite, test_report)
 
-    return 0
+    return execute_test_cases(my_suite, test_report)
 
 
 if __name__ == '__main__':
