@@ -27,9 +27,11 @@ param(
     [switch]$clean ## Delete build directory
     , [Parameter(ParameterSetName = 'Build')]
     [switch]$reconfigure ## Delete CMake cache and reconfigure
-    , [Parameter(ParameterSetName = 'Install')]
+    , [Parameter(ParameterSetName = 'Build')]
+    [Parameter(ParameterSetName = 'Install')]
     [switch]$installMandatory ## install mandatory packages (e.g., CMake, Ninja, ...)
-    , [Parameter(ParameterSetName = 'Install')]
+    , [Parameter(ParameterSetName = 'Build')]
+    [Parameter(ParameterSetName = 'Install')]
     [switch]$installOptional ## install optional packages (e.g., VS Code)
 )
 
@@ -43,8 +45,8 @@ Function ReloadEnvVars () {
 }
 
 Function ScoopInstall ([string[]]$Packages) {
-    #Invoke-CommandLine -CommandLine "scoop install $Packages"
-    #ReloadEnvVars
+    Invoke-CommandLine -CommandLine "scoop install $Packages"
+    ReloadEnvVars
 }
 
 Function Invoke-CommandLine {
@@ -56,7 +58,8 @@ Function Invoke-CommandLine {
     Invoke-Expression $CommandLine
     if ($LASTEXITCODE -ne 0) {
         if ($StopAtError) {
-            throw "Command line call `"$CommandLine`" failed with exit code $LASTEXITCODE"
+            Write-Error "Command line call `"$CommandLine`" failed with exit code $LASTEXITCODE"
+            exit 1
         }
         else {
             Write-Host "Command line call `"$CommandLine`" failed with exit code $LASTEXITCODE, continuing ..."
@@ -65,6 +68,15 @@ Function Invoke-CommandLine {
 }
 
 Push-Location $PSScriptRoot
+
+# Use default proxy
+# $ProxyHost = '<your host>'
+# $Env:HTTP_PROXY = "http://$ProxyHost"
+# $Env:HTTPS_PROXY = $Env:HTTP_PROXY
+# $Env:NO_PROXY = "localhost"
+# $WebProxy = New-Object System.Net.WebProxy($Env:HTTP_PROXY, $true, ($Env:NO_PROXY).split(','))
+# [net.webrequest]::defaultwebproxy = $WebProxy
+# [net.webrequest]::defaultwebproxy.credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
 
 if ($installMandatory -or $installOptional) {
     # Initial Scoop installation
@@ -112,7 +124,9 @@ if ($build) {
             }
         }
 
-        ScoopInstall('python')
+        Invoke-CommandLine -CommandLine "scoop list"
+        Invoke-CommandLine -CommandLine "where ninja"
+
         Invoke-CommandLine -CommandLine "python -m pip install --quiet --trusted-host pypi.org --trusted-host files.pythonhosted.org python-certifi-win32"
         Invoke-CommandLine -CommandLine "python -m pip install --quiet xmlrunner==1.7.7 autopep8==1.6.0 gcovr==5.0.0"
 
