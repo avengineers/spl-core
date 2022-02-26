@@ -22,6 +22,20 @@ jobs:
 
     - uses: actions/upload-artifact@v2
       with:
+        name: quality-gate-results.zip
+        retention-days: 90
+        path: test/output/test-report.xml
+        if-no-files-found: error
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: unittest-results.zip
+        retention-days: 90
+        path: 'build/**/junit.xml'
+        if-no-files-found: error
+
+    - uses: actions/upload-artifact@v2
+      with:
         name: code-coverage.zip
         retention-days: 90
         path: build/**/coverage/*
