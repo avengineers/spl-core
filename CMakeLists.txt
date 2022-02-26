@@ -7,8 +7,16 @@ set(BUILD_KIT production CACHE STRING "Target Group to build.")
 include(variants/${VARIANT}/config.cmake)
 project(${VARIANT} C ASM)
 
+#first time checkout submodules, ignore if existing
 execute_process(
     COMMAND git submodule update --init --recursive
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    ERROR_QUIET
+)
+
+#consecutive times just pull changes
+execute_process(
+    COMMAND git submodule update --recursive
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
