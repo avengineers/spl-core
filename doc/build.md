@@ -7,6 +7,8 @@ We assume you want to build variant **alpha**.
 In the blue ribbon at the bottom (1) select a variant like _alpha_, (2) and the Kit _production_ ,(3) choose the build target _elf_ and (4) click on build:
 ![vscode-build](img/vscode-build.png)
 
+![vscode-build](img/build-binaries.gif)
+
 ## Command Line
 
 The following shows the steps/commands when you use Windows PowerShell to do so.
