@@ -79,6 +79,8 @@ if ($installMandatory -or $installOptional) {
 
 if ($installMandatory) {
     ScoopInstall(Get-Content 'install-mandatory.list')
+    Invoke-CommandLine -CommandLine "python -m pip install --quiet --trusted-host pypi.org --trusted-host files.pythonhosted.org python-certifi-win32"
+    Invoke-CommandLine -CommandLine "python -m pip install --quiet xmlrunner==1.7.7 autopep8==1.6.0 gcovr==5.0.0"
 }
 if ($installOptional) {
     Invoke-CommandLine -CommandLine "scoop bucket add extras"
@@ -104,9 +106,6 @@ if ($target) {
                 Remove-Item $BuildFolder -Force -Recurse
             }
         }
-
-        Invoke-CommandLine -CommandLine "python -m pip install --quiet --trusted-host pypi.org --trusted-host files.pythonhosted.org python-certifi-win32"
-        Invoke-CommandLine -CommandLine "python -m pip install --quiet xmlrunner==1.7.7 autopep8==1.6.0 gcovr==5.0.0"
 
         # Run test cases to be found in folder test/
         Invoke-CommandLine -CommandLine "python -u test/run_all.py"
