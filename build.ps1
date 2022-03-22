@@ -60,11 +60,11 @@ Push-Location $PSScriptRoot
 # [net.webrequest]::defaultwebproxy.credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
 
 if ($installMandatory -or $installOptional) {
-    # Initial Scoop installation
-    $ScoopInstaller = (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
     ReloadEnvVars
     if (-Not (Get-Command scoop -errorAction SilentlyContinue)) {
-        Invoke-Expression $ScoopInstaller
+        # Initial Scoop installation
+        $ScoopInstaller = (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
+        Invoke-Expression "$ScoopInstaller -RunAsAdmin"
         ReloadEnvVars
     }
 
