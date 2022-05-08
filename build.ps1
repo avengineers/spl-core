@@ -60,11 +60,11 @@ Push-Location $PSScriptRoot
 # [net.webrequest]::defaultwebproxy.credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
 
 if ($installMandatory -or $installOptional) {
-    # Initial Scoop installation
-    $ScoopInstaller = (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
     ReloadEnvVars
     if (-Not (Get-Command scoop -errorAction SilentlyContinue)) {
-        Invoke-Expression $ScoopInstaller
+        # Initial Scoop installation
+        $ScoopInstaller = (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
+        Invoke-Expression "$ScoopInstaller -RunAsAdmin"
         ReloadEnvVars
     }
 
@@ -80,7 +80,7 @@ if ($installMandatory -or $installOptional) {
 if ($installMandatory) {
     ScoopInstall(Get-Content 'install-mandatory.list')
     Invoke-CommandLine -CommandLine "python -m pip install --quiet --trusted-host pypi.org --trusted-host files.pythonhosted.org python-certifi-win32"
-    Invoke-CommandLine -CommandLine "python -m pip install --quiet xmlrunner==1.7.7 autopep8==1.6.0 gcovr==5.0.0"
+    Invoke-CommandLine -CommandLine "python -m pip install --quiet xmlrunner==1.7.7 autopep8==1.6.0 gcovr==5.1.0"
 }
 if ($installOptional) {
     Invoke-CommandLine -CommandLine "scoop bucket add extras"
@@ -133,7 +133,7 @@ if ($target) {
             }
         }
         else {
-            $variantsSelected = $variants.Replace('\', '/').Replace('./variant/', '').Split(',')
+            $variantsSelected = $variants.Replace('\', '/').Replace('./variant/', '').Replace('./variants/', '').Split(',')
         }
 
         Foreach ($variant in $variantsSelected) {
@@ -163,10 +163,10 @@ if ($target) {
             if ($target.Contains("unittests")) {
                 $additionalConfig = "-DBUILD_KIT=`"test`" -DCMAKE_TOOLCHAIN_FILE=`"tools/toolchains/gcc/toolchain.cmake`""
             }
-            Invoke-CommandLine -CommandLine "cmake -B '$BuildFolder' -G Ninja -DFLAVOR=`"$platform`" -DSUBSYSTEM=`"$subsystem`" $additionalConfig" 2>&1 | Tee-Object -FilePath .\$BuildFolder\configure-$target.log
+            Invoke-CommandLine -CommandLine "cmake -B '$BuildFolder' -G Ninja -DFLAVOR=`"$platform`" -DSUBSYSTEM=`"$subsystem`" $additionalConfig"
         
-            # Ninja build
-            Invoke-CommandLine -CommandLine "ninja -C $BuildFolder $target $ninjaArgs" 2>&1 | Tee-Object -FilePath .\$BuildFolder\build-$target.log
+            # CMake build
+            Invoke-CommandLine -CommandLine "cmake --build '$BuildFolder' --target $target -- $ninjaArgs"
         }
     }    
 }

@@ -2,42 +2,43 @@ name: selftests
 
 on:
   push:
-    branches: [ develop ]
+    branches: [develop]
   pull_request:
-    branches: [ develop ]
+    branches: [develop]
 
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2019
     steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: true
-
-    - name: install tools and run selftests
-      run: .\build.ps1 -target selftests -installMandatory
-      shell: powershell
-
-    - uses: actions/upload-artifact@v2
-      with:
-        name: quality-gate-results.zip
-        retention-days: 90
-        path: test/output/test-report.xml
-        if-no-files-found: error
-
-    - uses: actions/upload-artifact@v2
-      with:
-        name: unittest-results.zip
-        retention-days: 90
-        path: 'build/**/junit.xml'
-        if-no-files-found: error
-
-    - uses: actions/upload-artifact@v2
-      with:
-        name: code-coverage.zip
-        retention-days: 90
-        path: build/**/coverage/*
-        if-no-files-found: error
-        
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: download scoop to file (github actions / scoop workaround)
+        run: iwr get.scoop.sh -outfile 'install.ps1' 
+        shell: powershell
+      - name: install scoop as admin (github actions / scoop workaround)
+        run: .\install.ps1 -RunAsAdmin 
+        shell: powershell
+      - name: install tools and run selftests
+        run: .\build.ps1 -target selftests -installMandatory
+        shell: powershell
+      - uses: actions/upload-artifact@v2
+        with:
+          name: quality-gate-results.zip
+          retention-days: 90
+          path: test/output/test-report.xml
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v2
+        with:
+          name: unittest-results.zip
+          retention-days: 90
+          path: "build/**/junit.xml"
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v2
+        with:
+          name: code-coverage.zip
+          retention-days: 90
+          path: build/**/coverage/*
+          if-no-files-found: error
