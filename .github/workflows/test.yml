@@ -15,6 +15,12 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: true
+      - name: download scoop to file (github actions / scoop workaround)
+        run: iwr get.scoop.sh -outfile 'install.ps1' 
+        shell: powershell
+      - name: install scoop as admin (github actions / scoop workaround)
+        run: .\install.ps1 -RunAsAdmin 
+        shell: powershell
       - name: install tools and run selftests
         run: .\build.ps1 -target selftests -installMandatory
         shell: powershell
