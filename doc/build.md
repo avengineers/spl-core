@@ -16,7 +16,7 @@ The following shows the steps/commands when you use Windows PowerShell to do so.
 ```powershell
 cd <Your root directory of repository>
 
-.\spl.ps1 -build -target elf
+.\build.ps1 -target elf
 ```
 
 ## Binary Location

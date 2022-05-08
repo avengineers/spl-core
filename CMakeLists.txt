@@ -1,40 +1,29 @@
 # cmake project definition
 cmake_minimum_required(VERSION 3.22.0)
 
+#set variant from outside
 set(VARIANT ${FLAVOR}/${SUBSYSTEM} CACHE STRING "Variant to build.")
 set(BUILD_KIT production CACHE STRING "Target Group to build.")
-
-include(variants/${VARIANT}/config.cmake)
-project(${VARIANT} C ASM)
-
-#first time checkout submodules, ignore if existing
-execute_process(
-    COMMAND git submodule update --init --recursive
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    ERROR_QUIET
-)
-
-#consecutive times just pull changes
-execute_process(
-    COMMAND git submodule update --recursive
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
-
 set(EXE_TARGET_NAME exe)
 
-include(tools/cmake/common-macros.cmake)
+#load variant specific configuration and toolchain
+include(variants/${VARIANT}/config.cmake)
 
-# get variant specific feature configuration for build or test
-include_directories("build/${VARIANT}/gen")
+project(${VARIANT} C ASM)
+
+#load common includes
+include(tools/cmake/common-macros.cmake)
+include(tools/cmake/common-functions.cmake)
 
 if(BUILD_KIT STREQUAL production)
     include(tools/cmake/build-kit-production.cmake)
-endif()
-
-if(BUILD_KIT STREQUAL test)
+elseif(BUILD_KIT STREQUAL test)
     include(tools/cmake/build-kit-test.cmake)
 endif()
 
+# get variant specific feature configuration for build or test
+include_directories("build/${VARIANT}/gen")
+configure_file(${CMAKE_SOURCE_DIR}/variants/config.h.in gen/config.h @ONLY)
 include(variants/${VARIANT}/parts.cmake)
 
-configure_file(${CMAKE_SOURCE_DIR}/variants/config.h.in gen/config.h @ONLY)
+checkout_git_submodules()
