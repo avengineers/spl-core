@@ -106,8 +106,8 @@ Push-Location $PSScriptRoot
 if ($installMandatory -or $installOptional) {
     if (-Not (Get-Command scoop -errorAction SilentlyContinue)) {
         # Initial Scoop installation
-        Invoke-Expression -CommandLine "iwr get.scoop.sh -outfile 'install.ps1'"
-        Invoke-Expression -CommandLine ".\install.ps1  -RunAsAdmin"
+        iwr get.scoop.sh -outfile 'install.ps1'
+        & .\install.ps1 -RunAsAdmin
         ReloadEnvVars
     }
 
@@ -242,7 +242,7 @@ if ($import) {
         # todo: add transformer to avengineers
         git clone https://github.com/avengineers/SPL.git .
     }
-    Invoke-CommandLine -CommandLine ".\build.ps1 --source $source --target $PSScriptRoot --variant $variant"
+    Invoke-CommandLine -CommandLine ".\build.bat --source $source --target $PSScriptRoot --variant $variant"
     Pop-Location
 }
 
