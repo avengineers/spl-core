@@ -7,13 +7,48 @@
 
 [CmdletBinding(DefaultParameterSetName = 'Build')]
 param(
+    [Parameter(
+        Mandatory = $true,
+        ParameterSetName = 'Build',
+        Position = 0
+    )]
+    [switch]$build ## Select for building the software
+    , [Parameter(
+        Mandatory = $true,
+        ParameterSetName = 'Build'
+    )]
+    [ValidateNotNullOrEmpty()]
     [string]$target = "" ## Target to be built
-    , [string[]]$variants = "" ## Variants (projects) to be built ('all' for automatic build of all variants)
-    , [string]$ninjaArgs = "" ## Additional build arguments for Ninja (e.g., "-d explain -d keepdepfile" for debugging purposes)
-    , [switch]$clean ## Delete build directory
-    , [switch]$reconfigure ## Delete CMake cache and reconfigure
-    , [switch]$installMandatory ## install mandatory packages (e.g., CMake, Ninja, ...)
-    , [switch]$installOptional ## install optional packages (e.g., VS Code)
+    , [Parameter(ParameterSetName = 'Build')]
+    [string[]]$variants = "" ## Variants (projects) to be built ('all' for automatic build of all variants)
+    , [Parameter(ParameterSetName = 'Build')]
+    [string]$ninjaArgs = "" ## Additional build arguments for Ninja (e.g., "-d explain -d keepdepfile" for debugging purposes)
+    , [Parameter(ParameterSetName = 'Build')]
+    [switch]$clean ## Delete build directory
+    , [Parameter(ParameterSetName = 'Build')]
+    [switch]$reconfigure ## Delete CMake cache and reconfigure
+    , [Parameter(
+        Mandatory = $true,
+        ParameterSetName = 'Import',
+        Position = 0
+    )]
+    [switch]$import ## Select for importing legacy code from GNU Make repo
+    , [Parameter(
+        Mandatory = $true,
+        ParameterSetName = 'Import'
+    )]
+    [ValidateNotNullOrEmpty()]
+    [string]$source ## Location of GNU Make project containing a Makefile file
+    , [Parameter(
+        Mandatory = $true,
+        ParameterSetName = 'Import'
+    )]
+    [ValidateNotNullOrEmpty()]
+    [string]$variant ## Configuration name (<platform>/<subsystem>, e.g., spl/alpha)
+    , [Parameter(ParameterSetName = 'Install')]
+    [switch]$installMandatory ## install mandatory packages (e.g., CMake, Ninja, ...)
+    , [Parameter(ParameterSetName = 'Install')]
+    [switch]$installOptional ## install optional packages (e.g., VS Code)
 )
 
 
@@ -33,9 +68,12 @@ Function ScoopInstall ([string[]]$Packages) {
 Function Invoke-CommandLine {
     param (
         [string]$CommandLine,
-        [bool]$StopAtError = $true
+        [bool]$StopAtError = $true,
+        [bool]$Silent = $false
     )
-    Write-Host "Executing: $CommandLine"
+    if (-Not $Silent) {
+        Write-Host "Executing: $CommandLine"
+    }
     Invoke-Expression $CommandLine
     if ($LASTEXITCODE -ne 0) {
         if ($StopAtError) {
@@ -43,7 +81,9 @@ Function Invoke-CommandLine {
             exit 1
         }
         else {
-            Write-Host "Command line call `"$CommandLine`" failed with exit code $LASTEXITCODE, continuing ..."
+            if (-Not $Silent) {
+                Write-Host "Command line call `"$CommandLine`" failed with exit code $LASTEXITCODE, continuing ..."
+            }
         }
     }
 }
@@ -54,17 +94,18 @@ Push-Location $PSScriptRoot
 # $ProxyHost = '<your host>'
 # $Env:HTTP_PROXY = "http://$ProxyHost"
 # $Env:HTTPS_PROXY = $Env:HTTP_PROXY
-# $Env:NO_PROXY = "localhost"
+# $Env:NO_PROXY = "localhost, .other-domain.com"
 # $WebProxy = New-Object System.Net.WebProxy($Env:HTTP_PROXY, $true, ($Env:NO_PROXY).split(','))
 # [net.webrequest]::defaultwebproxy = $WebProxy
 # [net.webrequest]::defaultwebproxy.credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
 
 if ($installMandatory -or $installOptional) {
-    ReloadEnvVars
     if (-Not (Get-Command scoop -errorAction SilentlyContinue)) {
         # Initial Scoop installation
         $ScoopInstaller = (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
         Invoke-Expression "$ScoopInstaller -RunAsAdmin"
+        Invoke-CommandLine -CommandLine "scoop bucket rm main" -Silent $true -StopAtError $false
+        Invoke-CommandLine -CommandLine "scoop bucket add main" -Silent $true
         ReloadEnvVars
     }
 
@@ -78,16 +119,21 @@ if ($installMandatory -or $installOptional) {
 }
 
 if ($installMandatory) {
+    Invoke-CommandLine -CommandLine "scoop bucket add epes-scoop https://git.marquardt.de/scm/epes/scoop-bucket.git" -StopAtError $false
+    Invoke-CommandLine -CommandLine "scoop update"
     ScoopInstall(Get-Content 'install-mandatory.list')
-    Invoke-CommandLine -CommandLine "python -m pip install --quiet --trusted-host pypi.org --trusted-host files.pythonhosted.org python-certifi-win32"
-    Invoke-CommandLine -CommandLine "python -m pip install --quiet xmlrunner==1.7.7 autopep8==1.6.0 gcovr==5.1.0"
+    $PipInstaller = "python -m pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org"
+    # Invoke-CommandLine -CommandLine "$PipInstaller --upgrade pip"
+    Invoke-CommandLine -CommandLine "$PipInstaller xmlrunner==1.7.7 autopep8==1.6.0 gcovr==5.1 pytest==7.1.2"
+    ReloadEnvVars
 }
 if ($installOptional) {
-    Invoke-CommandLine -CommandLine "scoop bucket add extras"
+    Invoke-CommandLine -CommandLine "scoop bucket add extras" -StopAtError $false
+    Invoke-CommandLine -CommandLine "scoop update"
     ScoopInstall(Get-Content 'install-optional.list')
 }
 
-if ($target) {
+if ($build) {
     # Read build environment definitions from VSCode config
     $settingsJSON = Get-Content -Raw -Path .vscode/settings.json | ConvertFrom-Json
 
@@ -108,7 +154,7 @@ if ($target) {
         }
 
         # Run test cases to be found in folder test/
-        Invoke-CommandLine -CommandLine "python -u test/run_all.py"
+        Invoke-CommandLine -CommandLine "python -m pytest --capture=tee-sys --junitxml=test/output/test-report.xml -o junit_logging=all"
     }
     else {
         if ((-Not $variants) -or ($variants -eq 'all')) {
@@ -137,7 +183,11 @@ if ($target) {
         }
 
         Foreach ($variant in $variantsSelected) {
-            $BuildFolder = "build/$variant"
+            $BuildKit = "prod"
+            if ($target.Contains("unittests")) {
+                $BuildKit = "test"
+            }
+            $BuildFolder = "build/$variant/$BuildKit"
             # fresh and clean build
             if ($clean) {
                 if (Test-Path -Path $BuildFolder) {
@@ -159,16 +209,44 @@ if ($target) {
             $variantDetails = $variant.Split('/')
             $platform = $variantDetails[0]
             $subsystem = $variantDetails[1]
-            $additionalConfig = "-DBUILD_KIT=`"production`""
-            if ($target.Contains("unittests")) {
-                $additionalConfig = "-DBUILD_KIT=`"test`" -DCMAKE_TOOLCHAIN_FILE=`"tools/toolchains/gcc/toolchain.cmake`""
+            $additionalConfig = "-DBUILD_KIT=`"$BuildKit`""
+            if ($BuildKit -eq "test") {
+                $additionalConfig += " -DCMAKE_TOOLCHAIN_FILE=`"tools/toolchains/gcc/toolchain.cmake`""
             }
             Invoke-CommandLine -CommandLine "cmake -B '$BuildFolder' -G Ninja -DFLAVOR=`"$platform`" -DSUBSYSTEM=`"$subsystem`" $additionalConfig"
         
+            # CMake clean all dead artifacts. Required when running incremented builds to delete obsolete artifacts.
+            Invoke-CommandLine -CommandLine "cmake --build '$BuildFolder' --target $target -- -t cleandead"
             # CMake build
             Invoke-CommandLine -CommandLine "cmake --build '$BuildFolder' --target $target -- $ninjaArgs"
         }
     }    
+}
+
+if ($import) {
+    $importWorkDir = 'build/import'
+    
+    if ($clean) {
+        if (Test-Path -Path $importWorkDir) {
+            Remove-Item $importWorkDir -Force -Recurse
+        }
+    }
+    
+    $transformerDir = "$importWorkDir/transformer"
+    New-Item -ItemType "directory" -Path $transformerDir -Force
+    
+    Push-Location $transformerDir
+    if (Test-Path -Path '.git') {
+        git reset --hard HEAD
+        git clean -fdx
+        git pull
+    }
+    else {
+        # todo: add transformer to avengineers
+        git clone https://github.com/avengineers/SPL.git .
+    }
+    Invoke-CommandLine -CommandLine ".\build.ps1 --source $source --target $PSScriptRoot --variant $variant"
+    Pop-Location
 }
 
 Pop-Location

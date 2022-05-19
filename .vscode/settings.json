@@ -1,4 +1,9 @@
 {
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": [
+        "--capture=tee-sys"
+    ],
+    "python.testing.unittestEnabled": false,
     "python.testing.unittestArgs": [
         "-v",
         "-s",
@@ -6,11 +11,9 @@
         "-p",
         "test_*.py"
     ],
-    "python.testing.pytestEnabled": false,
-    "python.testing.unittestEnabled": true,
     "python.formatting.provider": "autopep8",
     "cmake.configureOnOpen": false,
-    "cmake.buildDirectory": "${workspaceFolder}/build/${variant:variant}",
+    "cmake.buildDirectory": "${workspaceFolder}/build/${variant:variant}/${buildKit}",
     "cmake.configureSettings": {
         "BUILD_KIT": "${buildKit}"
     },
@@ -20,7 +23,7 @@
         "miDebuggerPath": "gdb",
         "stopAtEntry": true
     },
-    "cmake.configureOnEdit": true,
+    "cmake.configureOnEdit": false,
     "cmake.buildBeforeRun": false,
     "cmake.environment": {},
     "cmake.buildToolArgs": [],
@@ -28,6 +31,7 @@
     "C_Cpp.errorSquiggles": "Enabled",
     "C_Cpp.default.cStandard": "gnu17",
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "C_Cpp.formatting": "vcFormat",
     "files.associations": {
         "*.h": "c",
         "*.c": "c",

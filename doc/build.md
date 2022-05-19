@@ -4,7 +4,7 @@ We assume you want to build variant **alpha**.
 
 ## Visual Studio Code
 
-In the blue ribbon at the bottom (1) select a variant like _alpha_, (2) and the Kit _production_ ,(3) choose the build target _elf_ and (4) click on build:
+In the blue ribbon at the bottom (1) select a variant like _alpha_, (2) and the Kit _prod_ ,(3) choose the build target _elf_ and (4) click on build:
 ![vscode-build](img/vscode-build.png)
 
 ![vscode-build](img/build-binaries.gif)

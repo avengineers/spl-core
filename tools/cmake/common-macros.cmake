@@ -33,12 +33,12 @@ macro(create_mocks fileName)
         cmake_path(GET FILE_TO_BE_MOCKED FILENAME FILE_BASE_NAME)
         cmake_path(REMOVE_EXTENSION FILE_BASE_NAME LAST_ONLY OUTPUT_VARIABLE FILE_BASE_NAME_WITHOUT_EXTENSION)
         file(RELATIVE_PATH component_path ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_LIST_DIR})
-        add_custom_command(OUTPUT ${PROJECT_SOURCE_DIR}/build/${VARIANT}/${component_path}/mocks/mock_${FILE_BASE_NAME_WITHOUT_EXTENSION}.c
+        add_custom_command(OUTPUT ${PROJECT_SOURCE_DIR}/build/${VARIANT}/${BUILD_KIT}/${component_path}/mocks/mock_${FILE_BASE_NAME_WITHOUT_EXTENSION}.c
             COMMAND cmd /C "ruby ${PROJECT_SOURCE_DIR}/tools/CMock/lib/cmock.rb -o${PROJECT_SOURCE_DIR}/cmock-config.yml ${FILE_TO_BE_MOCKED}"
             DEPENDS ${PROJECT_SOURCE_DIR}/${fileName}
         )
-        add_include(/build/${VARIANT}/${component_path}/mocks)
-        add_test_source(/build/${VARIANT}/${component_path}/mocks/mock_${FILE_BASE_NAME_WITHOUT_EXTENSION}.c)
+        add_include(/build/${VARIANT}/${BUILD_KIT}/${component_path}/mocks)
+        add_test_source(/build/${VARIANT}/${BUILD_KIT}/${component_path}/mocks/mock_${FILE_BASE_NAME_WITHOUT_EXTENSION}.c)
     endif()
 endmacro()
 

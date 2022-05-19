@@ -21,8 +21,11 @@ jobs:
       - name: install scoop as admin (github actions / scoop workaround)
         run: .\install.ps1 -RunAsAdmin 
         shell: powershell
-      - name: install tools and run selftests
-        run: .\build.ps1 -target selftests -installMandatory
+      - name: install tools
+        run: .\build.ps1 -installMandatory
+        shell: powershell
+      - name: run selftests
+        run: .\build.ps1 -build -target selftests
         shell: powershell
       - uses: actions/upload-artifact@v2
         with:

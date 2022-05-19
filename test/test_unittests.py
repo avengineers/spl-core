@@ -12,7 +12,7 @@ class TestUnitTests(unittest.TestCase):
         variant = 'spl/alpha'
         self.build_unittests_and_expect_files(variant)
 
-        iut = 'build/{variant}/src/app/component/var_a/'.format(variant=variant)
+        iut = 'build/{variant}/test/src/app/component/var_a/'.format(variant=variant)
 
         """Test reports shall be created."""
         self.assertTrue(os.path.isfile(iut + 'junit.xml'))
@@ -41,6 +41,7 @@ class TestUnitTests(unittest.TestCase):
     def build_unittests_and_expect_files(self, variant):
         exit_code = run_process([
             'build.bat',
+            '--build',
             '--variants', variant,
             '--target', 'unittests',
             '--reconfigure'
@@ -49,11 +50,6 @@ class TestUnitTests(unittest.TestCase):
         """Unit tests execution shall pass."""
         self.assertEqual(0, exit_code)
 
-#        """Test logs shall be created."""
-#        expected_log = 'build/{variant}/build-unittests.log'.format(
-#            variant=variant)
-#        self.assertTrue(os.path.isfile(expected_log))
-
         """Coverage report shall be created"""
         self.assertTrue(os.path.isfile(
-            'build/{variant}/coverage/index.html'.format(variant=variant)))
+            'build/{variant}/test/coverage/index.html'.format(variant=variant)))
