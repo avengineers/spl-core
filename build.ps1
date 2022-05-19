@@ -106,10 +106,8 @@ Push-Location $PSScriptRoot
 if ($installMandatory -or $installOptional) {
     if (-Not (Get-Command scoop -errorAction SilentlyContinue)) {
         # Initial Scoop installation
-        $ScoopInstaller = (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
-        Invoke-Expression "$ScoopInstaller -RunAsAdmin"
-        Invoke-CommandLine -CommandLine "scoop bucket rm main" -Silent $true -StopAtError $false
-        Invoke-CommandLine -CommandLine "scoop bucket add main" -Silent $true
+        Invoke-Expression -CommandLine "iwr get.scoop.sh -outfile 'install.ps1'"
+        Invoke-Expression -CommandLine ".\install.ps1  -RunAsAdmin"
         ReloadEnvVars
     }
 
@@ -123,17 +121,12 @@ if ($installMandatory -or $installOptional) {
 }
 
 if ($installMandatory) {
-    Invoke-CommandLine -CommandLine "scoop bucket add epes-scoop https://git.marquardt.de/scm/epes/scoop-bucket.git" -StopAtError $false
-    Invoke-CommandLine -CommandLine "scoop update"
     ScoopInstall(Get-Content 'install-mandatory.list')
     $PipInstaller = "python -m pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org"
-    # Invoke-CommandLine -CommandLine "$PipInstaller --upgrade pip"
     Invoke-CommandLine -CommandLine "$PipInstaller xmlrunner==1.7.7 autopep8==1.6.0 gcovr==5.1 pytest==7.1.2"
-    ReloadEnvVars
 }
 if ($installOptional) {
-    Invoke-CommandLine -CommandLine "scoop bucket add extras" -StopAtError $false
-    Invoke-CommandLine -CommandLine "scoop update"
+    Invoke-CommandLine -CommandLine "scoop bucket add extras"
     ScoopInstall(Get-Content 'install-optional.list')
 }
 
