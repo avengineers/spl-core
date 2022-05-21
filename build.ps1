@@ -107,7 +107,11 @@ if ($installMandatory -or $installOptional) {
     if (-Not (Get-Command scoop -errorAction SilentlyContinue)) {
         # Initial Scoop installation
         iwr get.scoop.sh -outfile 'install.ps1'
-        & .\install.ps1 -RunAsAdmin
+        if ((New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+            & .\install.ps1 -RunAsAdmin
+        } else {
+            & .\install.ps1
+        }
         ReloadEnvVars
     }
 
@@ -239,8 +243,7 @@ if ($import) {
         git pull
     }
     else {
-        # todo: add transformer to avengineers
-        git clone https://github.com/avengineers/SPL.git .
+        git clone https://github.com/avengineers/Make2SPL.git .
     }
     Invoke-CommandLine -CommandLine ".\build.bat --source $source --target $PSScriptRoot --variant $variant"
     Pop-Location
