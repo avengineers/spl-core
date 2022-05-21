@@ -33,12 +33,12 @@ macro(create_mocks fileName)
         cmake_path(GET FILE_TO_BE_MOCKED FILENAME FILE_BASE_NAME)
         cmake_path(REMOVE_EXTENSION FILE_BASE_NAME LAST_ONLY OUTPUT_VARIABLE FILE_BASE_NAME_WITHOUT_EXTENSION)
         file(RELATIVE_PATH component_path ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_LIST_DIR})
-        add_custom_command(OUTPUT ${PROJECT_SOURCE_DIR}/build/${VARIANT}/${component_path}/mocks/mock_${FILE_BASE_NAME_WITHOUT_EXTENSION}.c
+        add_custom_command(OUTPUT ${PROJECT_SOURCE_DIR}/build/${VARIANT}/${BUILD_KIT}/${component_path}/mocks/mock_${FILE_BASE_NAME_WITHOUT_EXTENSION}.c
             COMMAND cmd /C "ruby ${PROJECT_SOURCE_DIR}/tools/CMock/lib/cmock.rb -o${PROJECT_SOURCE_DIR}/cmock-config.yml ${FILE_TO_BE_MOCKED}"
             DEPENDS ${PROJECT_SOURCE_DIR}/${fileName}
         )
-        add_include(/build/${VARIANT}/${component_path}/mocks)
-        add_test_source(/build/${VARIANT}/${component_path}/mocks/mock_${FILE_BASE_NAME_WITHOUT_EXTENSION}.c)
+        add_include(/build/${VARIANT}/${BUILD_KIT}/${component_path}/mocks)
+        add_test_source(/build/${VARIANT}/${BUILD_KIT}/${component_path}/mocks/mock_${FILE_BASE_NAME_WITHOUT_EXTENSION}.c)
     endif()
 endmacro()
 
@@ -92,4 +92,27 @@ macro(add_test_suite)
     )
 
     add_test(${component_name}_test ${exe_name})
+endmacro()
+
+macro(checkout_git_submodules)
+    #first time checkout submodules, ignore if existing
+    execute_process(
+        COMMAND git submodule update --init --recursive
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        ERROR_QUIET
+    )
+
+    #consecutive times just pull changes
+    execute_process(
+        COMMAND git submodule update --recursive
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+endmacro()
+
+macro(add_component component_path)
+    slash_to_underscore(component_name ${component_path})
+    add_subdirectory(${CMAKE_SOURCE_DIR}/${component_path})
+    if(BUILD_KIT STREQUAL prod)
+        target_link_libraries(${EXE_TARGET_NAME} ${component_name})
+    endif()
 endmacro()
