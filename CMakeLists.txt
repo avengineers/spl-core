@@ -6,14 +6,13 @@ set(VARIANT ${FLAVOR}/${SUBSYSTEM} CACHE STRING "Variant to build.")
 set(BUILD_KIT prod CACHE STRING "Target Group to build.")
 set(EXE_TARGET_NAME exe)
 
+#load common includes
+include(tools/cmake/common-macros.cmake)
+
 #load variant specific configuration and toolchain
 include(variants/${VARIANT}/config.cmake)
 
 project(${VARIANT} C ASM)
-
-#load common includes
-include(tools/cmake/common-macros.cmake)
-include(tools/cmake/common-functions.cmake)
 
 # build or test
 if(BUILD_KIT STREQUAL prod)
