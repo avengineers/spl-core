@@ -1,6 +1,6 @@
 add_postprocessing_step(
     test #build-kit: 'prod' or 'test'
-    unittest # target name, e.g. exe or unittest
+    unittests # target name, e.g. exe or unittest
     echo Hello World! This is a post-processing step that runs after target '${EXE_TARGET_NAME}' has finished.  # command to call
 )
 
