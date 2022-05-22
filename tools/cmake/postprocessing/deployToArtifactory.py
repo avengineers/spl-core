@@ -14,10 +14,10 @@ print(cmd)
 args = shlex.split(cmd)
 process = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 stdout, stderr = process.communicate()
-if stderr:
+if process.returncode:
     print(stderr)
     print('Upload failed.')
-    exit(1)
 else:
-    print('Upload finished.')
-    exit(0)
+    print('Upload finished successfully.')
+    
+exit(process.returncode)
