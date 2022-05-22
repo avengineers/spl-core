@@ -29,3 +29,6 @@ include(variants/${VARIANT}/parts.cmake)
 
 # get external git dependencies
 checkout_git_submodules()
+
+# run post-processing
+include(tools/cmake/postprocessing/postprocessing.cmake)
