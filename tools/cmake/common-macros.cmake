@@ -117,9 +117,11 @@ macro(add_component component_path)
     endif()
 endmacro()
 
-macro(add_postprocessing_step target_name)
-    add_custom_command(
-        TARGET ${target_name} POST_BUILD
-        COMMAND ${ARGN}
-        VERBATIM)
+macro(add_postprocessing_step build_kit target_name)
+    if(BUILD_KIT STREQUAL ${build_kit})
+        add_custom_command(
+            TARGET ${target_name} POST_BUILD
+            COMMAND ${ARGN}
+            VERBATIM)
+    endif()
 endmacro()
