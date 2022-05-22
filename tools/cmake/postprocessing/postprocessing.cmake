@@ -1,6 +1,6 @@
 add_postprocessing_step(
     ${EXE_TARGET_NAME}
-    echo Hello World! This is a post-processing step that runs after target ${EXE_TARGET_NAME} has finished.
+    echo Hello World! This is a post-processing step that runs after target '${EXE_TARGET_NAME}' has finished.
 )
 
 add_postprocessing_step(
