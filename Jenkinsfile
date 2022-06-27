@@ -1,6 +1,6 @@
 properties([
-   buildDiscarder(logRotator(numToKeepStr: '20')),
-   disableConcurrentBuilds()
+    buildDiscarder(logRotator(numToKeepStr: '20')),
+    disableConcurrentBuilds()
 ])
 
 node('spl') {
@@ -21,7 +21,6 @@ def test() {
         } catch (e) {
             echo 'One or more selftests failed.'
         }
-        
         junit allowEmptyResults: false, keepLongStdio: false, testResults: 'test/output/test-report.xml'
         junit allowEmptyResults: false, keepLongStdio: false, testResults: 'build/**/junit.xml'
         dir('build'){
