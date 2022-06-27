@@ -1,22 +1,25 @@
 <#
-.SYNOPSIS
-    Build wrapper for this project
 .DESCRIPTION
-    Build wrapper for CMake and Ninja
+    Wrapper for installing dependencies, running and testing the project
+
+.Notes
+On Windows, it may be required to enable this script by setting the execution
+policy for the user. You can do this by issuing the following PowerShell command:
+
+PS C:\> Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+For more information on Execution Policies: 
+https://go.microsoft.com/fwlink/?LinkID=135170
 #>
 
 [CmdletBinding(DefaultParameterSetName = 'Build')]
 param(
     [Parameter(
-        Mandatory = $true,
         ParameterSetName = 'Build',
         Position = 0
     )]
     [switch]$build ## Select for building the software
-    , [Parameter(
-        Mandatory = $true,
-        ParameterSetName = 'Build'
-    )]
+    , [Parameter(ParameterSetName = 'Build')]
     [ValidateNotNullOrEmpty()]
     [string]$target = "" ## Target to be built
     , [Parameter(ParameterSetName = 'Build')]
@@ -61,7 +64,7 @@ $ErrorActionPreference = "Stop"
 # Needed on Jenkins, somehow the env var PATH is not updated automatically
 # after tool installations by scoop
 Function ReloadEnvVars () {
-    $Env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+    $Env:Path = [System.Environment]::GetEnvironmentVariable("Path", "User") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "Machine")
 }
 
 Function ScoopInstall ([string[]]$Packages) {
@@ -94,7 +97,7 @@ Function Invoke-CommandLine {
 
 Push-Location $PSScriptRoot
 
-# Use default proxy
+# TODO: read proxy from a configuration file to make this script independent on network settings
 # $ProxyHost = '<your host>'
 # $Env:HTTP_PROXY = "http://$ProxyHost"
 # $Env:HTTPS_PROXY = $Env:HTTP_PROXY
@@ -102,6 +105,8 @@ Push-Location $PSScriptRoot
 # $WebProxy = New-Object System.Net.WebProxy($Env:HTTP_PROXY, $true, ($Env:NO_PROXY).split(','))
 # [net.webrequest]::defaultwebproxy = $WebProxy
 # [net.webrequest]::defaultwebproxy.credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
+
+Write-Output "Running in ${pwd}"
 
 if ($installMandatory -or $installOptional) {
     if (-Not (Get-Command scoop -errorAction SilentlyContinue)) {
@@ -125,12 +130,17 @@ if ($installMandatory -or $installOptional) {
 }
 
 if ($installMandatory) {
+    Invoke-CommandLine -CommandLine "scoop update"
     ScoopInstall(Get-Content 'install-mandatory.list')
     $PipInstaller = "python -m pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org"
     Invoke-CommandLine -CommandLine "$PipInstaller xmlrunner==1.7.7 autopep8==1.6.0 gcovr==5.1 pytest==7.1.2"
+    ReloadEnvVars
+    Invoke-CommandLine -CommandLine "$PipInstaller --upgrade pip"
+    ReloadEnvVars
 }
 if ($installOptional) {
-    Invoke-CommandLine -CommandLine "scoop bucket add extras"
+    Invoke-CommandLine -CommandLine "scoop bucket add extras" -StopAtError $false
+    Invoke-CommandLine -CommandLine "scoop update"
     ScoopInstall(Get-Content 'install-optional.list')
 }
 
@@ -215,13 +225,13 @@ if ($build) {
                 $additionalConfig += " -DCMAKE_TOOLCHAIN_FILE=`"tools/toolchains/gcc/toolchain.cmake`""
             }
             Invoke-CommandLine -CommandLine "cmake -B '$BuildFolder' -G Ninja -DFLAVOR=`"$platform`" -DSUBSYSTEM=`"$subsystem`" $additionalConfig"
-        
+
             # CMake clean all dead artifacts. Required when running incremented builds to delete obsolete artifacts.
             Invoke-CommandLine -CommandLine "cmake --build '$BuildFolder' --target $target -- -t cleandead"
             # CMake build
             Invoke-CommandLine -CommandLine "cmake --build '$BuildFolder' --target $target -- $ninjaArgs"
         }
-    }    
+    }
 }
 
 if ($import) {
@@ -245,7 +255,7 @@ if ($import) {
     else {
         git clone https://github.com/avengineers/Make2SPL.git .
     }
-    Invoke-CommandLine -CommandLine ".\build.bat --source $source --target $PSScriptRoot --variant $variant"
+    Invoke-CommandLine -CommandLine ".\build.ps1 --source $source --target $PSScriptRoot --variant $variant"
     Pop-Location
 }
 
