@@ -45,9 +45,13 @@ param(
     )]
     [ValidateNotNullOrEmpty()]
     [string]$variant ## Configuration name (<platform>/<subsystem>, e.g., spl/alpha)
-    , [Parameter(ParameterSetName = 'Install')]
+    , [Parameter(ParameterSetName = 'Build')]
+    [Parameter(ParameterSetName = 'Import')]
+    [Parameter(ParameterSetName = 'Install')]
     [switch]$installMandatory ## install mandatory packages (e.g., CMake, Ninja, ...)
-    , [Parameter(ParameterSetName = 'Install')]
+    , [Parameter(ParameterSetName = 'Build')]
+    [Parameter(ParameterSetName = 'Import')]
+    [Parameter(ParameterSetName = 'Install')]
     [switch]$installOptional ## install optional packages (e.g., VS Code)
 )
 
