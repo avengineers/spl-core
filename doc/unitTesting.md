@@ -38,8 +38,17 @@ add_source(src/component.c)
 add_test_source(test/test_component.c)
 ```
 
+## Mocking
+
+In order to successfully implement your tests, it is very likely that you must mock (https://en.wikipedia.org/wiki/Mock_object#Motivation) some of your used interfaces. There is a way of semi-automatic mocking with CMock. You can add mocks by:
+- adding `create_mocks(<path to your header>)` to `src/App/<component>/parts.cmake`
+- (some manual preprocessing might be required, CMock will only detect functions, no macros)
+-  add all missing global variables to `test_component.c` (previously created) so that it links.
+
 # Building and Executing Unit Tests
 
 The execution of a unit test is just a target in the build system, but it is part of another _kit_. So (1) select the _variant_, (2) change _kit_ to 'test' (cmake reconfigure might be necessary after this step: ctrl+shift+p --> 'cmake delete cache and reconfigure'), (3) choose the test to run (e.g. 'src_app_component_unittests' for one specific or 'unittests' for all) and (4) click on build:
 
 ![vscode-build](img/vscode-test.png)
+
+![vscode-build](img/run-unittest.gif)
