@@ -133,7 +133,7 @@ if ($target) {
             }
         }
         else {
-            $variantsSelected = $variants.Replace('\', '/').Replace('./variant/', '').Split(',')
+            $variantsSelected = $variants.Replace('\', '/').Replace('./variant/', '').Replace('./variants/', '').Split(',')
         }
 
         Foreach ($variant in $variantsSelected) {
@@ -163,10 +163,10 @@ if ($target) {
             if ($target.Contains("unittests")) {
                 $additionalConfig = "-DBUILD_KIT=`"test`" -DCMAKE_TOOLCHAIN_FILE=`"tools/toolchains/gcc/toolchain.cmake`""
             }
-            Invoke-CommandLine -CommandLine "cmake -B '$BuildFolder' -G Ninja -DFLAVOR=`"$platform`" -DSUBSYSTEM=`"$subsystem`" $additionalConfig" 2>&1 | Tee-Object -FilePath .\$BuildFolder\configure-$target.log
+            Invoke-CommandLine -CommandLine "cmake -B '$BuildFolder' -G Ninja -DFLAVOR=`"$platform`" -DSUBSYSTEM=`"$subsystem`" $additionalConfig"
         
-            # Ninja build
-            Invoke-CommandLine -CommandLine "ninja -C $BuildFolder $target $ninjaArgs" 2>&1 | Tee-Object -FilePath .\$BuildFolder\build-$target.log
+            # CMake build
+            Invoke-CommandLine -CommandLine "cmake --build '$BuildFolder' --target $target -- $ninjaArgs"
         }
     }    
 }
