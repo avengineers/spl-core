@@ -6,7 +6,7 @@ The &lt;SPL&gt; spl is a tiny but fully fledged &lt;SPL&gt;: https://en.wikipedi
 
 ## CI (Continuous Integration)
 
-* Find the latest CI results of default branch 'develop' [here](github.com).
+* Find the latest CI results [here](https://github.com/avengineers/aSPL/actions).
 
 ## Preparation
 
