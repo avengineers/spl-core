@@ -1,4 +1,4 @@
-name: CI
+name: selftests
 
 on:
   push:
@@ -13,14 +13,16 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
 
-    - name: install
-      run: ./spl.bat --installMandatory || exit /b 1
-
-    - name: selftests
-      run: ./spl.bat --build --target selftests || exit /b 1
+    - name: install tools and run selftests
+      run: .\spl.ps1 -build -target selftests -installMandatory
+      shell: powershell
 
     - uses: actions/upload-artifact@v2
       with:
+        name: code-coverage.zip
         retention-days: 90
         path: build/**/coverage/*
+        if-no-files-found: error
