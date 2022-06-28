@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: install
+      run: ./spl.bat --installMandatory || exit /b 1
+
+    - name: selftests
+      run: ./spl.bat --build --target selftests || exit /b 1
+
+    - uses: actions/upload-artifact@v2
+      with:
+        retention-days: 90
+        path: build/**/coverage/*
