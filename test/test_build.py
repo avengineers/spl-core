@@ -27,10 +27,6 @@ class TestBuild(unittest.TestCase):
         ])
 
         self.assertEqual(0, exit_code)
-#        self.assert_expected_file_exists(
-#            'build/{variant}/configure-default.log'.format(variant=variant))
-#        self.assert_expected_file_exists(
-#            'build/{variant}/build-default.log'.format(variant=variant))
         self.expect_binary(variant)
 
     def expect_binary(self, variant, binType='exe'):
