@@ -116,3 +116,10 @@ macro(add_component component_path)
         target_link_libraries(${EXE_TARGET_NAME} ${component_name})
     endif()
 endmacro()
+
+macro(add_postprocessing_step target_name)
+    add_custom_command(
+        TARGET ${target_name} POST_BUILD
+        COMMAND ${ARGN}
+        VERBATIM)
+endmacro()
