@@ -12,6 +12,8 @@ The following steps must be performed in order to import a GNU Make project into
 
 ## Import Instruction
 
+> **_NOTE:_** importing requires a specific structure that is documented here: https://github.com/avengineers/Make2SPL/blob/develop/Readme.md
+
 The import mode of `build.bat` requires 2 commandline parameters:
 
 `build.bat --import --source <path to make project> --variant <name of variant>`
