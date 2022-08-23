@@ -64,9 +64,14 @@ Function ScoopInstallOptional ([string[]]$Packages) {
 }
 
 # installs a given set of PIP packages (single or multiple)
-Function PythonInstall ([string[]]$Packages) {
+Function PythonInstall ([string[]]$Packages, [string[]]$TrustedHosts) {
     if ($Packages) {
-        $pipInstaller = "python -m pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org"
+        $hosts = ""
+        Foreach ($trustedHost in $TrustedHosts) {
+            $hosts += " --trusted-host $trustedHost"
+        }
+
+        $pipInstaller = "python -m pip install $hosts"
         Invoke-CommandLine -CommandLine "$pipInstaller $Packages"
         ReloadEnvVars
         Invoke-CommandLine -CommandLine "$pipInstaller --upgrade pip"
@@ -116,7 +121,7 @@ Function Install-Mandatory-Tools([PSCustomObject]$JsonDependencies) {
     }
     
     ScoopInstall($JsonDependencies.mandatory.scoop)
-    PythonInstall($JsonDependencies.mandatory.python)
+    PythonInstall($JsonDependencies.mandatory.python, $JsonDependencies.mandatory.python_trusted_hosts)
 }
 
 # install optional (GUI) tools that make life easier for developers 

@@ -135,6 +135,17 @@ Describe "python installation" {
   }
 }
 
+Describe "python installation advanced" {
+  It "shall add new trusted hosts to call" {
+    [String[]]$package = "PowerShell", "MinGW", "MSys"
+    [String[]]$hosts = "pypi.org", "files.pythonhosted.org"
+    $global:counter = 0
+    Mock -CommandName Invoke-CommandLine -MockWith {$global:counter++} -ParameterFilter { $CommandLine -eq "python -m pip install  --trusted-host pypi.org --trusted-host files.pythonhosted.org PowerShell MinGW MSys" }
+    PythonInstall -Packages $package -TrustedHosts $hosts
+    $global:counter | Should -Be 1
+  }
+}
+
 Describe "running setup scripts" {
   It "shall not search for files if directory does not exist" {
     Mock -CommandName Test-Path -MockWith {$false}
