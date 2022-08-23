@@ -1,0 +1,15 @@
+{
+    "mandatory": {
+        "python": [
+            "gcovr==5.1",
+            "conan==1.50.0"
+        ],
+        "scoop": [
+            "epes-scoop/cmake",
+            "epes-scoop/ninja",
+            "epes-scoop/gcc-llvm_11p2p0-13p0p0",
+            "ruby",
+            "epes-scoop/python"
+        ]
+    }
+}
