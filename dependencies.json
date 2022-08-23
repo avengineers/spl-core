@@ -10,6 +10,9 @@
             "winlibs-mingw-llvm",
             "ruby",
             "python"
+        ],
+        "scoop_repos": [
+            "ktos-scoop@https://github.com/ktos/scoop"
         ]
     }
 }

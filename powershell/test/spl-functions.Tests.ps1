@@ -49,6 +49,23 @@ Describe "scoop installation" {
   }
 }
 
+Describe "scoop mandatory installation" {
+  BeforeEach{
+    Mock -CommandName ScoopInstall -MockWith {}
+  }
+
+  It "shall add all buckets from dependencies.json" {
+    Mock -CommandName ScoopInstall -MockWith {}
+    Mock -CommandName PythonInstall -MockWith {}
+    Mock -CommandName Invoke-CommandLine -MockWith {}
+
+    $SPL_INSTALL_DEPENDENCY_JSON_FILE_CONTENT = Get-Content -Raw -Path "../../dependencies.json" | ConvertFrom-Json
+    Install-Mandatory-Tools($SPL_INSTALL_DEPENDENCY_JSON_FILE_CONTENT)
+
+    Should -Invoke -CommandName Invoke-CommandLine -Times 2
+  }
+}
+
 Describe "scoop optional installation" {
   BeforeEach{
     Mock -CommandName ScoopInstall -MockWith {}

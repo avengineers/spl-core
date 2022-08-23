@@ -109,6 +109,12 @@ Function Install-Basic-Tools() {
 
 # install all tools that are mandatory for building the project
 Function Install-Mandatory-Tools([PSCustomObject]$JsonDependencies) {
+    Foreach ($repo in $JsonDependencies.mandatory.scoop_repos) {
+        $repo_and_name = $repo.Split("@")
+        Invoke-CommandLine -CommandLine "scoop bucket add $($repo_and_name[0]) $($repo_and_name[1])" -StopAtError $false -Silent $true
+        Invoke-CommandLine -CommandLine "scoop update"
+    }
+    
     ScoopInstall($JsonDependencies.mandatory.scoop)
     PythonInstall($JsonDependencies.mandatory.python)
 }
