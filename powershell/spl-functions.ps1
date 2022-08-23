@@ -92,7 +92,6 @@ Function Install-Basic-Tools() {
         } else {
             invoke-expression -Command ". $PSScriptRoot\install-scoop.ps1"
         }
-        ReloadEnvVars
 
         Invoke-CommandLine -CommandLine "scoop bucket rm main" -Silent $true -StopAtError $false
         Invoke-CommandLine -CommandLine "scoop bucket add main" -Silent $true
