@@ -4,6 +4,9 @@ In this repository we construct the &lt;SPL&gt; ePES.
 
 ## CI (Continuous Integration)
 
+* [![selftests](https://github.com/avengineers/spl/actions/workflows/test.yml/badge.svg)](https://github.com/avengineers/spl/actions/workflows/test.yml)
+* An overview of all CI build results can be found [here](http://jenkins.marquardt.de:8080/job/EPES/job/ePES/job/epes/).
+
 ## Preparation
 
 In order to work with this repository you must

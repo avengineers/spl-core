@@ -21,6 +21,21 @@ macro(get_absolute_path out in)
     endif()
 endmacro()
 
+macro(checkout_git_submodules)
+    #first time checkout submodules, ignore if existing
+    execute_process(
+        COMMAND git submodule update --init --recursive
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        ERROR_QUIET
+    )
+
+    #consecutive times just pull changes
+    execute_process(
+        COMMAND git submodule update --recursive
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+endmacro()
+
 macro(add_component component_path)
     slash_to_underscore(component_name ${component_path})
     add_subdirectory(${CMAKE_SOURCE_DIR}/${component_path})
@@ -51,8 +66,13 @@ macro(create_mocks fileName)
         cmake_path(GET FILE_TO_BE_MOCKED FILENAME FILE_BASE_NAME)
         cmake_path(REMOVE_EXTENSION FILE_BASE_NAME LAST_ONLY OUTPUT_VARIABLE FILE_BASE_NAME_WITHOUT_EXTENSION)
         file(RELATIVE_PATH component_path ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_LIST_DIR})
+        if($ENV{SPL_CMOCK_CONFIG_FILE})
+            SET(CMOCK_CONFIG_OPT -o${SPL_CMOCK_CONFIG_FILE})
+        else()
+            SET(CMOCK_CONFIG_OPT -o${PROJECT_SOURCE_DIR}/cmock-config.yml)
+        endif()
         add_custom_command(OUTPUT ${PROJECT_SOURCE_DIR}/build/${VARIANT}/test/${component_path}/mocks/mock_${FILE_BASE_NAME_WITHOUT_EXTENSION}.c
-            COMMAND cmd /C "ruby ${PROJECT_SOURCE_DIR}/tools/CMock/lib/cmock.rb -o${PROJECT_SOURCE_DIR}/tools/CMock/project-config.yml ${FILE_TO_BE_MOCKED}"
+            COMMAND cmd /C "ruby ${PROJECT_SOURCE_DIR}/tools/CMock/lib/cmock.rb ${CMOCK_CONFIG_OPT} ${FILE_TO_BE_MOCKED}"
             DEPENDS ${FILE_TO_BE_MOCKED}
         )
         add_include(/build/${VARIANT}/test/${component_path}/mocks)
@@ -141,33 +161,37 @@ endmacro(spl_add_conan_install_settings)
 
 
 macro(spl_run_conan)
-    # This is the wrapper-code
-    include(${spl_install_dir}/conan.cmake)
-    # This replaces file conanfile.txt
-    conan_cmake_configure(
-        BUILD_REQUIRES
-        ${CONAN__BUILD_REQUIRES}
-        REQUIRES
-        ${CONAN__REQUIRES}
-        GENERATORS
-        cmake_paths
-        virtualrunenv
-    )
+    if(CONAN__BUILD_REQUIRES OR CONAN__REQUIRES)
+        # This is the wrapper-code
+        include(${spl_install_dir}/conan.cmake)
+        # This replaces file conanfile.txt
+        conan_cmake_configure(
+            BUILD_REQUIRES
+            ${CONAN__BUILD_REQUIRES}
+            REQUIRES
+            ${CONAN__REQUIRES}
+            GENERATORS
+            cmake_paths
+            virtualrunenv
+        )
 
-    conan_config_install(
-        ITEM $ENV{SPL_CONAN_CONFIG_URL}
-    )
+        if(ENV{SPL_CONAN_CONFIG_URL})
+            conan_config_install(
+                ITEM $ENV{SPL_CONAN_CONFIG_URL}
+            )
+        endif()
 
-    # This replaces the call of command "conan install" on the command line
-    conan_cmake_install(
-        PATH_OR_REFERENCE .
-        SETTINGS
-        ${CONAN_INSTALL_SETTINGS}
-    )
-    include(${CMAKE_BINARY_DIR}/conan_paths.cmake)
+        # This replaces the call of command "conan install" on the command line
+        conan_cmake_install(
+            PATH_OR_REFERENCE .
+            SETTINGS
+            ${CONAN_INSTALL_SETTINGS}
+        )
+        include(${CMAKE_BINARY_DIR}/conan_paths.cmake)
 
-    # This is the ninja hack to get paths of conan packages
-    set_ninja_wrapper_as_cmake_make()
+        # This is the ninja hack to get paths of conan packages
+        set_ninja_wrapper_as_cmake_make()
+    endif()
 endmacro(spl_run_conan)
 
 macro(run_pip PIP_INSTALL_REQUIREMENTS)

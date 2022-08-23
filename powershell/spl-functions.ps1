@@ -121,7 +121,7 @@ Function Install-Mandatory-Tools([PSCustomObject]$JsonDependencies) {
     }
     
     ScoopInstall($JsonDependencies.mandatory.scoop)
-    PythonInstall($JsonDependencies.mandatory.python, $JsonDependencies.mandatory.python_trusted_hosts)
+    PythonInstall -Package $JsonDependencies.mandatory.python -TrustedHosts $JsonDependencies.mandatory.python_trusted_hosts
 }
 
 # install optional (GUI) tools that make life easier for developers 
@@ -129,7 +129,7 @@ Function Install-Optional-Tools([PSCustomObject]$JsonDependencies) {
     Invoke-CommandLine -CommandLine "scoop bucket add extras" -StopAtError $false
     Invoke-CommandLine -CommandLine "scoop update"
     ScoopInstallOptional($JsonDependencies.optional.scoop)
-    PythonInstall($jsonDependJsonDependenciesencies.optional.python)
+    PythonInstall -Package $jsonDependJsonDependenciesencies.optional.python
 }
 
 # start CMake with given targets

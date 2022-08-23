@@ -10,22 +10,19 @@ Function Read-Environment-Variables() {
     }
 }
 
-Function Print-Missing-Variable([String] $variable) {
-    Write-Error "$variable is/are not defined in settings.json"
-}
-
 ### Env Vars ###
 # Env variables must be defined in settings.json and shall print an error if missing
 Read-Environment-Variables
 
-$SPL_INSTALL_DEPENDENCY_JSON_FILE = Get-Content -Raw -Path $Env:SPL_INSTALL_DEPENDENCY_JSON_FILE | ConvertFrom-Json
-if (-not $SPL_INSTALL_DEPENDENCY_JSON_FILE) {
-    Print-Missing-Variable('SPL_INSTALL_DEPENDENCY_JSON_FILE')
-    $SPL_INSTALL_DEPENDENCY_JSON_FILE = "dependencies.json"
+if ($Env:SPL_INSTALL_DEPENDENCY_JSON_FILE) {
+    $SPL_INSTALL_DEPENDENCY_JSON_CONTENT = Get-Content -Raw -Path $Env:SPL_INSTALL_DEPENDENCY_JSON_FILE | ConvertFrom-Json
+} elseif (Test-Path -Path dependencies.json) {
+    $SPL_INSTALL_DEPENDENCY_JSON_CONTENT = Get-Content -Raw -Path dependencies.json | ConvertFrom-Json
 }
 
+$SPL_CORE_INSTALL_DEPENDENCY_JSON_CONTENT = Get-Content -Raw -Path $PSScriptRoot/../dependencies.json | ConvertFrom-Json
+
 $SPL_EXTENSIONS_SETUP_SCRIPTS_PATH = $Env:SPL_EXTENSION_ROOT_DIR + $Env:SPL_EXTENSION_SETUP_SCRIPT_SUBDIR
-if (-not $SPL_EXTENSIONS_SETUP_SCRIPTS_PATH) {Print-Missing-Variable('SPL_EXTENSION_PATH and SPL_EXTENSION_SETUP_SCRIPT_SUBDIR')}
 
 # TODO: read proxy from a configuration file to make this script independent on network settings
 $SPL_PROXY_HOST = $Env:SPL_PROXY_HOST

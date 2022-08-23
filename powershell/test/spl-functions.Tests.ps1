@@ -124,13 +124,13 @@ Describe "python installation" {
   It "shall not call Invoke-CommandLine if no package is given" {
    
     [String[]]$package = @() # empty array
-    PythonInstall($package)
+    PythonInstall -Package $package
     Should -Invoke -CommandName Invoke-CommandLine -Times 0
   }
 
   It "shall call Invoke-CommandLine twice, once for installing packages and once for upgrading" {
     [String[]]$package = "PowerShell", "MinGW", "MSys"
-    PythonInstall($package)
+    PythonInstall -Package $package
     Should -Invoke -CommandName Invoke-CommandLine -Times 2
   }
 }
