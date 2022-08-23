@@ -40,9 +40,11 @@ add_test_source(test/test_component.c)
 
 ## Mocking
 
-In order to successfully implement your tests, it is very likely that you must mock (https://en.wikipedia.org/wiki/Mock_object#Motivation) some of your used interfaces. There is a way of semi-automatic mocking with CMock. You can add mocks by:
-- adding `create_mocks(<path to your header>)` to `src/App/<component>/parts.cmake`
-- (some manual preprocessing might be required, CMock will only detect functions, no macros)
+In order to successfully implement your tests, it is very likely that you must mock (https://en.wikipedia.org/wiki/Mock_object#Motivation) some of your used interfaces. We provide a way of semi-automatic mocking. In case of `IsolMn.c` we managed to add mocks by:
+- adding `create_mocks(test/mock/Rte_IsolMn.h)` to `src/App/IsolMn/parts.cmake`
+- creating the file `test/mock/Rte_IsolMn.h` inside IsolMn component
+  - this file is a copy of the real `Rte_IsolMn.h`
+  - but with the Autosar functions "manually" preprocessed. For details compare both files with BeyondCompare or similar
 -  add all missing global variables to `test_component.c` (previously created) so that it links.
 
 # Building and Executing Unit Tests

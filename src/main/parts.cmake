@@ -1,1 +1,0 @@
-add_source(src/main.c)
