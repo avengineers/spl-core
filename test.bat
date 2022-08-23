@@ -1,6 +1,6 @@
 @echo off
 
-exit 0
+powershell -File .\install.ps1 || exit /b 1
 
 pushd powershell\test\
 REM ugly workaround to invoke tests twice, first time always fails.

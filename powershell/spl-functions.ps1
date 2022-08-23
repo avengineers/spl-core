@@ -87,8 +87,13 @@ Function Run-Setup-Scripts([string] $Location) {
 # installs required tools that are needed to use scoop and python as installers
 Function Install-Basic-Tools() {
     if (-Not (Get-Command scoop -ErrorAction SilentlyContinue)) {
-        # Initial Scoop installation
-        invoke-expression -Command ". $PSScriptRoot\install-scoop.ps1"
+        if ((New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+            & $PSScriptRoot\install-scoop.ps1 -RunAsAdmin
+        } else {
+            invoke-expression -Command ". $PSScriptRoot\install-scoop.ps1"
+        }
+        ReloadEnvVars
+
         Invoke-CommandLine -CommandLine "scoop bucket rm main" -Silent $true -StopAtError $false
         Invoke-CommandLine -CommandLine "scoop bucket add main" -Silent $true
         ReloadEnvVars
