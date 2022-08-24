@@ -212,13 +212,29 @@ macro(set_ninja_wrapper_as_cmake_make)
     set(CMAKE_MAKE_PROGRAM ${NINJA_WRAPPER} CACHE FILEPATH "Custom ninja wrapper to activate the Conan virtual environment" FORCE)
 endmacro()
 
-macro(spl_install_extension NAME VERSION)
-    run_pip(${NAME}==${VERSION})
-    execute_process(
-        COMMAND python -c "import pathlib, ${NAME}; print(pathlib.Path(${NAME}.__file__).resolve().parent, end='')"
-        OUTPUT_VARIABLE ${NAME}_EXTENSION_PATH
-    )
-    set(${NAME}_CMAKE_MODULE_PATH ${${NAME}_EXTENSION_PATH}/cmake)
-    list(APPEND CMAKE_MODULE_PATH ${${NAME}_CMAKE_MODULE_PATH})
-    include(${NAME})
+macro(spl_install_extensions)
+    # Strange hack found here: https://stackoverflow.com/questions/5248749/passing-a-list-to-a-cmake-macro
+    set(_ARGN_LIST ${ARGN})
+
+    foreach(arg IN LISTS _ARGN_LIST)
+        string(REPLACE "@" ";" arglist ${arg})
+        list(LENGTH arglist len)
+
+        if(len EQUAL 2)
+            list(GET arglist 0 NAME)
+            list(GET arglist 1 VERSION)
+            run_pip(${NAME}==${VERSION})
+            execute_process(
+                COMMAND python -c "import pathlib, ${NAME}; print(pathlib.Path(${NAME}.__file__).resolve().parent, end='')"
+                OUTPUT_VARIABLE ${NAME}_EXTENSION_PATH
+            )
+            set(${NAME}_CMAKE_MODULE_PATH ${${NAME}_EXTENSION_PATH}/cmake)
+            list(APPEND CMAKE_MODULE_PATH ${${NAME}_CMAKE_MODULE_PATH})
+            include(${NAME})
+        else()
+            message(FATAL_ERROR "Requested extension \"${arg}\" does not contain a version suffix with @.")
+        endif()
+    endforeach()
+
+    spl_run_conan()
 endmacro()
