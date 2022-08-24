@@ -1,12 +1,15 @@
 param(
     [Parameter(
-        Mandatory = $false,
-        Position = 0
+        Mandatory = $false
     )]
     [string]$version = "develop" ## use latest if no verison was given
+    , [Parameter(
+        Mandatory = $false
+    )]
+    [string]$repo_url = "https://github.com/avengineers/SPL.git"
 )
 
-echo "Clone/Update SPL version: $version"
+echo "Clone/Update SPL version: $version from $repo_url"
 
 if (-Not (Get-Command git -ErrorAction SilentlyContinue)) {
     throw "'git' executable not found, please install it."
@@ -18,7 +21,7 @@ if (Test-Path build/spl-core/.git) {
     git checkout $version
     Pop-Location
 } else {
-    git clone https://github.com/avengineers/SPL.git --branch $version --depth 1 ./build/spl-core
+    git clone $repo_url --branch $version --depth 1 ./build/spl-core
 }
 
 Push-Location build/spl-core
