@@ -1,3 +1,5 @@
+$ErrorActionPreference = 'Stop'
+
 . .\install.ps1
 
 Push-Location powershell\test\
@@ -15,6 +17,9 @@ if (Test-Path .cmaketest) {
     Remove-Item .cmaketest -Recurse -Force
 }
 cmake -B .cmaketest -G Ninja
+if ($lastexitcode -ne 0) {
+    throw ("Exec: " + $errorMessage)
+}
 Pop-Location
 
 Push-Location cmake\test\spl.cmake\
@@ -22,4 +27,7 @@ if (Test-Path .cmaketest) {
     Remove-Item .cmaketest -Recurse -Force
 }
 cmake -B .cmaketest -G Ninja
+if ($lastexitcode -ne 0) {
+    throw ("Exec: " + $errorMessage)
+}
 Pop-Location

@@ -6,11 +6,11 @@ set(LINK_TARGET_NAME link)
 string(REPLACE "/" "_" BINARY_BASENAME ${VARIANT})
 
 # macros and functions
-macro(slash_to_underscore out in)
+macro(_spl_slash_to_underscore out in)
     string(REGEX REPLACE "/" "_" ${out} ${in})
 endmacro()
 
-macro(get_absolute_path out in)
+macro(_spl_get_absolute_path out in)
     string(FIND ${in} "/" position)
 
     if(position STREQUAL 0)
@@ -21,7 +21,7 @@ macro(get_absolute_path out in)
     endif()
 endmacro()
 
-macro(checkout_git_submodules)
+macro(spl_checkout_git_submodules)
     #first time checkout submodules, ignore if existing
     execute_process(
         COMMAND git submodule update --init --recursive
@@ -36,8 +36,8 @@ macro(checkout_git_submodules)
     )
 endmacro()
 
-macro(add_component component_path)
-    slash_to_underscore(component_name ${component_path})
+macro(spl_add_component component_path)
+    _spl_slash_to_underscore(component_name ${component_path})
     add_subdirectory(${CMAKE_SOURCE_DIR}/${component_path})
 
     if(BUILD_KIT STREQUAL prod)
@@ -45,24 +45,24 @@ macro(add_component component_path)
     endif()
 endmacro()
 
-macro(add_source fileName)
-    get_absolute_path(to_be_appended ${fileName})
+macro(spl_add_source fileName)
+    _spl_get_absolute_path(to_be_appended ${fileName})
     list(APPEND SOURCES ${to_be_appended})
 endmacro()
 
-macro(add_include includeDirectory)
-    get_absolute_path(to_be_appended ${includeDirectory})
+macro(spl_add_include includeDirectory)
+    _spl_get_absolute_path(to_be_appended ${includeDirectory})
     list(APPEND INCLUDES ${to_be_appended})
 endmacro()
 
-macro(add_test_source fileName)
-    get_absolute_path(to_be_appended ${fileName})
+macro(spl_add_test_source fileName)
+    _spl_get_absolute_path(to_be_appended ${fileName})
     list(APPEND TEST_SOURCES ${to_be_appended})
 endmacro()
 
-macro(create_mocks fileName)
+macro(spl_create_mocks fileName)
     if(BUILD_KIT STREQUAL test)
-        get_absolute_path(FILE_TO_BE_MOCKED ${fileName})
+        _spl_get_absolute_path(FILE_TO_BE_MOCKED ${fileName})
         cmake_path(GET FILE_TO_BE_MOCKED FILENAME FILE_BASE_NAME)
         cmake_path(REMOVE_EXTENSION FILE_BASE_NAME LAST_ONLY OUTPUT_VARIABLE FILE_BASE_NAME_WITHOUT_EXTENSION)
         file(RELATIVE_PATH component_path ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_LIST_DIR})
@@ -80,9 +80,9 @@ macro(create_mocks fileName)
     endif()
 endmacro()
 
-macro(create_component)
+macro(spl_create_component)
     file(RELATIVE_PATH component_path ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_LIST_DIR})
-    slash_to_underscore(component_name ${component_path})
+    _spl_slash_to_underscore(component_name ${component_path})
     add_library(${component_name} OBJECT ${SOURCES})
     target_compile_options(${component_name} PRIVATE ${VARIANT_ADDITIONAL_COMPILE_C_FLAGS})
 
@@ -102,11 +102,11 @@ macro(create_component)
 
     if((BUILD_KIT STREQUAL test) AND TEST_SOURCES)
         set(exe_name ${component_name}_test)
-        add_test_suite(${TEST_SOURCES})
+        _spl_add_test_suite(${TEST_SOURCES})
     endif()
 endmacro()
 
-macro(add_test_suite)
+macro(_spl_add_test_suite)
     add_executable(${exe_name}
         ${ARGN}
     )
@@ -157,9 +157,6 @@ macro(spl_add_conan_install_settings settings)
     list(APPEND CONAN_INSTALL_SETTINGS ${settings})
 endmacro(spl_add_conan_install_settings)
 
-
-
-
 macro(spl_run_conan)
     if(CONAN__BUILD_REQUIRES OR CONAN__REQUIRES)
         # This is the wrapper-code
@@ -190,11 +187,11 @@ macro(spl_run_conan)
         include(${CMAKE_BINARY_DIR}/conan_paths.cmake)
 
         # This is the ninja hack to get paths of conan packages
-        set_ninja_wrapper_as_cmake_make()
+        _spl_set_ninja_wrapper_as_cmake_make()
     endif()
 endmacro(spl_run_conan)
 
-macro(run_pip PIP_INSTALL_REQUIREMENTS)
+macro(spl_run_pip PIP_INSTALL_REQUIREMENTS)
     message("Execute PIP")
     execute_process(
         COMMAND python -m pip install --trusted-host $ENV{SPL_PIP_TRUSTED_HOST} --index-url $ENV{SPL_PIP_REPOSITORY} ${PIP_INSTALL_REQUIREMENTS}
@@ -202,7 +199,7 @@ macro(run_pip PIP_INSTALL_REQUIREMENTS)
     )
 endmacro()
 
-macro(set_ninja_wrapper_as_cmake_make)
+macro(_spl_set_ninja_wrapper_as_cmake_make)
     set(NINJA_WRAPPER ${CMAKE_SOURCE_DIR}/build/${VARIANT}/${BUILD_KIT}/ninja_wrapper.bat)
     file(WRITE ${NINJA_WRAPPER}
         "@echo off
@@ -223,7 +220,7 @@ macro(spl_install_extensions)
         if(len EQUAL 2)
             list(GET arglist 0 NAME)
             list(GET arglist 1 VERSION)
-            run_pip(${NAME}==${VERSION})
+            spl_run_pip(${NAME}==${VERSION})
             execute_process(
                 COMMAND python -c "import pathlib, ${NAME}; print(pathlib.Path(${NAME}.__file__).resolve().parent, end='')"
                 OUTPUT_VARIABLE ${NAME}_EXTENSION_PATH
