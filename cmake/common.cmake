@@ -75,8 +75,8 @@ macro(spl_create_mocks fileName)
             COMMAND cmd /C "ruby ${PROJECT_SOURCE_DIR}/tools/CMock/lib/cmock.rb ${CMOCK_CONFIG_OPT} ${FILE_TO_BE_MOCKED}"
             DEPENDS ${FILE_TO_BE_MOCKED}
         )
-        add_include(/build/${VARIANT}/test/${component_path}/mocks)
-        add_test_source(/build/${VARIANT}/test/${component_path}/mocks/mock_${FILE_BASE_NAME_WITHOUT_EXTENSION}.c)
+        spl_add_include(/build/${VARIANT}/test/${component_path}/mocks)
+        spl_add_test_source(/build/${VARIANT}/test/${component_path}/mocks/mock_${FILE_BASE_NAME_WITHOUT_EXTENSION}.c)
     endif()
 endmacro()
 
