@@ -12,16 +12,16 @@ if (-Not (Get-Command git -ErrorAction SilentlyContinue)) {
     throw "'git' executable not found, please install it."
 }
 
-if (Test-Path build/spl/.git) {
-    Push-Location build/spl
+if (Test-Path build/spl-core/.git) {
+    Push-Location build/spl-core
     git fetch --all --tags --prune
     git checkout $version
     Pop-Location
 } else {
-    git clone https://github.com/avengineers/SPL.git --branch $version --depth 1 ./build/spl
+    git clone https://github.com/avengineers/SPL.git --branch $version --depth 1 ./build/spl-core
 }
 
-Push-Location build/spl
+Push-Location build/spl-core
 
 . .\powershell\spl-functions.ps1
 
@@ -32,4 +32,4 @@ if ($Env:HTTP_PROXY -and $Env:NO_PROXY) {
 Install-Basic-Tools
 $SPL_INSTALL_DEPENDENCY_JSON_FILE_CONTENT = Get-Content -Raw -Path "dependencies.json" | ConvertFrom-Json
 Install-Mandatory-Tools -JsonDependencies $SPL_INSTALL_DEPENDENCY_JSON_FILE_CONTENT
-Pop-Location #build/spl
+Pop-Location #build/spl-core
