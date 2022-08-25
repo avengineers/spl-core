@@ -42,6 +42,8 @@ Function Setup-Proxy([String] $ProxyHost, [String] $NoProxy) {
     $webProxy = New-Object System.Net.WebProxy($Env:HTTP_PROXY, $true, ($Env:NO_PROXY).split(','))
     [net.webrequest]::defaultwebproxy = $webProxy
     [net.webrequest]::defaultwebproxy.credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
+    Write-Host "Proxy set to: " + $Env:HTTP_PROXY
+    Write-Host "No-Proxy set to: " + $Env:NO_PROXY
 }
 
 # installs scoop packages; can be a single package or multiple packages at once

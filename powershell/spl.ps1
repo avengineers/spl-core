@@ -54,8 +54,18 @@ param(
     )]
     [ValidateNotNullOrEmpty()]
     [string]$variant ## Configuration name (<platform>/<subsystem>, e.g., VW_PPE_Porsche_983/BMS_HV_PYRO)
-    , [switch]$installMandatory ## install mandatory packages (e.g., CMake, Ninja, ...)
-    , [switch]$installOptional ## install optional packages (e.g., VS Code)
+    , [Parameter(
+        Mandatory = $true,
+        ParameterSetName = 'Install',
+        Position = 0
+    )]
+    [switch]$install ## Select for installing the software
+    , [Parameter(ParameterSetName = 'Build')]
+    [Parameter(ParameterSetName = 'Install')]
+    [switch]$installMandatory ## install mandatory packages (e.g., CMake, Ninja, ...)
+    , [Parameter(ParameterSetName = 'Build')]
+    [Parameter(ParameterSetName = 'Install')]
+    [switch]$installOptional ## install optional packages (e.g., VS Code)
 )
 
 
