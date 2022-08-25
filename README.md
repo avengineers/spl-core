@@ -1,45 +1,61 @@
-# Software Product Line "ePES"
+# Software Product Line Core
 
-In this repository we construct the &lt;SPL&gt; ePES.
+In this repository we construct the &lt;SPL-core&gt; functionality that can be integrated into CMake projects.
 
 ## CI (Continuous Integration)
 
 * [![selftests](https://github.com/avengineers/spl/actions/workflows/test.yml/badge.svg)](https://github.com/avengineers/spl/actions/workflows/test.yml)
-* An overview of all CI build results can be found [here](http://jenkins.marquardt.de:8080/job/EPES/job/ePES/job/epes/).
 
 ## Preparation
 
-In order to work with this repository you must
+You can add SPL to your CMake project by running:
 
-* Clone it first:
-Therefore you must first install a Git client, e.g. Sourcetree:
+```powershell
+Invoke-Expression "& { $(Invoke-RestMethod https://raw.githubusercontent.com/avengineers/SPL/develop/install.ps1) } v1.0.9"
+```
 
-![vscode-build](doc/img/install-sourcetree.gif)
+This call will download the installer script of a given version (for latest-greatest use "develop") and execute it. It will take care of downloading all mandatory dependencies. The same command can be used to up- or downgrade the version.
 
-and then click on the `clone` button on the left hand side.
-Clone it in any directory you like on your local disk, there are no path constraints (putting it to the synced user profile will work, but is not recommended). 
+Our SPL works best with VSCode and some extensions. Make sure to install 'optional' tools as well by running a powershell command from your project root:
 
-![vscode-build](doc/img/clone-repository.gif)
+```powershell
+.\build\spl-core\powershell\spl.ps1 -install -installOptional
+```
 
-* Install mandatory tools by executing `install-mandatory.bat` in the root directory of the repository.
-* In case you want to use Visual Studio Code you might want to install the optional tools, too by executing `install-optional.bat` in the root directory of the repository.
-  * In VS Code you need to install the following extensions. Hit `Ctrl+Shift+x` to search and install them.
-    * CMake Tools
-    * C/C++ Extension Pack
+In VS Code you need to install the following extensions. Hit `Ctrl+Shift+x` to search and install them.
+  * CMake Tools
+  * C/C++ Extension Pack
 
-## Contributing
+### Additional Files
 
-## Import new Dimension Projects (as legacy sources)
+There are some recommended files that should be placed in the root of your project to make it easier to use. See SPLDemo as reference:
+* https://github.com/avengineers/SPLDemo/blob/develop/CMakeLists.txt (to include the `SPL` and see how the basic project structure looks like)
+* https://github.com/avengineers/SPLDemo/blob/develop/build.bat (to make SPL calls easier, by simply passing all arguments; in case SPL is not downloaded it will do this for the user)
+* https://github.com/avengineers/SPLDemo/blob/develop/install-spl.ps1 (activating auto download of SPL will require something similar to this)
+* https://github.com/avengineers/SPLDemo/blob/develop/dependencies.json (define other dependencies to download)
 
-Importing is only possible in commandline mode. By running `build.bat` you will take a Make project from Dimensions (from local disk) and you can automatically bring it into SPL structure. [see details here](doc/import.md)
+## Configuration
 
-## Legacy Sources to Configurable Sources
+There are multiple configurations available that you have to consider for your SPL usage.
 
-The imported sources will be part of the legacy/ folder and placed there in the same structure as they were in Dimensions. They are not fully transformed into the new `configurable sources` structure. It needs some manual effort to change the code accordingly. [see details here](doc/legacyToConfigurable.md)
+### .vscode/cmake-variants.json
+
+lorem ipsum
+### .vscode/settings.json
+
+lorem ipsum
+
+### dependencies.json
+
+lorem ipsum
+
+### tools/splExtensions/powershell/setup scripts
+
+lorem ipsum
 
 ## TDD (Test Driven Development) and Unit Testing
 
-In order do develop software using TDD, you need to [write and run unit tests](doc/unitTesting.md).
+In order to develop software using TDD, you need to [write and run unit tests](doc/unitTesting.md).
 
 ## Debugging
 

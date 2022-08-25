@@ -1,7 +1,7 @@
 # Build Binaries
 
 We assume you want to build variant **alpha**.
-**alpha** is a theoretical variant, the variants in ePES might change and thus are not mentioned explicitely here.
+**alpha** is a theoretical variant, the name of your variants might be different.
 
 ## Visual Studio Code
 
@@ -17,7 +17,7 @@ The following shows the steps/commands when you use Windows PowerShell to do so.
 ```powershell
 cd <Your root directory of repository>
 
-.\build.ps1 -build -target elf
+.\build\spl-core\powershell\spl.ps1 -build -target link
 ```
 
 ## Binary Location
