@@ -54,15 +54,7 @@ elseif(BUILD_KIT STREQUAL test)
 
     target_link_libraries(CMock Unity)
 
-    set(COV_OUT_VARIANT_HTML coverage/index.html)
-
-    add_custom_command(
-        OUTPUT ${COV_OUT_VARIANT_HTML}
-        COMMAND gcovr --root ${CMAKE_SOURCE_DIR} --add-tracefile \"${CMAKE_CURRENT_BINARY_DIR}/**/coverage.json\" --html --html-details --output ${COV_OUT_VARIANT_HTML}
-        DEPENDS coverage
-    )
     add_custom_target(coverage)
-    add_custom_target(unittests DEPENDS coverage ${COV_OUT_VARIANT_HTML})
 else()
     message(FATAL_ERROR "Invalid BUILD_KIT selected!")
 endif()
@@ -71,6 +63,8 @@ endif()
 ## Things to be done at the very end of configure phase as if they would be at bottom of CMakelists.txt
 cmake_language(DEFER DIRECTORY ${CMAKE_SOURCE_DIR} CALL _spl_hook_end_of_configure())
 function(_spl_hook_end_of_configure)
+    _spl_coverage_create_overall_report()
+
    if(CONAN__REQUIRES OR CONAN__BUILD_REQUIRES)
    endif() # CONAN__REQUIRES
 endfunction(_spl_hook_end_of_configure)

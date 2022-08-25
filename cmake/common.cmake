@@ -106,7 +106,28 @@ macro(spl_create_component)
     endif()
 endmacro()
 
+macro(_spl_set_coverage_create_overall_report_is_necessary)
+    set(_SPL_COVERAGE_CREATE_OVERALL_REPORT_IS_NECESSARY TRUE PARENT_SCOPE)
+endmacro(_spl_set_coverage_create_overall_report_is_necessary)
+
+# TODO: replace global json filter pattern with config file listing components' json files explicitely
+function(_spl_coverage_create_overall_report)
+    if(_SPL_COVERAGE_CREATE_OVERALL_REPORT_IS_NECESSARY)
+        set(COV_OUT_VARIANT_HTML coverage/index.html)
+        add_custom_command(
+            OUTPUT ${COV_OUT_VARIANT_HTML}
+            COMMAND gcovr --root ${CMAKE_SOURCE_DIR} --add-tracefile \"${CMAKE_CURRENT_BINARY_DIR}/**/coverage.json\" --html --html-details --output ${COV_OUT_VARIANT_HTML}
+            DEPENDS coverage
+        )
+        add_custom_target(unittests DEPENDS coverage ${COV_OUT_VARIANT_HTML})
+    else(_SPL_COVERAGE_CREATE_OVERALL_REPORT_IS_NECESSARY)
+        add_custom_target(unittests)
+    endif(_SPL_COVERAGE_CREATE_OVERALL_REPORT_IS_NECESSARY)
+endfunction(_spl_coverage_create_overall_report)
+
 macro(_spl_add_test_suite)
+    _spl_set_coverage_create_overall_report_is_necessary()
+
     add_executable(${exe_name}
         ${ARGN}
     )
@@ -121,7 +142,7 @@ macro(_spl_add_test_suite)
     set(COV_OUT_JSON coverage.json)
     add_custom_command(
         OUTPUT ${COV_OUT_JSON}
-        COMMAND gcovr --root ${CMAKE_SOURCE_DIR} --filter ${CMAKE_CURRENT_LIST_DIR}/src --json --output ${COV_OUT_JSON} ${GCOVR_ADDITIONAL_OPTIONS}
+        COMMAND gcovr --root ${CMAKE_SOURCE_DIR} --filter ${CMAKE_CURRENT_LIST_DIR}/src --json --output ${COV_OUT_JSON} ${GCOVR_ADDITIONAL_OPTIONS} ${CMAKE_CURRENT_BINARY_DIR}
         DEPENDS ${TEST_OUT_JUNIT}
     )
 
