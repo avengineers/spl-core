@@ -223,26 +223,14 @@ Function Run-CMake-Build([String] $Target, [String] $Variants, [String] $Filter,
 
 # clones and runs the transformer to import new product variants
 Function Run-Transformer([String] $Source, [String] $Variant, [bool] $Clean) {
-    $importWorkDir = 'build/import'
-    
-    if ($Clean) {
-        if (Test-Path -Path $importWorkDir) {
-            Remove-Item $importWorkDir -Force -Recurse
-        }
-    }
-    
-    $transformerDir = "$importWorkDir/transformer"
+    $transformerDir = "./build/import/transformer"
     New-Item -ItemType "directory" -Path $transformerDir -Force
     
-    Push-Location $transformerDir
-    if (Test-Path -Path '.git') {
-        git reset --hard HEAD
-        git clean -fdx
-        git pull
+    if (Test-Path -Path "$transformerDir/.git") {
+        Remove-Item $transformerDir -Recurse -Force
     }
-    else {
-        git clone https://github.com/avengineers/SPLTransformer.git .
-    }
-    Invoke-CommandLine -CommandLine ".\build.ps1 --source $Source --target $pwd --variant $Variant"
-    Pop-Location
+
+    git clone https://github.com/avengineers/SPLTransformer.git $transformerDir
+
+    Invoke-CommandLine -CommandLine "$transformerDir\build.ps1 --source $Source --target $pwd --variant $Variant"
 }

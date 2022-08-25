@@ -16,7 +16,7 @@ if (-Not (Get-Command git -ErrorAction SilentlyContinue)) {
 }
 
 if (Test-Path build/spl-core/.git) {
-    cmd /c "rmdir /S/Q build\\spl-core"
+    Remove-Item "build/spl-core" -Recurse -Force
 }
 
 git clone $repo_url --branch $version --depth 1 ./build/spl-core
