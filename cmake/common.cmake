@@ -193,7 +193,7 @@ macro(spl_run_conan)
             virtualrunenv
         )
 
-        if(ENV{SPL_CONAN_CONFIG_URL})
+        if(DEFINED ENV{SPL_CONAN_CONFIG_URL})
             conan_config_install(
                 ITEM $ENV{SPL_CONAN_CONFIG_URL}
             )
