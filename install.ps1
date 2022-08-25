@@ -16,16 +16,14 @@ if (-Not (Get-Command git -ErrorAction SilentlyContinue)) {
 }
 
 if (Test-Path build/spl-core/.git) {
-    Push-Location build/spl-core
-    git fetch --all --tags --prune
-    git checkout $version
-    Pop-Location
-} else {
-    git clone $repo_url --branch $version --depth 1 ./build/spl-core
+    Remove-Item 'build/spl-core' -Recurse
 }
+
+git clone $repo_url --branch $version --depth 1 ./build/spl-core
 
 Push-Location build/spl-core
 
+Out-File -FilePath $version
 . .\powershell\spl-functions.ps1
 
 if ($Env:HTTP_PROXY -and $Env:NO_PROXY) {
