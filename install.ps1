@@ -24,7 +24,12 @@ git clone $repo_url --branch $version --depth 1 ./build/spl-core
 Push-Location build/spl-core
 
 Out-File -FilePath $version
+. .\powershell\spl-variables.ps1
 . .\powershell\spl-functions.ps1
+
+if ($SPL_PROXY_HOST -and $SPL_PROXY_BYPASS_LIST) {
+    Setup-Proxy -ProxyHost $SPL_PROXY_HOST -NoProxy $SPL_PROXY_BYPASS_LIST
+}
 
 if ($Env:HTTP_PROXY -and $Env:NO_PROXY) {
     Setup-Proxy -ProxyHost $Env:HTTP_PROXY -NoProxy $Env:NO_PROXY
