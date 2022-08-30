@@ -1,0 +1,20 @@
+name: selftests
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [develop]
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: install tools and run selftests
+        run: .\test.ps1
+        shell: powershell
