@@ -33,26 +33,12 @@ if(BUILD_KIT STREQUAL prod)
         LINK_DEPENDS "${LINK_TARGET_DEPENDS}"
     )
 elseif(BUILD_KIT STREQUAL test)
+    _spl_get_google_test()
+    _spl_get_hammock()
     include(CTest)
     list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ggdb --coverage")
-    add_library(Unity STATIC
-        tools/Unity/src/unity.c
-    )
-
-    target_include_directories(Unity PUBLIC
-        tools/Unity/src
-    )
-
-    add_library(CMock
-        tools/CMock/src/cmock.c
-    )
-
-    target_include_directories(CMock PUBLIC
-        tools/CMock/src
-    )
-
-    target_link_libraries(CMock Unity)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ggdb --coverage")
 
     add_custom_target(coverage)
 else()

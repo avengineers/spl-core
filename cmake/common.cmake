@@ -60,24 +60,43 @@ macro(spl_add_test_source fileName)
     list(APPEND TEST_SOURCES ${to_be_appended})
 endmacro()
 
-macro(spl_create_mocks fileName)
-    if(BUILD_KIT STREQUAL test)
-        _spl_get_absolute_path(FILE_TO_BE_MOCKED ${fileName})
-        cmake_path(GET FILE_TO_BE_MOCKED FILENAME FILE_BASE_NAME)
-        cmake_path(REMOVE_EXTENSION FILE_BASE_NAME LAST_ONLY OUTPUT_VARIABLE FILE_BASE_NAME_WITHOUT_EXTENSION)
-        file(RELATIVE_PATH component_path ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_LIST_DIR})
-        if(DEFINED ENV{SPL_CMOCK_CONFIG_FILE})
-            SET(CMOCK_CONFIG_OPT -o${PROJECT_SOURCE_DIR}/$ENV{SPL_CMOCK_CONFIG_FILE})
-        else()
-            SET(CMOCK_CONFIG_OPT -o${PROJECT_SOURCE_DIR}/cmock-config.yml)
-        endif()
-        add_custom_command(OUTPUT ${PROJECT_SOURCE_DIR}/build/${VARIANT}/test/${component_path}/mocks/mock_${FILE_BASE_NAME_WITHOUT_EXTENSION}.c
-            COMMAND cmd /C "ruby ${PROJECT_SOURCE_DIR}/tools/CMock/lib/cmock.rb ${CMOCK_CONFIG_OPT} ${FILE_TO_BE_MOCKED}"
-            DEPENDS ${FILE_TO_BE_MOCKED}
-        )
-        spl_add_include(/build/${VARIANT}/test/${component_path}/mocks)
-        spl_add_test_source(/build/${VARIANT}/test/${component_path}/mocks/mock_${FILE_BASE_NAME_WITHOUT_EXTENSION}.c)
+macro(_spl_get_hammock)
+    # Temporary solution before hammock is on official server pypi.org
+    execute_process(
+        COMMAND python -m pip install --trusted-host test.pypi.org --extra-index-url https://test.pypi.org/simple/ hammock==0.1.0
+        COMMAND_ERROR_IS_FATAL ANY
+    )
+endmacro(_spl_get_hammock)
+
+macro(_spl_get_google_test)
+    # GoogleTest requires at least C++14
+    set(CMAKE_CXX_STANDARD 14)
+
+    set(FETCHCONTENT_BASE_DIR ${CMAKE_BINARY_DIR}/../../_deps CACHE INTERNAL "")
+
+    include(FetchContent)
+    FetchContent_Declare(
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG release-1.12.1
+    )
+
+    if(WIN32)
+        # Prevent overriding the parent project's compiler/linker
+        # settings on Windows
+        set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
     endif()
+
+    FetchContent_MakeAvailable(googletest)
+
+    include(GoogleTest)
+
+    find_package(Threads REQUIRED)
+
+    enable_testing()
+endmacro(_spl_get_google_test)
+
+macro(spl_create_mocks fileName)
 endmacro()
 
 macro(spl_create_component)
@@ -90,6 +109,7 @@ macro(spl_create_component)
     set(COMPONENT_NAMES ${COMPONENT_NAMES} PARENT_SCOPE)
 
     list(APPEND target_include_directories__INCLUDES ${CMAKE_CURRENT_LIST_DIR}/src)
+    list(APPEND target_include_directories__INCLUDES ${CMAKE_CURRENT_BINARY_DIR})
 
     foreach(source ${SOURCES})
         get_filename_component(path ${source} DIRECTORY)
@@ -102,7 +122,7 @@ macro(spl_create_component)
 
     if((BUILD_KIT STREQUAL test) AND TEST_SOURCES)
         set(exe_name ${component_name}_test)
-        _spl_add_test_suite(${TEST_SOURCES})
+        _spl_add_test_suite(${SOURCES} ${TEST_SOURCES})
     endif()
 endmacro()
 
@@ -125,11 +145,36 @@ function(_spl_coverage_create_overall_report)
     endif(_SPL_COVERAGE_CREATE_OVERALL_REPORT_IS_NECESSARY)
 endfunction(_spl_coverage_create_overall_report)
 
-macro(_spl_add_test_suite)
+macro(_spl_add_test_suite PROD_SRC TEST_SOURCES)
     _spl_set_coverage_create_overall_report_is_necessary()
 
+    set(PROD_PARTIAL_LINK prod_partial_${component_name}.obj)
+    set(MOCK_SRC mockup.cc)          
+
     add_executable(${exe_name}
-        ${ARGN}
+        ${TEST_SOURCES}
+        ${MOCK_SRC}
+    )
+
+    add_custom_command(
+        OUTPUT ${PROD_PARTIAL_LINK}
+        COMMAND ${CMAKE_CXX_COMPILER} -r -nostdlib -o ${PROD_PARTIAL_LINK} $<TARGET_OBJECTS:${component_name}>
+        COMMAND_EXPAND_LISTS
+        VERBATIM
+        DEPENDS ${component_name}
+    )
+
+    set(prop "$<TARGET_PROPERTY:${component_name},INCLUDE_DIRECTORIES>")
+    add_custom_command(
+        OUTPUT ${MOCK_SRC}
+        BYPRODUCTS mockup.h
+        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+        COMMAND python -m hammock --sources ${PROD_SRC} --plink ${CMAKE_CURRENT_BINARY_DIR}/${PROD_PARTIAL_LINK} --outdir ${CMAKE_CURRENT_BINARY_DIR} "$<$<BOOL:${prop}>:-I$<JOIN:${prop},;-I>>"
+        COMMAND_EXPAND_LISTS
+        VERBATIM
+        DEPENDS
+        ${PROD_SRC}
+        ${PROD_PARTIAL_LINK}
     )
 
     set(TEST_OUT_JUNIT junit.xml)
@@ -159,10 +204,12 @@ macro(_spl_add_test_suite)
 
     target_link_libraries(${exe_name}
         ${component_name}
-        CMock
+        GTest::gtest_main
+        GTest::gmock_main
+        Threads::Threads
     )
 
-    add_test(${component_name}_test ${exe_name})
+    gtest_discover_tests(${exe_name})
 endmacro()
 
 
