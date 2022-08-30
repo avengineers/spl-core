@@ -22,14 +22,14 @@ macro(_spl_get_absolute_path out in)
 endmacro()
 
 macro(spl_checkout_git_submodules)
-    #first time checkout submodules, ignore if existing
+    # first time checkout submodules, ignore if existing
     execute_process(
         COMMAND git submodule update --init --recursive
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         ERROR_QUIET
     )
 
-    #consecutive times just pull changes
+    # consecutive times just pull changes
     execute_process(
         COMMAND git submodule update --recursive
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
@@ -103,7 +103,12 @@ macro(spl_create_component)
     file(RELATIVE_PATH component_path ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_LIST_DIR})
     _spl_slash_to_underscore(component_name ${component_path})
     add_library(${component_name} OBJECT ${SOURCES})
-    target_compile_options(${component_name} PRIVATE ${VARIANT_ADDITIONAL_COMPILE_C_FLAGS})
+
+    if(BUILD_KIT STREQUAL test)
+        target_compile_options(${component_name} PRIVATE ${VARIANT_ADDITIONAL_COMPILE_C_FLAGS} -ggdb --coverage)
+    else()
+        target_compile_options(${component_name} PRIVATE ${VARIANT_ADDITIONAL_COMPILE_C_FLAGS})
+    endif()
 
     list(APPEND COMPONENT_NAMES ${component_name})
     set(COMPONENT_NAMES ${COMPONENT_NAMES} PARENT_SCOPE)
@@ -149,11 +154,15 @@ macro(_spl_add_test_suite PROD_SRC TEST_SOURCES)
     _spl_set_coverage_create_overall_report_is_necessary()
 
     set(PROD_PARTIAL_LINK prod_partial_${component_name}.obj)
-    set(MOCK_SRC mockup.cc)          
+    set(MOCK_SRC mockup.cc)
 
     add_executable(${exe_name}
         ${TEST_SOURCES}
         ${MOCK_SRC}
+    )
+
+    target_link_options(${exe_name}
+        PRIVATE -ggdb --coverage
     )
 
     add_custom_command(
@@ -212,7 +221,6 @@ macro(_spl_add_test_suite PROD_SRC TEST_SOURCES)
     gtest_discover_tests(${exe_name})
 endmacro()
 
-
 macro(spl_add_conan_requires requirement)
     list(APPEND CONAN__REQUIRES ${requirement})
 endmacro(spl_add_conan_requires)
@@ -229,6 +237,7 @@ macro(spl_run_conan)
     if(CONAN__BUILD_REQUIRES OR CONAN__REQUIRES)
         # This is the wrapper-code
         include(${spl_install_dir}/conan.cmake)
+
         # This replaces file conanfile.txt
         conan_cmake_configure(
             BUILD_REQUIRES
@@ -306,22 +315,27 @@ endmacro()
 
 # deprecated
 macro(add_include)
-    spl_add_include(${ARGN})    
-    if (NOT add_include_warning)
+    spl_add_include(${ARGN})
+
+    if(NOT add_include_warning)
         set(add_include_warning ON)
         message(WARNING "'add_include' is deprecated, use 'spl_add_include' instead. This warning is only printed once!")
     endif()
 endmacro()
+
 macro(add_source)
     spl_add_source(${ARGN})
-    if (NOT add_source_warning)
+
+    if(NOT add_source_warning)
         set(add_source_warning ON)
         message(WARNING "'add_source' is deprecated, use 'spl_add_source' instead. This warning is only printed once!")
     endif()
 endmacro()
+
 macro(create_component)
     spl_create_component(${ARGN})
-    if (NOT create_component_warning)
+
+    if(NOT create_component_warning)
         set(create_component_warning ON)
         message(WARNING "'create_component' is deprecated, use 'spl_create_component' instead. This warning is only printed once!")
     endif()

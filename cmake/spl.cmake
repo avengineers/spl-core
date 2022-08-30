@@ -37,8 +37,6 @@ elseif(BUILD_KIT STREQUAL test)
     _spl_get_hammock()
     include(CTest)
     list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ggdb --coverage")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ggdb --coverage")
 
     add_custom_target(coverage)
 else()
