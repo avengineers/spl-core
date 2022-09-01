@@ -11,12 +11,13 @@
         "scoop": [
             "cmake",
             "ninja",
-            "winlibs-mingw-llvm",
+            "mingw-winlibs-llvm-ucrt",
             "ruby",
             "python"
         ],
         "scoop_repos": [
-            "ktos-scoop@https://github.com/ktos/scoop"
+            "ktos-scoop@https://github.com/ktos/scoop",
+            "versions@https://github.com/ScoopInstaller/Versions"
         ]
     }
 }
