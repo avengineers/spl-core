@@ -127,7 +127,7 @@ macro(spl_create_component)
 
     if((BUILD_KIT STREQUAL test) AND TEST_SOURCES)
         set(exe_name ${component_name}_test)
-        _spl_add_test_suite(${SOURCES} ${TEST_SOURCES})
+        _spl_add_test_suite("${SOURCES}" ${TEST_SOURCES})
     endif()
 endmacro()
 
