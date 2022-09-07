@@ -178,7 +178,7 @@ macro(_spl_add_test_suite PROD_SRC TEST_SOURCES)
         OUTPUT ${MOCK_SRC}
         BYPRODUCTS mockup.h
         WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-        COMMAND python -m hammock --sources ${PROD_SRC} --plink ${CMAKE_CURRENT_BINARY_DIR}/${PROD_PARTIAL_LINK} --outdir ${CMAKE_CURRENT_BINARY_DIR} "$<$<BOOL:${prop}>:-I$<JOIN:${prop},;-I>>"
+        COMMAND python -m hammocking --sources ${PROD_SRC} --plink ${CMAKE_CURRENT_BINARY_DIR}/${PROD_PARTIAL_LINK} --outdir ${CMAKE_CURRENT_BINARY_DIR} "$<$<BOOL:${prop}>:-I$<JOIN:${prop},;-I>>"
         COMMAND_EXPAND_LISTS
         VERBATIM
         DEPENDS
