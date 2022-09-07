@@ -201,7 +201,7 @@ Describe "import project with transformer" {
     Mock -CommandName Remove-Item -MockWith {}
   }
 
-  It "shall cleanup existing directories if clean is true" {
+  It "shall always cleanup existing directories when called" {
     Mock -CommandName New-Item -MockWith {}
     Mock -CommandName Push-Location -MockWith {}
     Mock -CommandName git -MockWith {}
@@ -209,25 +209,11 @@ Describe "import project with transformer" {
     Mock -CommandName Pop-Location -MockWith {}
     Mock -CommandName Test-Path -MockWith {$true}
 
-    Run-Transformer -Source "mysource" -Variant "myvariant" -Clean $true
+    Run-Transformer -Source "mysource" -Variant "myvariant"
     Should -Invoke -CommandName Remove-Item -Times 1
   }
 
-  It "shall keep all files and directories if clean is false, but create a new dir and update git repo" {
-    Mock -CommandName New-Item -MockWith {}
-    Mock -CommandName Push-Location -MockWith {}
-    Mock -CommandName git -MockWith {}
-    Mock -CommandName Invoke-CommandLine -MockWith {}
-    Mock -CommandName Pop-Location -MockWith {}
-    Mock -CommandName Test-Path -MockWith {$true}
-
-    Run-Transformer -Source "mysource" -Variant "myvariant" -Clean $false
-    Should -Invoke -CommandName Remove-Item -Times 0
-    Should -Invoke -CommandName git -Times 3
-    Should -Invoke -CommandName New-Item -Times 1
-  }
-
-  It "shall shall clone instead of pull when clean is active" {
+  It "shall shallow clone all the time" {
     Mock -CommandName New-Item -MockWith {}
     Mock -CommandName Push-Location -MockWith {}
     Mock -CommandName git -MockWith {}
@@ -235,6 +221,7 @@ Describe "import project with transformer" {
     Mock -CommandName Pop-Location -MockWith {}
     Mock -CommandName Test-Path -MockWith {$true} -ParameterFilter { $Path -eq "build/import" }
     Mock -CommandName Test-Path -MockWith {$false} -ParameterFilter { $Path -eq ".git" }
+    Mock -CommandName Test-Path -MockWith {$true} -ParameterFilter { $Path -eq "./build/import/transformer/.git" }
 
     Run-Transformer -Source "mysource" -Variant "myvariant" -Clean $true
     Should -Invoke -CommandName Remove-Item -Times 1

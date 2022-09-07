@@ -16,7 +16,6 @@
             "python"
         ],
         "scoop_repos": [
-            "ktos-scoop@https://github.com/ktos/scoop",
             "versions@https://github.com/ScoopInstaller/Versions"
         ]
     }

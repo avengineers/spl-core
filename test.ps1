@@ -12,6 +12,10 @@ catch {
 }
 Pop-Location
 
+if ($lastexitcode -ne 0) {
+    throw ("Exec: " + $errorMessage)
+}
+
 Push-Location cmake\test\common.cmake\
 if (Test-Path .cmaketest) {
     Remove-Item .cmaketest -Recurse -Force
