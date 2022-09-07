@@ -63,7 +63,7 @@ endmacro()
 macro(_spl_get_hammock)
     # Temporary solution before hammock is on official server pypi.org
     execute_process(
-        COMMAND python -m pip install --trusted-host test.pypi.org --extra-index-url https://test.pypi.org/simple/ hammock==0.1.3
+        COMMAND python -m pip install --trusted-host test.pypi.org hammocking==0.2.1
         COMMAND_ERROR_IS_FATAL ANY
     )
 endmacro(_spl_get_hammock)
