@@ -61,9 +61,9 @@ macro(spl_add_test_source fileName)
 endmacro()
 
 macro(_spl_get_hammock)
-    # Temporary solution before hammock is on official server pypi.org
+    # Temporary solution before hammocking is on official server pypi.org
     execute_process(
-        COMMAND python -m pip install --trusted-host test.pypi.org hammocking==0.2.1
+        COMMAND python -m pip install hammocking==0.2.3
         COMMAND_ERROR_IS_FATAL ANY
     )
 endmacro(_spl_get_hammock)
@@ -154,7 +154,7 @@ macro(_spl_add_test_suite PROD_SRC TEST_SOURCES)
     _spl_set_coverage_create_overall_report_is_necessary()
 
     set(PROD_PARTIAL_LINK prod_partial_${component_name}.obj)
-    set(MOCK_SRC mockup.cc)
+    set(MOCK_SRC mockup_${component_name}.cc)
 
     add_executable(${exe_name}
         ${TEST_SOURCES}
@@ -170,19 +170,18 @@ macro(_spl_add_test_suite PROD_SRC TEST_SOURCES)
         COMMAND ${CMAKE_CXX_COMPILER} -r -nostdlib -o ${PROD_PARTIAL_LINK} $<TARGET_OBJECTS:${component_name}>
         COMMAND_EXPAND_LISTS
         VERBATIM
-        DEPENDS ${component_name}
+        DEPENDS $<TARGET_OBJECTS:${component_name}>
     )
 
     set(prop "$<TARGET_PROPERTY:${component_name},INCLUDE_DIRECTORIES>")
     add_custom_command(
         OUTPUT ${MOCK_SRC}
-        BYPRODUCTS mockup.h
+        BYPRODUCTS mockup_${component_name}.h
         WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-        COMMAND python -m hammocking --sources ${PROD_SRC} --plink ${CMAKE_CURRENT_BINARY_DIR}/${PROD_PARTIAL_LINK} --outdir ${CMAKE_CURRENT_BINARY_DIR} "$<$<BOOL:${prop}>:-I$<JOIN:${prop},;-I>>"
+        COMMAND python -m hammocking --suffix _${component_name} --sources ${PROD_SRC} --plink ${CMAKE_CURRENT_BINARY_DIR}/${PROD_PARTIAL_LINK} --outdir ${CMAKE_CURRENT_BINARY_DIR} "$<$<BOOL:${prop}>:-I$<JOIN:${prop},;-I>>"
         COMMAND_EXPAND_LISTS
         VERBATIM
         DEPENDS
-        ${PROD_SRC}
         ${PROD_PARTIAL_LINK}
     )
 
