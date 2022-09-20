@@ -1,4 +1,4 @@
-name: selftests
+name: gate
 
 on:
   push:
@@ -9,12 +9,15 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: windows-2019
+  test:
+    runs-on: windows-latest
+    timeout-minutes: 15
+
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
         with:
           submodules: true
-      - name: install tools and run selftests
-        run: .\test.ps1
+      - name: build
+        run: .\build.ps1
         shell: powershell

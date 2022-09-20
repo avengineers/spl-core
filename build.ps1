@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 
-. .\install.ps1
+. .\install.ps1 -useCurrent
 
 Push-Location powershell\test\
 # ugly workaround to invoke tests twice, first time always fails.
@@ -35,3 +35,5 @@ if ($lastexitcode -ne 0) {
     throw ("Exec: " + $errorMessage)
 }
 Pop-Location
+
+pytest 
