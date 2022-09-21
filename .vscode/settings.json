@@ -1,41 +1,28 @@
 {
-    "python.testing.pytestEnabled": true,
     "python.testing.pytestArgs": [
-        "--capture=tee-sys"
+        "./python"
     ],
     "python.testing.unittestEnabled": false,
-    "python.testing.unittestArgs": [
-        "-v",
-        "-s",
-        "./test",
-        "-p",
-        "test_*.py"
-    ],
+    "python.testing.pytestEnabled": true,
     "python.formatting.provider": "autopep8",
-    "cmake.configureOnOpen": false,
-    "cmake.buildDirectory": "${workspaceFolder}/build/${variant:variant}/${buildKit}",
-    "cmake.configureSettings": {
-        "BUILD_KIT": "${buildKit}"
+    "workbench.colorCustomizations": {
+        "activityBar.activeBackground": "#fbed80",
+        "activityBar.background": "#fbed80",
+        "activityBar.foreground": "#15202b",
+        "activityBar.inactiveForeground": "#15202b99",
+        "activityBarBadge.background": "#06b9a5",
+        "activityBarBadge.foreground": "#15202b",
+        "commandCenter.border": "#15202b99",
+        "sash.hoverBorder": "#fbed80",
+        "statusBar.background": "#f9e64f",
+        "statusBar.foreground": "#15202b",
+        "statusBarItem.hoverBackground": "#f7df1e",
+        "statusBarItem.remoteBackground": "#f9e64f",
+        "statusBarItem.remoteForeground": "#15202b",
+        "titleBar.activeBackground": "#f9e64f",
+        "titleBar.activeForeground": "#15202b",
+        "titleBar.inactiveBackground": "#f9e64f99",
+        "titleBar.inactiveForeground": "#15202b99"
     },
-    "cmake.generator": "Ninja",
-    "cmake.debugConfig": {
-        "MIMode": "gdb",
-        "miDebuggerPath": "gdb",
-        "stopAtEntry": true
-    },
-    "cmake.configureOnEdit": false,
-    "cmake.buildBeforeRun": false,
-    "cmake.environment": {},
-    "cmake.buildToolArgs": [],
-    "git.ignoreLimitWarning": true,
-    "C_Cpp.errorSquiggles": "Enabled",
-    "C_Cpp.default.cStandard": "gnu17",
-    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
-    "C_Cpp.formatting": "vcFormat",
-    "files.associations": {
-        "*.h": "c",
-        "*.c": "c",
-        "Jenkinsfile": "groovy",
-        "*.py": "python"
-    }
+    "peacock.color": "#f9e64f"
 }

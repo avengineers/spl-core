@@ -60,14 +60,6 @@ macro(spl_add_test_source fileName)
     list(APPEND TEST_SOURCES ${to_be_appended})
 endmacro()
 
-macro(_spl_get_hammock)
-    # Temporary solution before hammocking is on official server pypi.org
-    execute_process(
-        COMMAND python -m pip install hammocking==0.2.3
-        COMMAND_ERROR_IS_FATAL ANY
-    )
-endmacro(_spl_get_hammock)
-
 macro(_spl_get_google_test)
     # GoogleTest requires at least C++14
     set(CMAKE_CXX_STANDARD 14)

@@ -1,8 +1,15 @@
 include(${CMAKE_CURRENT_LIST_DIR}/common.cmake)
+#  Define the SPL Core root directory to be used to refer to files
+# relative to the repository root.
+set(SPL_CORE_ROOT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/..)
+set(SPL_CORE_PYTHON_MODULES_DIRECTORY ${SPL_CORE_ROOT_DIRECTORY}/python)
 
 if(PIP_INSTALL_REQUIREMENTS)
     run_pip("${PIP_INSTALL_REQUIREMENTS}" $ENV{SPL_PIP_REPOSITORY} $ENV{SPL_PIP_TRUSTED_HOST})
 endif() 
+
+# Include and run KConfig
+include(${CMAKE_CURRENT_LIST_DIR}/kconfig.cmake)
 
 if(BUILD_KIT STREQUAL prod)
     # set default link target output name
@@ -34,7 +41,6 @@ if(BUILD_KIT STREQUAL prod)
     )
 elseif(BUILD_KIT STREQUAL test)
     _spl_get_google_test()
-    _spl_get_hammock()
     include(CTest)
     list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 
