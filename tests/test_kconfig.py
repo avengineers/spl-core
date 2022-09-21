@@ -2,8 +2,8 @@ import os
 import textwrap
 from unittest.mock import patch
 
-from .kconfig import KConfig, main
-from .utils import TestUtils
+from src.kconfig.kconfig import KConfig, main
+from tests.utils import TestUtils
 
 
 class TestKConfig:

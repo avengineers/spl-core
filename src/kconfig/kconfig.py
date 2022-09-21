@@ -6,6 +6,8 @@ from typing import Dict
 
 import kconfiglib
 
+from src.common.common import existing_path, non_existing_path
+
 
 @contextmanager
 def working_directory(some_directory: Path):
@@ -59,22 +61,6 @@ class KConfig:
     def generate_header(self, output_file: Path):
         output_file.parent.mkdir(parents=True, exist_ok=True)
         self.config.write_autoconf(filename=output_file)
-
-
-def to_path(input_path: str, check_if_exists: bool = True) -> Path:
-    return_path = Path(input_path)
-    if not check_if_exists or return_path.exists():
-        return return_path.absolute()
-    else:
-        raise FileNotFoundError(input_path)
-
-
-def existing_path(input_path: str) -> Path:
-    return to_path(input_path, True)
-
-
-def non_existing_path(input_path: str) -> Path:
-    return to_path(input_path, False)
 
 
 def main():
