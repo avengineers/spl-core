@@ -2,7 +2,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/common.cmake)
 #  Define the SPL Core root directory to be used to refer to files
 # relative to the repository root.
 set(SPL_CORE_ROOT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/..)
-set(SPL_CORE_PYTHON_MODULES_DIRECTORY ${SPL_CORE_ROOT_DIRECTORY}/python)
+set(SPL_CORE_PYTHON_MODULES_DIRECTORY ${SPL_CORE_ROOT_DIRECTORY}/src)
 
 if(PIP_INSTALL_REQUIREMENTS)
     run_pip("${PIP_INSTALL_REQUIREMENTS}" $ENV{SPL_PIP_REPOSITORY} $ENV{SPL_PIP_TRUSTED_HOST})

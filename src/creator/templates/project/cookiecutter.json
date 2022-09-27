@@ -1,0 +1,9 @@
+{
+  "name": "project",
+  "variants": {
+    "1": {
+      "flavor": "flavor",
+      "subsystem": "subsystem"
+    }
+  }
+}

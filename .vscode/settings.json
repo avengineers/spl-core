@@ -1,7 +1,4 @@
 {
-    "python.testing.pytestArgs": [
-        "./python"
-    ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
     "python.formatting.provider": "autopep8",
