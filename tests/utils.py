@@ -26,7 +26,7 @@ class TestUtils:
     DEFAULT_TEST_DIR = 'tmp_test'
 
     @staticmethod
-    def create_clean_test_dir(name: str) -> TestDir:
+    def create_clean_test_dir(name: str = None) -> TestDir:
         out_dir = TestUtils.project_root_dir().joinpath('out')
         test_dir = out_dir.joinpath(name if name else TestUtils.DEFAULT_TEST_DIR).absolute()
         if test_dir.exists():
