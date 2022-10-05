@@ -1,5 +1,4 @@
 import argparse
-import dataclasses
 import logging
 import shutil
 from pathlib import Path
@@ -8,26 +7,8 @@ from typing import Dict, List
 from cookiecutter.main import cookiecutter
 
 from src.common.common import existing_path
-from src.creator.project_artifacts import ProjectArtifacts
-
-
-@dataclasses.dataclass
-class Variant:
-    flavor: str
-    subsystem: str
-
-    @classmethod
-    def from_string(cls, variant: str):
-        return cls(*variant.split('/'))
-
-    def __str__(self):
-        return f"{self.flavor}/{self.subsystem}"
-
-    def __lt__(self, other):
-        return f"{self}" < f"{other}"
-
-    def __hash__(self):
-        return hash(f"{self}")
+from src.creator.variant import Variant
+from src.creator.workspace_artifacts import WorkspaceArtifacts
 
 
 class Creator:
@@ -36,7 +17,7 @@ class Creator:
         self.project_name = project_name
         self.out_dir = out_dir.absolute()
         self.project_root_dir = self.out_dir.joinpath(self.project_name)
-        self.project_artifacts = ProjectArtifacts(self.project_root_dir)
+        self.project_artifacts = WorkspaceArtifacts(self.project_root_dir)
 
     @classmethod
     def from_folder(cls, project_dir: Path):

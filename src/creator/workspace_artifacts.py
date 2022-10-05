@@ -3,16 +3,17 @@ from pathlib import Path
 from src.creator.variant import Variant
 
 
-class ProjectArtifacts:
+class WorkspaceArtifacts:
     def __init__(self, project_root_dir: Path):
-        self.project_root_dir = project_root_dir
+        self.workspace_root_dir = project_root_dir
         self.variants_dir = self.root_dir.joinpath('variants')
         self.src_dir = self.root_dir.joinpath('src')
         self.test_dir = self.root_dir.joinpath('test')
+        self.components_dir = self.root_dir.joinpath('components')
 
     @property
     def root_dir(self) -> Path:
-        return self.project_root_dir
+        return self.workspace_root_dir
 
     @property
     def build_script(self) -> Path:
@@ -23,3 +24,6 @@ class ProjectArtifacts:
 
     def get_variant_dir(self, variant: Variant) -> Path:
         return self.variants_dir.joinpath(f"{variant.flavor}/{variant.subsystem}")
+
+    def get_component_path(self, component_name: str) -> Path:
+        return self.components_dir.joinpath(component_name)

@@ -1,4 +1,4 @@
-from src.creator.creator import Variant
+from src.creator.variant import Variant
 
 
 class TestVariant:

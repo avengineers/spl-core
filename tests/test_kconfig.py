@@ -9,28 +9,28 @@ from tests.utils import TestUtils
 class TestKConfig:
     def test_create_json(self):
         out_dir = TestUtils.create_clean_test_dir('')
-        feature_model_file = out_dir.write_file("""
+        feature_model_file = out_dir.write_file('kconfig.txt', """
         config NAME
             string "Just the name"
             default "John Smith"
         config STATUS
             string "Defines your status"
             default "ALIVE"
-        """, 'kconfig.txt')
+        """)
         iut = KConfig(feature_model_file)
         assert iut.get_json_values() == {'NAME': 'John Smith', 'STATUS': 'ALIVE'}
 
     def test_load_user_config_file(self):
         out_dir = TestUtils.create_clean_test_dir('')
-        feature_model_file = out_dir.write_file("""
+        feature_model_file = out_dir.write_file('kconfig.txt', """
         config NAME
             string "Just the name"
             default "No Name"
-        """, 'kconfig.txt')
-        user_config = out_dir.write_file("""
+        """)
+        user_config = out_dir.write_file('user.config', """
 CONFIG_UNKNOWN="y"
 CONFIG_NAME="John Smith" 
-        """, 'user.config')
+        """)
 
         iut = KConfig(feature_model_file, user_config)
         assert iut.get_json_values() == {'NAME': 'John Smith'}
@@ -40,14 +40,14 @@ CONFIG_NAME="John Smith"
         All lines in the user configuration file starting with whitespaces will be ignored
         """
         out_dir = TestUtils.create_clean_test_dir('')
-        feature_model_file = out_dir.write_file("""
+        feature_model_file = out_dir.write_file('kconfig.txt', """
         config NAME
             string "Just the name"
             default "No Name"
-        """, 'kconfig.txt')
-        user_config = out_dir.write_file("""
+        """)
+        user_config = out_dir.write_file('user.config', """
  CONFIG_NAME="John Smith" 
-        """, 'user.config')
+        """)
 
         iut = KConfig(feature_model_file, user_config)
         assert iut.get_json_values() == {'NAME': 'No Name'}
@@ -57,7 +57,7 @@ CONFIG_NAME="John Smith"
         A configuration without description can not be selected by the user
         """
         out_dir = TestUtils.create_clean_test_dir('')
-        feature_model_file = out_dir.write_file("""
+        feature_model_file = out_dir.write_file('kconfig.txt', """
         mainmenu "This is the main menu"
             menu "First menu"
                 config FIRST_BOOL
@@ -67,12 +67,12 @@ CONFIG_NAME="John Smith"
                 config SECOND_NAME
                     string
             endmenu
-        """, 'kconfig.txt')
-        user_config = out_dir.write_file(textwrap.dedent("""
+        """)
+        user_config = out_dir.write_file('user.config', textwrap.dedent("""
         CONFIG_FIRST_BOOL=y
         CONFIG_FIRST_NAME="Dude"
         CONFIG_SECOND_NAME="King"
-        """), 'user.config')
+        """))
 
         iut = KConfig(feature_model_file, user_config)
         assert iut.get_json_values() == {'FIRST_NAME': 'Dude'}
@@ -82,7 +82,7 @@ CONFIG_NAME="John Smith"
         A configuration with description can be selected by the user
         """
         out_dir = TestUtils.create_clean_test_dir('')
-        feature_model_file = out_dir.write_file("""
+        feature_model_file = out_dir.write_file('kconfig.txt', """
         mainmenu "This is the main menu"
             menu "First menu"
                 config FIRST_BOOL
@@ -90,11 +90,11 @@ CONFIG_NAME="John Smith"
                 config FIRST_NAME
                     string "You can select this also"
             endmenu
-        """, 'kconfig.txt')
-        user_config = out_dir.write_file(textwrap.dedent("""
+        """)
+        user_config = out_dir.write_file('user.config', textwrap.dedent("""
         CONFIG_FIRST_BOOL=y
         CONFIG_FIRST_NAME="Dude"
-        """), 'user.config')
+        """))
 
         iut = KConfig(feature_model_file, user_config)
         assert iut.get_json_values() == {'FIRST_NAME': 'Dude', 'FIRST_BOOL': True}
@@ -106,7 +106,7 @@ CONFIG_NAME="John Smith"
         There is a warning generated for choices without a 'prompt'.
         """
         out_dir = TestUtils.create_clean_test_dir('')
-        feature_model_file = out_dir.write_file("""
+        feature_model_file = out_dir.write_file('kconfig.txt', """
         choice APP_VERSION
             prompt "application version"
             default APP_VERSION_1
@@ -124,10 +124,10 @@ CONFIG_NAME="John Smith"
             config APP_VERSION_3
                 bool
         endchoice
-        """, 'kconfig.txt')
-        user_config = out_dir.write_file(textwrap.dedent("""
+        """)
+        user_config = out_dir.write_file('user.config', textwrap.dedent("""
         CONFIG_APP_VERSION="APP_VERSION_1"
-        """), 'user.config')
+        """))
 
         iut = KConfig(feature_model_file, user_config)
         assert iut.get_json_values() == {'APP_VERSION_1': True, 'APP_VERSION_2': False}
@@ -138,7 +138,7 @@ CONFIG_NAME="John Smith"
         One can use string but a warning will be issued.
         """
         out_dir = TestUtils.create_clean_test_dir('')
-        feature_model_file = out_dir.write_file("""
+        feature_model_file = out_dir.write_file('kconfig.txt', """
         choice APP_VERSION
             prompt "application version"
             default APP_VERSION_1
@@ -153,11 +153,11 @@ CONFIG_NAME="John Smith"
                 string
                 prompt "app v2"
         endchoice
-        """, 'kconfig.txt')
-        user_config = out_dir.write_file(textwrap.dedent("""
+        """)
+        user_config = out_dir.write_file('user.config', textwrap.dedent("""
         CONFIG_APP_VERSION="APP_VERSION_1"
         CONFIG_APP_VERSION_1="VERSION_NEW"
-        """), 'user.config')
+        """))
 
         iut = KConfig(feature_model_file, user_config)
         assert iut.get_json_values() == {'APP_VERSION_1': 'VERSION_NEW', 'APP_VERSION_2': ''}
@@ -168,7 +168,7 @@ CONFIG_NAME="John Smith"
         the third `tristate` state is not supported.
         """
         out_dir = TestUtils.create_clean_test_dir('')
-        feature_model_file = out_dir.write_file("""
+        feature_model_file = out_dir.write_file('kconfig.txt', """
         choice APP_VERSION
             prompt "application version"
             default APP_VERSION_1
@@ -183,10 +183,10 @@ CONFIG_NAME="John Smith"
                 tristate
                 prompt "app v2"
         endchoice
-        """, 'kconfig.txt')
-        user_config = out_dir.write_file(textwrap.dedent("""
+        """)
+        user_config = out_dir.write_file('user.config', textwrap.dedent("""
         CONFIG_APP_VERSION="APP_VERSION_1"
-        """), 'user.config')
+        """))
 
         iut = KConfig(feature_model_file, user_config)
         assert iut.get_json_values() == {'APP_VERSION_1': True, 'APP_VERSION_2': False}
@@ -200,7 +200,7 @@ CONFIG_NAME="John Smith"
             * 'osource' - for files that might not exist
         """
         out_dir = TestUtils.create_clean_test_dir('')
-        feature_model_file = out_dir.write_file("""
+        feature_model_file = out_dir.write_file('kconfig.txt', """
         menu "First menu"
             config FIRST_BOOL
                 bool "You can select FIRST_BOOL"
@@ -208,24 +208,24 @@ CONFIG_NAME="John Smith"
                 string "You can select FIRST_NAME"
         endmenu
         source "common/common.txt"
-        """, 'kconfig.txt')
-        out_dir.write_file("""
+        """)
+        out_dir.write_file('common/common.txt', """
         config COMMON_BOOL
             bool "You can select COMMON_BOOL"
             default n
         source "new/new.txt"
-        """, 'common/common.txt')
-        out_dir.write_file("""
+        """)
+        out_dir.write_file('new/new.txt', """
         config NEW_BOOL
             bool "You can select NEW_BOOL"
             default n
-        """, 'new/new.txt')
-        user_config = out_dir.write_file(textwrap.dedent("""
+        """)
+        user_config = out_dir.write_file('user.config', textwrap.dedent("""
         CONFIG_FIRST_BOOL=y
         CONFIG_FIRST_NAME="Dude"
         CONFIG_COMMON_BOOL=y
         CONFIG_NEW_BOOL=y
-        """), 'user.config')
+        """))
         iut = KConfig(feature_model_file, user_config)
         assert iut.get_json_values() == {
             'COMMON_BOOL': True,
@@ -239,7 +239,7 @@ CONFIG_NAME="John Smith"
         One can refer to environment variables when including other files
         """
         out_dir = TestUtils.create_clean_test_dir('')
-        feature_model_file = out_dir.write_file("""
+        feature_model_file = out_dir.write_file('kconfig.txt', """
         menu "First menu"
             config FIRST_BOOL
                 bool "You can select FIRST_BOOL"
@@ -247,17 +247,17 @@ CONFIG_NAME="John Smith"
                 string "You can select FIRST_NAME"
         endmenu
         source "$(COMMON_PATH)/common.txt"
-        """, 'kconfig.txt')
-        out_dir.write_file("""
+        """)
+        out_dir.write_file('common/common.txt', """
         config COMMON_BOOL
             bool "You can select COMMON_BOOL"
             default n
-        """, 'common/common.txt')
-        user_config = out_dir.write_file(textwrap.dedent("""
+        """)
+        user_config = out_dir.write_file('user.config', textwrap.dedent("""
         CONFIG_FIRST_BOOL=y
         CONFIG_FIRST_NAME="Dude"
         CONFIG_COMMON_BOOL=y
-        """), 'user.config')
+        """))
         os.environ['COMMON_PATH'] = 'common'
         iut = KConfig(feature_model_file, user_config)
         assert iut.get_json_values() == {'COMMON_BOOL': True, 'FIRST_BOOL': True, 'FIRST_NAME': 'Dude'}
@@ -267,19 +267,19 @@ CONFIG_NAME="John Smith"
         KConfigLib can generate the configuration as C-header file (like autoconf.h)
         """
         out_dir = TestUtils.create_clean_test_dir('')
-        feature_model_file = out_dir.write_file("""
+        feature_model_file = out_dir.write_file('kconfig.txt', """
                 menu "First menu"
                     config FIRST_BOOL
                         bool "You can select FIRST_BOOL"
                     config FIRST_NAME
                         string "You can select FIRST_NAME"
                 endmenu
-                """, 'kconfig.txt')
+                """)
 
-        user_config = out_dir.write_file(textwrap.dedent("""
+        user_config = out_dir.write_file('user.config', textwrap.dedent("""
                     CONFIG_FIRST_BOOL=y
                     CONFIG_FIRST_NAME="Dude"
-                    """), 'user.config')
+                    """))
         header_file = out_dir.joinpath('gen/header.h')
 
         with patch('sys.argv', [
@@ -297,19 +297,19 @@ CONFIG_NAME="John Smith"
         KConfigLib can generate the configuration as C-header file (like autoconf.h)
         """
         out_dir = TestUtils.create_clean_test_dir('')
-        feature_model_file = out_dir.write_file("""
+        feature_model_file = out_dir.write_file('kconfig.txt', """
                 menu "First menu"
                     config FIRST_BOOL
                         bool "You can select FIRST_BOOL"
                     config FIRST_NAME
                         string "You can select FIRST_NAME"
                 endmenu
-                """, 'kconfig.txt')
+                """)
 
-        user_config = out_dir.write_file(textwrap.dedent("""
+        user_config = out_dir.write_file('user.config', textwrap.dedent("""
                     CONFIG_FIRST_BOOL=y
                     CONFIG_FIRST_NAME="Dude"
-                    """), 'user.config')
+                    """))
         iut = KConfig(feature_model_file, user_config)
         header_file = out_dir.joinpath('gen/header.h')
         iut.generate_header(header_file)
