@@ -6,9 +6,10 @@ from unittest.mock import patch
 
 import pytest
 
-from src.creator.creator import Creator, main, Variant, parse_arguments
-from src.creator.project_artifacts import ProjectArtifacts
-from tests.utils import TestUtils
+from src.creator.creator import Creator, main, parse_arguments
+from src.creator.variant import Variant
+from src.creator.workspace_artifacts import WorkspaceArtifacts
+from tests.utils import TestUtils, TestWorkspace
 
 
 def execute_command(command: str) -> CompletedProcess:
@@ -19,14 +20,7 @@ class TestProjectGenerator:
 
     @staticmethod
     def create_my_project(out_dir_name: str) -> Path:
-        out_dir = TestUtils.create_clean_test_dir(out_dir_name)
-        project_name = 'MyProject'
-        creator = Creator(project_name, out_dir.path)
-        variants = [
-            Variant('Flv1', 'Sys1'),
-            Variant('Flv1', 'Sys2')
-        ]
-        return creator.materialize(variants)
+        return TestWorkspace.create_my_workspace(out_dir_name)
 
     def test_materialize(self):
         out_dir = TestUtils.create_clean_test_dir('test_materialize')
@@ -195,7 +189,7 @@ def test_create_project_running_main():
         main()
 
     project_dir = out_dir.joinpath('MyProject1')
-    project_artifacts = ProjectArtifacts(project_dir)
+    project_artifacts = WorkspaceArtifacts(project_dir)
     assert project_dir.joinpath('CMakeLists.txt').exists()
     assert project_dir.joinpath('variants/Flv1/Sys1/config.cmake').exists()
     assert project_dir.joinpath('variants/Flv1/Sys2/config.cmake').exists()

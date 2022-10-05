@@ -1,6 +1,9 @@
 {
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": [
+        "--capture=tee-sys"
+    ],
     "python.formatting.provider": "autopep8",
     "workbench.colorCustomizations": {
         "activityBar.activeBackground": "#fbed80",
