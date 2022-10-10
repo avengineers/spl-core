@@ -157,10 +157,16 @@ class TestWorkspace:
         return subprocess.run(command.split())
 
     def get_component_file(self, component_name: str, component_file: str) -> Path:
-        return self.workspace_artifacts.get_component_path(component_name).joinpath(component_file)
+        return self.get_component_path(component_name).joinpath(component_file)
+
+    def get_component_path(self, component_name: str) -> Path:
+        return self.workspace_artifacts.get_component_path(component_name)
 
     def take_files_snapshot(self):
         self.directory_tracker.reset_status()
 
     def get_workspace_files_status(self) -> DirectoryStatus:
         return self.directory_tracker.get_status()
+
+    def add_external_component(self, component_path: Path):
+        pass

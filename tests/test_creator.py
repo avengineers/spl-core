@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
+from src.creator.component import Component
 from src.creator.creator import Creator, main, parse_arguments
 from src.creator.variant import Variant
 from src.creator.workspace_artifacts import WorkspaceArtifacts
@@ -53,7 +54,7 @@ class TestProjectGenerator:
         assert creator.collect_project_variants() == variants
 
     def test_create_project_description(self):
-        project_description = Creator.create_project_description(
+        project_description = Creator.create_workspace_description(
             'SomeProject',
             [Variant('Flv1', 'Sys1'), Variant('Flv1', 'Sys2')]
         )
@@ -171,6 +172,13 @@ class TestProjectGenerator:
         'Existing flavors shall not be overwritten'
         assert workspace_dir.joinpath('variants/Flv1/Sys1/config.txt').exists()
         assert not workspace_dir.joinpath('variants/Flv1/Sys2/config.txt').exists()
+
+    def test_add_component(self):
+        workspace = TestWorkspace("test_add_component")
+        creator = Creator.from_folder(workspace.workspace_dir)
+        creator.add_component(Component('compC'), [Variant('Flv1', 'Sys1')])
+        for file in ['CMakeLists.txt', 'parts.cmake', 'src/compC.c', 'src/compC.h']:
+            assert workspace.get_component_file('compC', file).exists()
 
 
 def test_create_project_running_main():
