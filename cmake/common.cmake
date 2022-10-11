@@ -8,6 +8,7 @@ string(REPLACE "/" "_" BINARY_BASENAME ${VARIANT})
 # macros and functions
 macro(_spl_slash_to_underscore out in)
     string(REGEX REPLACE "/" "_" ${out} ${in})
+    message(DEBUG "_spl_slash_to_underscore: got '${${out}}' from '${in}'")
 endmacro()
 
 macro(_spl_get_absolute_path out in)
@@ -21,9 +22,40 @@ macro(_spl_get_absolute_path out in)
     endif()
 endmacro()
 
+macro(_spl_get_component_path return_component_path project_dir component_dir)
+    set(path_var ${project_dir})
+    cmake_path(IS_PREFIX path_var "${component_dir}" NORMALIZE result)
+
+    if(result)
+        file(RELATIVE_PATH ${return_component_path} ${project_dir} ${component_dir})
+    else()
+        set(${return_component_path} ${component_dir})
+    endif()
+    message(DEBUG "_spl_get_component_path: got '${${return_component_path}}' from '${project_dir}' '${component_dir}'")
+endmacro()
+
+macro(_spl_get_component_name_from_path return__component_name component_path)
+    if(IS_ABSOLUTE ${component_path})
+        # TODO: Throw an error if the external component name was already used.
+        set (path_var ${component_path})
+        cmake_path(HASH path_var ${return__component_name})
+    else()
+        # Components inside the workspace are named as their relative path to make sure the name is unique.
+        _spl_slash_to_underscore(${return__component_name} ${component_path})
+    endif()
+
+    message(DEBUG "_spl_get_component_name_from_path: got '${${return__component_name}}' from '${component_path}'")
+endmacro()
+
 macro(spl_add_component component_path)
-    _spl_slash_to_underscore(component_name ${component_path})
-    add_subdirectory(${CMAKE_SOURCE_DIR}/${component_path})
+    _spl_get_component_name_from_path(component_name ${component_path})
+
+    if(IS_ABSOLUTE ${component_path})
+        # When specifying an out-of-tree source a binary directory must be explicitly specified.
+        add_subdirectory(${component_path} ${BUILD_BINARY_DIRECTORY}/${component_name})
+    else()
+        add_subdirectory(${CMAKE_SOURCE_DIR}/${component_path})
+    endif()
 
     if(BUILD_KIT STREQUAL prod)
         target_link_libraries(${LINK_TARGET_NAME} ${component_name})
@@ -77,8 +109,8 @@ macro(spl_create_mocks fileName)
 endmacro()
 
 macro(spl_create_component)
-    file(RELATIVE_PATH component_path ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_LIST_DIR})
-    _spl_slash_to_underscore(component_name ${component_path})
+    _spl_get_component_path(component_path ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_LIST_DIR})
+    _spl_get_component_name_from_path(component_name ${component_path})
     add_library(${component_name} OBJECT ${SOURCES})
 
     if(BUILD_KIT STREQUAL test)

@@ -16,6 +16,8 @@ You can install required and optional tools and install some VS Code extensions.
     * CMake Tools
     * C/C++ Extension Pack
 
+**Important:** The project is currently using the SPL Core `develop` branch. We should modify the `dependencies.json` to use a specific release tag.
+
 ## Usage
 
 ### From the terminal

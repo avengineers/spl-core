@@ -126,6 +126,7 @@ class DirectoryTracker:
 
 class TestWorkspace:
     DEFAULT_VARIANT = Variant('Flv1', 'Sys1')
+    DEFAULT_BUILD_KIT = 'prod'
 
     def __init__(self, out_dir_name: str):
         self.workspace_dir = self.create_my_workspace(out_dir_name)
@@ -164,6 +165,11 @@ class TestWorkspace:
 
     def get_component_path(self, component_name: str) -> Path:
         return self.workspace_artifacts.get_component_path(component_name)
+
+    def get_component_obj_file(self, component_name: str, filename: str = None, variant: Variant = DEFAULT_VARIANT,
+                               build_kit: str = DEFAULT_BUILD_KIT) -> Path:
+        return self.workspace_artifacts.get_build_dir(variant, build_kit) \
+            .joinpath(f"{component_name}/CMakeFiles/{component_name}.dir/src/{filename or component_name}.c.obj")
 
     def get_variant_file(self, variant: Variant, variant_file: str) -> Path:
         return self.workspace_artifacts.get_variant_dir(variant).joinpath(variant_file)
