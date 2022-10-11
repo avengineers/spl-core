@@ -10,6 +10,7 @@ from time import perf_counter
 from typing import Dict, Collection
 
 from src.common.cmake import CMake
+from src.creator.component import Component
 from src.creator.creator import Creator
 from src.creator.variant import Variant
 from src.creator.workspace_artifacts import WorkspaceArtifacts
@@ -162,6 +163,9 @@ class TestWorkspace:
     def get_component_path(self, component_name: str) -> Path:
         return self.workspace_artifacts.get_component_path(component_name)
 
+    def get_variant_file(self, variant: Variant, variant_file: str) -> Path:
+        return self.workspace_artifacts.get_variant_dir(variant).joinpath(variant_file)
+
     def take_files_snapshot(self):
         self.directory_tracker.reset_status()
 
@@ -169,4 +173,6 @@ class TestWorkspace:
         return self.directory_tracker.get_status()
 
     def add_external_component(self, component_path: Path):
-        pass
+        component = Component.from_folder(component_path)
+        creator = Creator.from_folder(self.workspace_dir)
+        creator.add_component(component)

@@ -179,6 +179,25 @@ class TestProjectGenerator:
         creator.add_component(Component('compC'), [Variant('Flv1', 'Sys1')])
         for file in ['CMakeLists.txt', 'parts.cmake', 'src/compC.c', 'src/compC.h']:
             assert workspace.get_component_file('compC', file).exists()
+        flv1_sys1_parts = workspace.get_variant_file(Variant('Flv1', 'Sys1'), 'parts.cmake').read_text()
+        assert -1 != flv1_sys1_parts.find(f"spl_add_component(components/compC)")
+
+    def test_get_component_cmake_name(self):
+        workspace_dir = TestUtils.create_clean_test_dir().path
+        "component is in the workspace"
+        assert Creator.get_component_cmake_name(
+            Component('me', workspace_dir.joinpath('components/app')),
+            workspace_dir
+        ) == 'components/app/me'
+        "component does not specify path - is implicitly considered inside the workspace"
+        assert Creator.get_component_cmake_name(Component('me'), workspace_dir) == 'components/me'
+        "component is not in the workspace"
+        component = Component('me', workspace_dir.joinpath('../components/app'))
+        expected_cmake_path = f"{workspace_dir.parent.joinpath('components/app/me').resolve().as_posix()}"
+        assert Creator.get_component_cmake_name(
+            component,
+            workspace_dir
+        ) == expected_cmake_path
 
 
 def test_create_project_running_main():

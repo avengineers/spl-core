@@ -4,6 +4,9 @@ from src.creator.variant import Variant
 
 
 class WorkspaceArtifacts:
+    VARIANT_PARTS_FILE = 'parts.cmake'
+    BUILD_SCRIPT_FILE = 'build.bat'
+
     def __init__(self, project_root_dir: Path):
         self.workspace_root_dir = project_root_dir
         self.variants_dir = self.root_dir.joinpath('variants')
@@ -17,7 +20,7 @@ class WorkspaceArtifacts:
 
     @property
     def build_script(self) -> Path:
-        return self.root_dir.joinpath('build.bat')
+        return self.root_dir.joinpath(self.BUILD_SCRIPT_FILE)
 
     def get_build_dir(self, variant: Variant, build_kit: str) -> Path:
         return self.root_dir.joinpath(f"build/{variant}/{build_kit}")
@@ -27,3 +30,6 @@ class WorkspaceArtifacts:
 
     def get_component_path(self, component_name: str) -> Path:
         return self.components_dir.joinpath(component_name)
+
+    def get_variant_parts_file(self, variant: Variant) -> Path:
+        return self.get_variant_dir(variant).joinpath(self.VARIANT_PARTS_FILE)

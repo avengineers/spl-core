@@ -124,8 +124,18 @@ class Creator:
             variants.append(Variant(variant_dir.parent.name, variant_dir.name))
         return variants
 
-    def add_component(self, component: Component, variants: List[Variant] = None):
-        self.materialize_component(component, component.out_dir or self.workspace_artifacts.components_dir)
+    def add_component(self, component: Component, variants: List[Variant] = None) -> Path:
+        """
+        If no variants are specified, the component is added to all variants.
+        Provide an empty list for specifying that the component shall not be added to any variant.
+        """
+        target_variants = variants or self.collect_project_variants()
+        for variant in target_variants:
+            parts_cmake = self.workspace_artifacts.get_variant_parts_file(variant)
+            with parts_cmake.open(mode='a') as f:
+                component_path = self.get_component_cmake_name(component, self.workspace_root_dir)
+                f.writelines(['', f"spl_add_component({component_path})"])
+        return self.materialize_component(component, component.out_dir or self.workspace_artifacts.components_dir)
 
     def materialize_component(self, component: Component, out_dir: Path):
         result_path = self._run_cookiecutter(self.component_template_path, out_dir, {'name': component.name})
@@ -140,6 +150,24 @@ class Creator:
                                    no_input=True,
                                    overwrite_if_exists=True)
         return Path(result_path)
+
+    @staticmethod
+    def get_component_cmake_name(component: Component, workspace_root_dir: Path) -> str:
+        """
+        If the component is inside the workspace, it returns the relative path to the workspace dir.
+        If the component is outside the workspace, it returns the component absolute path.
+        """
+        ws_dir = workspace_root_dir.absolute().resolve()
+        if component.out_dir:
+            comp_dir = component.out_dir.joinpath(component.name).absolute().resolve()
+            if comp_dir.is_relative_to(ws_dir):
+                comp_path = f"{comp_dir.relative_to(ws_dir).as_posix()}"
+            else:
+                comp_path = f"{comp_dir.as_posix()}"
+        else:
+            artifacts = WorkspaceArtifacts(ws_dir)
+            comp_path = f"{artifacts.components_dir.joinpath(component.name).relative_to(ws_dir).as_posix()}"
+        return comp_path
 
 
 def main(command_arguments=None):

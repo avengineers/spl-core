@@ -3,7 +3,6 @@ from tests.utils import TestUtils, TestWorkspace, ExecutionTime
 
 class TestSpl:
     def test_incremental_build(self):
-        # create a new test workspace
         workspace = TestWorkspace("test_incremental_build")
         with ExecutionTime("build and run unit tests"):
             assert workspace.link().returncode == 0
