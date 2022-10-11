@@ -6,7 +6,24 @@ from typing import Dict
 
 import kconfiglib
 
-from src.common.common import existing_path, non_existing_path
+
+def to_path(input_path: str, check_if_exists: bool = True) -> Path:
+    """TODO: use function from common python module"""
+    return_path = Path(input_path)
+    if not check_if_exists or return_path.exists():
+        return return_path.absolute()
+    else:
+        raise FileNotFoundError(input_path)
+
+
+def existing_path(input_path: str) -> Path:
+    """TODO: use function from common python module"""
+    return to_path(input_path, True)
+
+
+def non_existing_path(input_path: str) -> Path:
+    """TODO: use function from common python module"""
+    return to_path(input_path, False)
 
 
 @contextmanager
@@ -28,12 +45,14 @@ class KConfig:
         :param k_config_root_directory: all paths for the included configuration paths shall be relative to this folder
         """
         if not k_config_model_file.exists():
-            raise FileNotFoundError(f"File {k_config_model_file} does not exist.")
+            raise FileNotFoundError(
+                f"File {k_config_model_file} does not exist.")
         with working_directory(k_config_root_directory or k_config_model_file.parent):
             self.config = kconfiglib.Kconfig(k_config_model_file)
         if k_config_file:
             if not k_config_file.exists():
-                raise FileNotFoundError(f"File {k_config_file} does not exist.")
+                raise FileNotFoundError(
+                    f"File {k_config_file} does not exist.")
             self.config.load_config(k_config_file, replace=False)
 
     def get_json_values(self) -> Dict:
@@ -65,9 +84,12 @@ class KConfig:
 
 def main():
     parser = argparse.ArgumentParser(description='KConfig generation')
-    parser.add_argument('--kconfig_model_file', required=True, type=existing_path)
-    parser.add_argument('--kconfig_config_file', required=False, type=existing_path)
-    parser.add_argument('--out_header_file', required=True, type=non_existing_path)
+    parser.add_argument('--kconfig_model_file',
+                        required=True, type=existing_path)
+    parser.add_argument('--kconfig_config_file',
+                        required=False, type=existing_path)
+    parser.add_argument('--out_header_file', required=True,
+                        type=non_existing_path)
     arguments = parser.parse_args()
     KConfig(
         arguments.kconfig_model_file,
