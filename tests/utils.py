@@ -131,6 +131,7 @@ class TestWorkspace:
         self.workspace_dir = self.create_my_workspace(out_dir_name)
         self.workspace_artifacts = WorkspaceArtifacts(self.workspace_dir)
         self.directory_tracker = DirectoryTracker(self.workspace_dir)
+        self.use_local_spl_core = True
 
     @staticmethod
     def create_my_workspace(out_dir_name: str) -> Path:
@@ -153,8 +154,9 @@ class TestWorkspace:
     def run_cmake(self, target: str, variant: Variant = DEFAULT_VARIANT) -> subprocess.CompletedProcess:
         return CMake(self.workspace_artifacts).build(variant, target=target)
 
-    @staticmethod
-    def execute_command(command: str) -> subprocess.CompletedProcess:
+    def execute_command(self, command: str) -> subprocess.CompletedProcess:
+        if self.use_local_spl_core:
+            os.environ['SPLCORE_PATH'] = TestUtils.project_root_dir().as_posix()
         return subprocess.run(command.split())
 
     def get_component_file(self, component_name: str, component_file: str) -> Path:
