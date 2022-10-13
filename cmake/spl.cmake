@@ -49,6 +49,7 @@ else()
     message(FATAL_ERROR "Invalid BUILD_KIT selected!")
 endif()
 
+include(${CMAKE_SOURCE_DIR}/variants/${VARIANT}/parts.cmake)
 
 ## Things to be done at the very end of configure phase as if they would be at bottom of CMakelists.txt
 cmake_language(DEFER DIRECTORY ${CMAKE_SOURCE_DIR} CALL _spl_hook_end_of_configure())
