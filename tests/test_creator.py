@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 from pathlib import Path
 from subprocess import CompletedProcess
@@ -216,6 +217,7 @@ def test_create_project_running_main():
         main()
 
     project_dir = out_dir.joinpath('MyProject1')
+    TestUtils.force_spl_core_version_to_this_repo()
     project_artifacts = WorkspaceArtifacts(project_dir)
     assert project_dir.joinpath('CMakeLists.txt').exists()
     assert project_dir.joinpath('variants/Flv1/Sys1/config.cmake').exists()
