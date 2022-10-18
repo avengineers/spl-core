@@ -133,8 +133,11 @@ class Creator:
         for variant in target_variants:
             parts_cmake = self.workspace_artifacts.get_variant_parts_file(variant)
             with parts_cmake.open(mode='a') as f:
-                component_path = self.get_component_cmake_name(component, self.workspace_root_dir)
-                f.writelines(['', f"spl_add_component({component_path})"])
+                component_path = self.get_component_cmake_path(component, self.workspace_root_dir)
+                if Path(component_path).is_absolute():
+                    f.writelines(['', f"spl_add_component({component_path} {component.name})"])
+                else:
+                    f.writelines(['', f"spl_add_component({component_path})"])
         return self.materialize_component(component, component.out_dir or self.workspace_artifacts.components_dir)
 
     def materialize_component(self, component: Component, out_dir: Path):
@@ -152,7 +155,7 @@ class Creator:
         return Path(result_path)
 
     @staticmethod
-    def get_component_cmake_name(component: Component, workspace_root_dir: Path) -> str:
+    def get_component_cmake_path(component: Component, workspace_root_dir: Path) -> str:
         """
         If the component is inside the workspace, it returns the relative path to the workspace dir.
         If the component is outside the workspace, it returns the component absolute path.

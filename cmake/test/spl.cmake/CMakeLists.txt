@@ -1,4 +1,4 @@
-include(../spl_test.cmake)
+include(../spl_unit_test_framework.cmake)
 
 # mocks
 spl_test_create_mock(add_executable)

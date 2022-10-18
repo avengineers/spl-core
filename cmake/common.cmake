@@ -31,13 +31,14 @@ macro(_spl_get_component_path return_component_path project_dir component_dir)
     else()
         set(${return_component_path} ${component_dir})
     endif()
+
     message(DEBUG "_spl_get_component_path: got '${${return_component_path}}' from '${project_dir}' '${component_dir}'")
 endmacro()
 
 macro(_spl_get_component_name_from_path return__component_name component_path)
     if(IS_ABSOLUTE ${component_path})
         # TODO: Throw an error if the external component name was already used.
-        set (path_var ${component_path})
+        set(path_var ${component_path})
         cmake_path(HASH path_var ${return__component_name})
     else()
         # Components inside the workspace are named as their relative path to make sure the name is unique.
@@ -47,8 +48,10 @@ macro(_spl_get_component_name_from_path return__component_name component_path)
     message(DEBUG "_spl_get_component_name_from_path: got '${${return__component_name}}' from '${component_path}'")
 endmacro()
 
-macro(spl_add_component component_path)
-    _spl_get_component_name_from_path(component_name ${component_path})
+macro(spl_add_component component_path component_name)
+    if(NOT component_name)
+        _spl_get_component_name_from_path(component_name ${component_path})
+    endif()
 
     if(IS_ABSOLUTE ${component_path})
         # When specifying an out-of-tree source a binary directory must be explicitly specified.

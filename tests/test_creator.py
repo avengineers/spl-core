@@ -1,5 +1,4 @@
 import json
-import os
 import subprocess
 from pathlib import Path
 from subprocess import CompletedProcess
@@ -186,16 +185,16 @@ class TestProjectGenerator:
     def test_get_component_cmake_name(self):
         workspace_dir = TestUtils.create_clean_test_dir().path
         "component is in the workspace"
-        assert Creator.get_component_cmake_name(
+        assert Creator.get_component_cmake_path(
             Component('me', workspace_dir.joinpath('components/app')),
             workspace_dir
         ) == 'components/app/me'
         "component does not specify path - is implicitly considered inside the workspace"
-        assert Creator.get_component_cmake_name(Component('me'), workspace_dir) == 'components/me'
+        assert Creator.get_component_cmake_path(Component('me'), workspace_dir) == 'components/me'
         "component is not in the workspace"
         component = Component('me', workspace_dir.joinpath('../components/app'))
         expected_cmake_path = f"{workspace_dir.parent.joinpath('components/app/me').resolve().as_posix()}"
-        assert Creator.get_component_cmake_name(
+        assert Creator.get_component_cmake_path(
             component,
             workspace_dir
         ) == expected_cmake_path

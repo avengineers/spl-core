@@ -40,4 +40,4 @@ class TestSpl:
         with ExecutionTime("link"):
             assert workspace.link().returncode == 0
         "External components are referred by the hash of their absolute path"
-        assert workspace.get_component_obj_file('d581f146e726a6aa', 'external_component').exists()
+        assert workspace.get_component_obj_file('external_component').exists()
