@@ -58,7 +58,7 @@ class TestUtils:
 
     @staticmethod
     def create_clean_test_dir(name: str = None) -> TestDir:
-        out_dir = TestUtils.project_root_dir().joinpath('out')
+        out_dir = TestUtils.this_repository_root_dir().joinpath('out')
         test_dir = out_dir.joinpath(name if name else TestUtils.DEFAULT_TEST_DIR).absolute()
         if test_dir.exists():
             # rmtree throws an exception if any of the files to be deleted is read-only
@@ -73,8 +73,12 @@ class TestUtils:
         return TestDir(test_dir)
 
     @staticmethod
-    def project_root_dir() -> Path:
+    def this_repository_root_dir() -> Path:
         return Path(__file__).parent.parent.absolute()
+
+    @staticmethod
+    def force_spl_core_version_to_this_repo():
+        os.environ['SPLCORE_PATH'] = TestUtils.this_repository_root_dir().as_posix()
 
 
 @dataclasses.dataclass
@@ -130,6 +134,7 @@ class TestWorkspace:
         self.workspace_dir = self.create_my_workspace(out_dir_name)
         self.workspace_artifacts = WorkspaceArtifacts(self.workspace_dir)
         self.directory_tracker = DirectoryTracker(self.workspace_dir)
+        self.use_local_spl_core = True
 
     @staticmethod
     def create_my_workspace(out_dir_name: str) -> Path:
@@ -152,8 +157,9 @@ class TestWorkspace:
     def run_cmake(self, target: str, variant: Variant = DEFAULT_VARIANT) -> subprocess.CompletedProcess:
         return CMake(self.workspace_artifacts).build(variant, target=target)
 
-    @staticmethod
-    def execute_command(command: str) -> subprocess.CompletedProcess:
+    def execute_command(self, command: str) -> subprocess.CompletedProcess:
+        if self.use_local_spl_core:
+            TestUtils.force_spl_core_version_to_this_repo()
         return subprocess.run(command.split())
 
     def get_component_file(self, component_name: str, component_file: str) -> Path:
