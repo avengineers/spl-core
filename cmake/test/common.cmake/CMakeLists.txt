@@ -18,7 +18,7 @@ if (NOT string_with_underscore STREQUAL "abc_def_ghi")
     message(FATAL_ERROR "Failing Test case: string_with_underscore = ${string_with_underscore}.")
 endif()
 
-_spl_get_absolute_path(absolute_path "/test")
+_spl_get_absolute_path(absolute_path "${PROJECT_SOURCE_DIR}/test")
 string(FIND "${absolute_path}" "cmake/test/common.cmake/test" out)
 if (NOT "${out}" GREATER 0)
     message(FATAL_ERROR "Failing Test case: absolute_path = ${absolute_path}.")

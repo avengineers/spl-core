@@ -11,11 +11,8 @@ macro(_spl_slash_to_underscore out in)
 endmacro()
 
 macro(_spl_get_absolute_path out in)
-    string(FIND ${in} "/" position)
-
-    if(position STREQUAL 0)
-        # Assumption: path starting with '/' means relative to project root
-        cmake_path(CONVERT ${PROJECT_SOURCE_DIR}/${in} TO_CMAKE_PATH_LIST ${out} NORMALIZE)
+    if(IS_ABSOLUTE ${in})
+        cmake_path(CONVERT ${in} TO_CMAKE_PATH_LIST ${out} NORMALIZE)
     else()
         cmake_path(CONVERT ${CMAKE_CURRENT_LIST_DIR}/${in} TO_CMAKE_PATH_LIST ${out} NORMALIZE)
     endif()
