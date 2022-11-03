@@ -16,7 +16,7 @@
     "scoop": [
       "cmake",
       "mingw-winlibs-llvm-ucrt",
-      "python"
+      "python310"
     ],
     "scoop_repos": [
       "versions@https://github.com/ScoopInstaller/Versions"

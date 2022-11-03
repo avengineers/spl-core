@@ -3,7 +3,7 @@ $ErrorActionPreference = 'Stop'
 . .\install.ps1 -useCurrent
 
 Push-Location powershell\test\
-# ugly workaround to invoke tests twice, first time always fails.
+# TODO: ugly workaround to invoke tests twice, first time always fails.
 try {
     Invoke-Pester spl-functions.Tests.ps1
 }
@@ -16,6 +16,7 @@ if ($lastexitcode -ne 0) {
     throw ("Exec: " + $errorMessage)
 }
 
+# TODO: move these tests to python tests
 Push-Location cmake\test\common.cmake\
 if (Test-Path .cmaketest) {
     Remove-Item .cmaketest -Recurse -Force
@@ -37,3 +38,5 @@ if ($lastexitcode -ne 0) {
 Pop-Location
 
 pytest 
+
+#TODO: pipenv would be nice here
