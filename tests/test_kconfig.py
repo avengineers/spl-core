@@ -281,16 +281,19 @@ CONFIG_NAME="John Smith"
                     CONFIG_FIRST_NAME="Dude"
                     """))
         header_file = out_dir.joinpath('gen/header.h')
+        json_file = out_dir.joinpath('gen/features.json')
 
         with patch('sys.argv', [
             'kconfig',
             '--kconfig_model_file', f"{feature_model_file}",
             '--kconfig_config_file', f"{user_config}",
-            '--out_header_file', f"{header_file}"
+            '--out_header_file', f"{header_file}",
+            '--out_json_file', f"{json_file}"
         ]):
             main()
+        assert json_file.exists()
         assert header_file.exists()
-        assert header_file.read_text() == """#define CONFIG_FIRST_BOOL 1\n#define CONFIG_FIRST_NAME "Dude"\n"""
+        assert header_file.read_text() == """#ifndef autoconf\n#define autoconf\n\n#define CONFIG_FIRST_BOOL 1\n#define CONFIG_FIRST_NAME "Dude"\n\n#endif\n"""
 
     def test_header_file_written_when_changed(self):
         """
@@ -314,7 +317,7 @@ CONFIG_NAME="John Smith"
         header_file = out_dir.joinpath('gen/header.h')
         iut.generate_header(header_file)
         assert header_file.exists()
-        assert header_file.read_text() == """#define CONFIG_FIRST_BOOL 1\n#define CONFIG_FIRST_NAME "Dude"\n"""
+        assert header_file.read_text() == """#ifndef autoconf\n#define autoconf\n\n#define CONFIG_FIRST_BOOL 1\n#define CONFIG_FIRST_NAME "Dude"\n\n#endif\n"""
         timestamp = header_file.stat().st_ctime
         iut.generate_header(header_file)
         assert header_file.stat().st_ctime == timestamp, "the file shall not be written if content is not changed"
