@@ -1,5 +1,6 @@
 import argparse
 import os
+import json
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Dict
@@ -80,6 +81,26 @@ class KConfig:
     def generate_header(self, output_file: Path):
         output_file.parent.mkdir(parents=True, exist_ok=True)
         self.config.write_autoconf(filename=output_file)
+        
+        with open(output_file, "r") as outfile:
+            content = outfile.read()
+            
+        with open(output_file, "w") as outfile:
+            outfile.write('#ifndef autoconf\n#define autoconf\n\n' + content + '\n#endif\n')
+        
+        
+    def generate_json(self, output_file: Path):
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Serializing json
+        feature_json = {'features': self.get_json_values()}
+        json_object = json.dumps(feature_json, indent=4)
+        
+        # Writing to sample.json
+        with open(output_file, "w") as outfile:
+            outfile.write(json_object)
+        
+        self.get_json_values
 
 
 def main():
@@ -90,11 +111,18 @@ def main():
                         required=False, type=existing_path)
     parser.add_argument('--out_header_file', required=True,
                         type=non_existing_path)
+    parser.add_argument('--out_json_file', required=False, 
+                        type=non_existing_path)
     arguments = parser.parse_args()
-    KConfig(
+    kconfig = KConfig(
         arguments.kconfig_model_file,
         arguments.kconfig_config_file
-    ).generate_header(arguments.out_header_file)
+    )
+    
+    kconfig.generate_header(arguments.out_header_file)
+    
+    if arguments.out_json_file:
+        kconfig.generate_json(arguments.out_json_file)
 
 
 if __name__ == '__main__':
