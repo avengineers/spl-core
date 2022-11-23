@@ -135,6 +135,9 @@ macro(_spl_add_test_suite PROD_SRC TEST_SOURCES)
         ${MOCK_SRC}
     )
 
+    # Produce debugging information to be able to set breakpoints while debugging.
+    target_compile_options(${exe_name} PRIVATE -ggdb)
+
     target_link_options(${exe_name}
         PRIVATE -ggdb --coverage
     )
