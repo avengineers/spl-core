@@ -1,6 +1,7 @@
 # Define generated header name
 set(KCONFIG_OUT_DIR ${PROJECT_BINARY_DIR}/include/generated)
 set(AUTOCONF_H ${KCONFIG_OUT_DIR}/autoconf.h)
+set(AUTOCONF_JSON ${KCONFIG_OUT_DIR}/autoconf.json)
 set(KCONFIG_ROOT_FILE ${PROJECT_SOURCE_DIR}/KConfig)
 set(KCONFIG_VARIANT_FILE ${PROJECT_SOURCE_DIR}/variants/${VARIANT}/config.txt)
 
@@ -18,6 +19,7 @@ if(EXISTS ${KCONFIG_ROOT_FILE})
         COMMAND python ${SPL_CORE_PYTHON_MODULES_DIRECTORY}/kconfig/kconfig.py
         --kconfig_model_file ${KCONFIG_ROOT_FILE} ${_kconfig_variant_file_option}
         --out_header_file ${AUTOCONF_H}
+        --out_json_file ${AUTOCONF_JSON}
         COMMAND_ECHO STDOUT
         RESULT_VARIABLE ret
     )
