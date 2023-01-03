@@ -152,7 +152,7 @@ Function Run-CMake-Build([String] $Target, [String] $Variants, [String] $Filter,
             $filterCmd = "-k '$Filter'"
         }
 
-        Invoke-CommandLine -CommandLine "python -m pytest --capture=tee-sys --junitxml=test/output/test-report.xml -o junit_logging=all $filterCmd"
+        Invoke-CommandLine -CommandLine "python -m pipenv run python -m pytest test --capture=tee-sys --junitxml=test/output/test-report.xml -o junit_logging=all $filterCmd"
     }
     else {
         if ((-Not $Variants) -or ($Variants -eq 'all')) {
@@ -211,12 +211,12 @@ Function Run-CMake-Build([String] $Target, [String] $Variants, [String] $Filter,
             if ($buildKit -eq "test") {
                 $additionalConfig += " -DCMAKE_TOOLCHAIN_FILE=`"tools/toolchains/gcc/toolchain.cmake`""
             }
-            Invoke-CommandLine -CommandLine "cmake -B '$buildFolder' -G Ninja -DFLAVOR=`"$platform`" -DSUBSYSTEM=`"$subsystem`" $additionalConfig"
+            Invoke-CommandLine -CommandLine "python -m pipenv run cmake -B '$buildFolder' -G Ninja -DFLAVOR=`"$platform`" -DSUBSYSTEM=`"$subsystem`" $additionalConfig"
         
             # CMake clean all dead artifacts. Required when running incremented builds to delete obsolete artifacts.
-            Invoke-CommandLine -CommandLine "cmake --build '$buildFolder' --target $Target -- -t cleandead"
+            Invoke-CommandLine -CommandLine "python -m pipenv run cmake --build '$buildFolder' --target $Target -- -t cleandead"
             # CMake build
-            Invoke-CommandLine -CommandLine "cmake --build '$buildFolder' --target $Target -- $NinjaArgs"
+            Invoke-CommandLine -CommandLine "python -m pipenv run cmake --build '$buildFolder' --target $Target -- $NinjaArgs"
         }
     }
 }

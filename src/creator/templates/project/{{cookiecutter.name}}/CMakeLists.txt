@@ -9,15 +9,12 @@ include(${CMAKE_SOURCE_DIR}/variants/${VARIANT}/config.cmake)
 project(${VARIANT} CXX C ASM)
 
 if(DEFINED ENV{SPLCORE_PATH})
-    message(WARNING "SPLCORE_PATH defined! Use fixed SPL-CORE version from: $ENV{SPLCORE_PATH}")
+    message(WARNING "SPLCORE_PATH defined! Using SPL Core from here: $ENV{SPLCORE_PATH}")
     include($ENV{SPLCORE_PATH}/cmake/spl.cmake)
 else()
-    execute_process(COMMAND powershell -ExecutionPolicy Bypass -File ${CMAKE_SOURCE_DIR}/install-spl.ps1)
-    include(build/spl-core/cmake/spl.cmake)
+    include(modules/spl/cmake/spl.cmake)
 endif()
 
-# spl_install_extensions(...)
-# run extensions
 
 include(${CMAKE_SOURCE_DIR}/variants/${VARIANT}/parts.cmake)
 

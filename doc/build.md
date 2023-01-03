@@ -17,7 +17,7 @@ The following shows the steps/commands when you use Windows PowerShell to do so.
 ```powershell
 cd <Your root directory of repository>
 
-.\build\spl-core\powershell\spl.ps1 -build -target link
+.\modules\spl\powershell\spl.ps1 -build -target link
 ```
 
 ## Binary Location
