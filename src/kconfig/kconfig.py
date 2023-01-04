@@ -77,6 +77,12 @@ class KConfig:
         for n in self.config.node_iter(False):
             write_node(n)
         return config_dict
+    
+
+    def get_cmake_content(self) -> str:
+        config_dict = self.get_json_values()
+        return '\n'.join([f'set({key} "{value}")' for key, value in config_dict.items()])  
+    
 
     def generate_header(self, output_file: Path):
         output_file.parent.mkdir(parents=True, exist_ok=True)
@@ -103,6 +109,12 @@ class KConfig:
         self.get_json_values
 
 
+    def generate_cmake(self, output_file: Path):
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+            
+        with open(output_file, "w") as outfile:
+            outfile.write(self.get_cmake_content())   
+
 def main():
     parser = argparse.ArgumentParser(description='KConfig generation')
     parser.add_argument('--kconfig_model_file',
@@ -112,6 +124,8 @@ def main():
     parser.add_argument('--out_header_file', required=True,
                         type=non_existing_path)
     parser.add_argument('--out_json_file', required=False, 
+                        type=non_existing_path)
+    parser.add_argument('--out_cmake_file', required=False, 
                         type=non_existing_path)
     arguments = parser.parse_args()
     kconfig = KConfig(
@@ -123,6 +137,9 @@ def main():
     
     if arguments.out_json_file:
         kconfig.generate_json(arguments.out_json_file)
+
+    if arguments.out_cmake_file:
+        kconfig.generate_cmake(arguments.out_cmake_file)        
 
 
 if __name__ == '__main__':

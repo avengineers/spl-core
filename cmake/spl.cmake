@@ -11,6 +11,10 @@ endif()
 # Include and run KConfig
 include(${CMAKE_CURRENT_LIST_DIR}/kconfig.cmake)
 
+if(EXISTS ${AUTOCONF_CMAKE})
+    include(${AUTOCONF_CMAKE})
+endif()
+
 if(BUILD_KIT STREQUAL prod)
     # set default link target output name
     if (LINK_FILE_BASENAME)
@@ -58,3 +62,13 @@ function(_spl_hook_end_of_configure)
    if(CONAN__REQUIRES OR CONAN__BUILD_REQUIRES)
    endif() # CONAN__REQUIRES
 endfunction(_spl_hook_end_of_configure)
+
+
+# TODO: find smarter way to open correct kconfig gui; maybe integrated
+set(_CONFIGURATION_TARGET configuration.stamp)
+add_custom_command(
+    OUTPUT ${_CONFIGURATION_TARGET}
+    COMMAND set "KCONFIG_CONFIG=${CMAKE_SOURCE_DIR}/variants/${VARIANT}/config.txt" && cd ${CMAKE_SOURCE_DIR} && guiconfig
+)
+
+add_custom_target(configuration DEPENDS ${_CONFIGURATION_TARGET})

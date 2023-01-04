@@ -19,6 +19,20 @@ class TestKConfig:
         """)
         iut = KConfig(feature_model_file)
         assert iut.get_json_values() == {'NAME': 'John Smith', 'STATUS': 'ALIVE'}
+        
+    def test_create_cmake(self):
+        out_dir = TestUtils.create_clean_test_dir('')
+        feature_model_file = out_dir.write_file('kconfig.txt', """
+        config NAME
+            string "Just the name"
+            default "John Smith"
+        config STATUS
+            bool "Defines your status"
+            default y
+        """)
+        iut = KConfig(feature_model_file)
+        cmake_expected = 'set(NAME "John Smith")\nset(STATUS "True")'
+        assert iut.get_cmake_content() == cmake_expected
 
     def test_load_user_config_file(self):
         out_dir = TestUtils.create_clean_test_dir('')
@@ -282,16 +296,19 @@ CONFIG_NAME="John Smith"
                     """))
         header_file = out_dir.joinpath('gen/header.h')
         json_file = out_dir.joinpath('gen/features.json')
-
+        cmake_file = out_dir.joinpath('gen/features.cmake')
+        
         with patch('sys.argv', [
             'kconfig',
             '--kconfig_model_file', f"{feature_model_file}",
             '--kconfig_config_file', f"{user_config}",
             '--out_header_file', f"{header_file}",
-            '--out_json_file', f"{json_file}"
+            '--out_json_file', f"{json_file}",
+            '--out_cmake_file', f"{cmake_file}",
         ]):
             main()
         assert json_file.exists()
+        assert cmake_file.exists()
         assert header_file.exists()
         assert header_file.read_text() == """#ifndef autoconf\n#define autoconf\n\n#define CONFIG_FIRST_BOOL 1\n#define CONFIG_FIRST_NAME "Dude"\n\n#endif\n"""
 
