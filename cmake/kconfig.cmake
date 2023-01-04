@@ -2,6 +2,7 @@
 set(KCONFIG_OUT_DIR ${PROJECT_BINARY_DIR}/include/generated)
 set(AUTOCONF_H ${KCONFIG_OUT_DIR}/autoconf.h)
 set(AUTOCONF_JSON ${KCONFIG_OUT_DIR}/autoconf.json)
+set(AUTOCONF_CMAKE ${KCONFIG_OUT_DIR}/autoconf.cmake)
 set(KCONFIG_ROOT_FILE ${PROJECT_SOURCE_DIR}/KConfig)
 set(KCONFIG_VARIANT_FILE ${PROJECT_SOURCE_DIR}/variants/${VARIANT}/config.txt)
 
@@ -20,6 +21,7 @@ if(EXISTS ${KCONFIG_ROOT_FILE})
         --kconfig_model_file ${KCONFIG_ROOT_FILE} ${_kconfig_variant_file_option}
         --out_header_file ${AUTOCONF_H}
         --out_json_file ${AUTOCONF_JSON}
+        --out_cmake_file ${AUTOCONF_CMAKE}
         COMMAND_ECHO STDOUT
         RESULT_VARIABLE ret
     )
