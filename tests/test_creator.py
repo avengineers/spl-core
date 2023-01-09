@@ -1,7 +1,5 @@
 import json
-import os
 import subprocess
-from pathlib import Path
 from subprocess import CompletedProcess
 from unittest.mock import patch
 
@@ -18,10 +16,6 @@ def execute_command(command: str) -> CompletedProcess:
 
 
 class TestProjectGenerator:
-
-    @staticmethod
-    def create_my_project(out_dir_name: str) -> Path:
-        return TestWorkspace.create_my_workspace(out_dir_name)
 
     def test_materialize(self):
         out_dir = TestUtils.create_clean_test_dir('test_materialize')
@@ -151,7 +145,7 @@ class TestProjectGenerator:
         assert raised_exception.value.code is 0
 
     def test_add_variant(self):
-        workspace_dir = self.create_my_project('test_add_variant')
+        workspace_dir = TestWorkspace.create_my_workspace('test_add_variant')
         workspace_dir.joinpath('variants/Flv1/Sys1/config.txt').write_text('')
         creator = Creator.from_folder(workspace_dir)
         creator.add_variants([Variant('Flv2', 'NewSys')])
@@ -166,7 +160,7 @@ class TestProjectGenerator:
         assert len(cmake_variants_json['variant']['choices']) == 3
 
     def test_delete_variant(self):
-        workspace_dir = self.create_my_project('test_delete_variant')
+        workspace_dir = TestWorkspace.create_my_workspace('test_delete_variant')
         creator = Creator.from_folder(workspace_dir)
         creator.delete_variants([Variant('Flv1', 'Sys2')])
         'Existing flavors shall not be overwritten'
@@ -190,13 +184,13 @@ def test_create_project_running_main():
         main()
 
     project_dir = out_dir.joinpath('MyProject1')
-    TestUtils.force_spl_core_version_to_this_repo()
+    TestUtils.force_spl_core_usage_to_this_repo()
     project_artifacts = WorkspaceArtifacts(project_dir)
     assert project_dir.joinpath('CMakeLists.txt').exists()
     assert project_dir.joinpath('variants/Flv1/Sys1/config.cmake').exists()
     assert project_dir.joinpath('variants/Flv1/Sys2/config.cmake').exists()
 
-    result = execute_command(f"{project_artifacts.build_script} -build -target selftests -installMandatory")
+    result = execute_command(f"{project_artifacts.build_script} -build -target selftests")
     assert result.returncode == 0
 
     "Add new variant and build again"

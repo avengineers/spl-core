@@ -1,3 +1,6 @@
+# See modules/.gitignore for explanation
+!*
+
 .cmaketest
 build/
 
@@ -12,3 +15,5 @@ __pycache__/
 # Build/test artifacts
 .pytest_cache
 out
+*.egg-info/
+.eggs/

@@ -73,12 +73,7 @@ $ErrorActionPreference = "Stop"
 Write-Output "Running in ${pwd}"
 
 # load spl scripts
-. $PSScriptRoot\spl-variables.ps1
-. $PSScriptRoot\spl-functions.ps1
-
-if ($SPL_PROXY_HOST -and $SPL_PROXY_BYPASS_LIST) {
-    Setup-Proxy -ProxyHost $SPL_PROXY_HOST -NoProxy $SPL_PROXY_BYPASS_LIST
-}
+. $PSScriptRoot\include.ps1
 
 if ($installMandatory -or $installOptional) {
     Install-Basic-Tools
@@ -87,13 +82,14 @@ if ($installMandatory -or $installOptional) {
 if ($installMandatory) {
     Write-Output "Install SPL core mandatory dependencies defined in $SPL_CORE_INSTALL_DEPENDENCY_JSON_CONTENT"
     Install-Mandatory-Tools -JsonDependencies $SPL_CORE_INSTALL_DEPENDENCY_JSON_CONTENT
-    Write-Output "Install project mandatory dependencies defined in $SPL_CORE_INSTALL_DEPENDENCY_JSON_CONTENT"
-    Install-Mandatory-Tools -JsonDependencies $SPL_INSTALL_DEPENDENCY_JSON_CONTENT
     Run-Setup-Scripts -Location "$SPL_EXTENSIONS_SETUP_SCRIPTS_PATH\mandatory"
+    New-Item -Path ".venv" -ItemType Directory -Force
+    Invoke-CommandLine -CommandLine "python -m pipenv install"
 }
 
 if ($installOptional) {
-    Install-Optional-Tools -JsonDependencies $SPL_INSTALL_DEPENDENCY_JSON_CONTENT
+    Write-Output "Install SPL core optional dependencies defined in $SPL_CORE_INSTALL_DEPENDENCY_JSON_CONTENT"
+    Install-Optional-Tools -JsonDependencies $SPL_CORE_INSTALL_DEPENDENCY_JSON_CONTENT
     Run-Setup-Scripts -Location "$SPL_EXTENSIONS_SETUP_SCRIPTS_PATH\optional"
 }
 

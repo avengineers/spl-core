@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 
-. .\install.ps1 -useCurrent
+. .\powershell\spl.ps1 -install -installMandatory
 
 Push-Location powershell\test\
 # TODO: ugly workaround to invoke tests twice, first time always fails.
@@ -37,6 +37,4 @@ if ($lastexitcode -ne 0) {
 }
 Pop-Location
 
-pytest 
-
-#TODO: pipenv would be nice here
+pipenv run pytest 
