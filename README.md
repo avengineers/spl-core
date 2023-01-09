@@ -10,15 +10,15 @@ In this repository we construct the *SPL Core* functionality that can be integra
 
 First thing to do is to install all SPL dependencies by opening a terminal and running:
 
-```
-powershell -File install.ps1 -useCurrent
+```powershell
+pipenv install
 ```
 
 Now you can just create a new SPL workspace. We recommend using the workspace creator wrapper for it.
 
 **Example:** create a workspace called `MyProject` with a flavor `FLV1/SYS1` under `C:\temp`
 
-```
+```powershell
 .\spl.bat workspace --name MyProject --variant FLV1/SYS1 --out_dir C:\temp
 ```
 

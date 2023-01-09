@@ -77,8 +77,9 @@ class TestUtils:
         return Path(__file__).parent.parent.absolute()
 
     @staticmethod
-    def force_spl_core_version_to_this_repo():
+    def force_spl_core_usage_to_this_repo():
         os.environ['SPLCORE_PATH'] = TestUtils.this_repository_root_dir().as_posix()
+        os.environ['PIPENV_PIPFILE'] = TestUtils.this_repository_root_dir().as_posix() + '/Pipfile'
 
 
 @dataclasses.dataclass
@@ -159,7 +160,7 @@ class TestWorkspace:
 
     def execute_command(self, command: str) -> subprocess.CompletedProcess:
         if self.use_local_spl_core:
-            TestUtils.force_spl_core_version_to_this_repo()
+            TestUtils.force_spl_core_usage_to_this_repo()
         return subprocess.run(command.split())
 
     def get_component_file(self, component_name: str, component_file: str) -> Path:
