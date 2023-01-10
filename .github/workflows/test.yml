@@ -1,4 +1,4 @@
-name: gate
+name: selftests
 
 on:
   push:
@@ -11,13 +11,13 @@ on:
 jobs:
   test:
     runs-on: windows-latest
-    timeout-minutes: 15
 
     steps:
       - name: Checkout
         uses: actions/checkout@v2
         with:
           submodules: true
-      - name: build
-        run: .\build.ps1
+      - name: install tools and run selftests
+        run: |
+          .\build.ps1
         shell: powershell
