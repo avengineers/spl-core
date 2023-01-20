@@ -10,10 +10,22 @@ try {
 catch {
     Invoke-Pester spl-functions.Tests.ps1
 }
+
+$unittest = $lastexitcode
+
 Pop-Location
 
-if ($lastexitcode -ne 0) {
-    throw ("Exec: " + $errorMessage)
+if ($unittest -ne 0) {
+    throw ("Unit Test: " + $errorMessage)
+}
+
+Push-Location powershell\
+powershell -Command "Invoke-ScriptAnalyzer -EnableExit -Recurse -Path ."
+$linter = $lastexitcode
+Pop-Location
+
+if ($linter -ne 0) {
+    throw ("Powershell Linter: " + $errorMessage)
 }
 
 # TODO: move these tests to python tests
@@ -23,7 +35,7 @@ if (Test-Path .cmaketest) {
 }
 cmake -B .cmaketest -G Ninja
 if ($lastexitcode -ne 0) {
-    throw ("Exec: " + $errorMessage)
+    throw ("common.cmake Tests: " + $errorMessage)
 }
 Pop-Location
 
@@ -33,7 +45,7 @@ if (Test-Path .cmaketest) {
 }
 cmake -B .cmaketest -G Ninja
 if ($lastexitcode -ne 0) {
-    throw ("Exec: " + $errorMessage)
+    throw ("spl.cmake Tests: " + $errorMessage)
 }
 Pop-Location
 

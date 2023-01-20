@@ -8,10 +8,10 @@ In this repository we construct the *SPL Core* functionality that can be integra
 
 ## Getting started
 
-First thing to do is to install all SPL dependencies by opening a terminal and running:
+First thing to do is to install all SPL dependencies and executing tests by opening a terminal and running:
 
 ```powershell
-pipenv install
+.\build.ps1
 ```
 
 Now you can just create a new SPL workspace. We recommend using the workspace creator wrapper for it.

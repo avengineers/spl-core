@@ -6,21 +6,22 @@ Function ReloadEnvVars () {
 
 # executes a command line call
 Function Invoke-CommandLine {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingInvokeExpression', '', Justification='Usually this statement must be avoided (https://learn.microsoft.com/en-us/powershell/scripting/learn/deep-dives/avoid-using-invoke-expression?view=powershell-7.3), here it is OK as it does not execute unknown code. Refactoring might still be good.')]
     param (
         [string]$CommandLine,
         [bool]$StopAtError = $true,
         [bool]$Silent = $false
     )
     if (-Not $Silent) {
-        Write-Host "Executing: $CommandLine"
+        Write-Information -Tags "Info:" -MessageData "Executing: $CommandLine"
     }
 
     try {
         Invoke-Expression $CommandLine
     } catch {
-        # do nothing
+        Write-Error "The command invokation failed: $CommandLine"
     }
-    
+
     if ($LASTEXITCODE -ne 0) {
         if ($StopAtError) {
             Write-Error "Command line call `"$CommandLine`" failed with exit code $LASTEXITCODE"
@@ -28,22 +29,22 @@ Function Invoke-CommandLine {
         }
         else {
             if (-Not $Silent) {
-                Write-Host "Command line call `"$CommandLine`" failed with exit code $LASTEXITCODE, continuing ..."
+                Write-Information -Tags "Info:" -MessageData "Command line call `"$CommandLine`" failed with exit code $LASTEXITCODE, continuing ..."
             }
         }
     }
 }
 
 # will configure the proxy if proxy variables were set in settings.json
-Function Setup-Proxy([String] $ProxyHost, [String] $NoProxy) {
+Function Initialize-Proxy([String] $ProxyHost, [String] $NoProxy) {
     $Env:HTTP_PROXY = "http://" + $ProxyHost.replace('http://', '')
     $Env:HTTPS_PROXY = $Env:HTTP_PROXY
     $Env:NO_PROXY = $NoProxy
     $webProxy = New-Object System.Net.WebProxy($Env:HTTP_PROXY, $true, ($Env:NO_PROXY).split(','))
     [net.webrequest]::defaultwebproxy = $webProxy
     [net.webrequest]::defaultwebproxy.credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
-    Write-Host "Proxy set to: " + $Env:HTTP_PROXY
-    Write-Host "No-Proxy set to: " + $Env:NO_PROXY
+    Write-Information -Tags "Info:" -MessageData "Proxy set to: " + $Env:HTTP_PROXY
+    Write-Information -Tags "Info:" -MessageData "No-Proxy set to: " + $Env:NO_PROXY
 }
 
 # installs scoop packages; can be a single package or multiple packages at once
@@ -82,22 +83,22 @@ Function PythonInstall ([string[]]$Packages, [string[]]$TrustedHosts) {
 }
 
 # the function will take a location/path to a directory that contains powershell.ps1 files and run all of them
-Function Run-Setup-Scripts([string] $Location) {
+Function Invoke-Setup-Script([string] $Location) {
     if (Test-Path -Path $Location) {
         Get-ChildItem $Location | ForEach-Object {
-            Write-Host("Run: " + $_.FullName)
+            Write-Information("Run: " + $_.FullName)
             & $_.FullName
         }
     }
 }
 
 # installs required tools that are needed to use scoop and python as installers
-Function Install-Basic-Tools() {
+Function Install-Basic-Toolset() {
     if (-Not (Get-Command scoop -ErrorAction SilentlyContinue)) {
         if ((New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
             & $PSScriptRoot\install-scoop.ps1 -RunAsAdmin
         } else {
-            invoke-expression -Command ". $PSScriptRoot\install-scoop.ps1"
+            & $PSScriptRoot\install-scoop.ps1
         }
 
         Invoke-CommandLine -CommandLine "scoop bucket rm main" -Silent $true -StopAtError $false
@@ -115,19 +116,19 @@ Function Install-Basic-Tools() {
 }
 
 # install all tools that are mandatory for building the project
-Function Install-Mandatory-Tools([PSCustomObject]$JsonDependencies) {
+Function Install-Mandatory-Toolset([PSCustomObject]$JsonDependencies) {
     Foreach ($repo in $JsonDependencies.mandatory.scoop_repos) {
         $repo_and_name = $repo.Split("@")
         Invoke-CommandLine -CommandLine "scoop bucket add $($repo_and_name[0]) $($repo_and_name[1])" -StopAtError $false -Silent $true
         Invoke-CommandLine -CommandLine "scoop update"
     }
-    
+
     ScoopInstall($JsonDependencies.mandatory.scoop)
     PythonInstall -Package $JsonDependencies.mandatory.python -TrustedHosts $JsonDependencies.mandatory.python_trusted_hosts
 }
 
-# install optional (GUI) tools that make life easier for developers 
-Function Install-Optional-Tools([PSCustomObject]$JsonDependencies) {
+# install optional (GUI) tools that make life easier for developers
+Function Install-Optional-Toolset([PSCustomObject]$JsonDependencies) {
     Invoke-CommandLine -CommandLine "scoop bucket add extras" -StopAtError $false
     Invoke-CommandLine -CommandLine "scoop update"
     ScoopInstallOptional($JsonDependencies.optional.scoop)
@@ -135,7 +136,7 @@ Function Install-Optional-Tools([PSCustomObject]$JsonDependencies) {
 }
 
 # start CMake with given targets
-Function Run-CMake-Build([String] $Target, [String] $Variants, [String] $Filter, [String] $NinjaArgs, [bool] $Clean, [bool] $Reconfigure) {
+Function Invoke-CMake-Build([String] $Target, [String] $Variants, [String] $Filter, [String] $NinjaArgs, [bool] $Clean, [bool] $Reconfigure) {
     if ("selftests" -eq $Target) {
         $buildFolder = "build"
         # fresh and clean build
@@ -165,12 +166,12 @@ Function Run-CMake-Build([String] $Target, [String] $Variants, [String] $Filter,
             $variantsSelected = @()
             if (-Not $Variants) {
                 # variant selection if not specified
-                Write-Host -ForegroundColor Black -BackgroundColor Yellow "no '--variant <variant>' was given, please select from list:"
+                Write-Information -ForegroundColor Black -BackgroundColor Yellow "no '--variant <variant>' was given, please select from list:"
                 Foreach ($variant in $variantsList) {
-                    Write-Host ("(" + [array]::IndexOf($variantsList, $variant) + ") " + $variant)
+                    Write-Information ("(" + [array]::IndexOf($variantsList, $variant) + ") " + $variant)
                 }
                 $variantsSelected += $variantsList[[int](Read-Host "Please enter selected variant number")]
-                Write-Host -ForegroundColor Black -BackgroundColor Yellow "Selected variant is: $variantsSelected"
+                Write-Information -ForegroundColor Black -BackgroundColor Yellow "Selected variant is: $variantsSelected"
             }
             else {
                 $variantsSelected = $variantsList
@@ -212,7 +213,7 @@ Function Run-CMake-Build([String] $Target, [String] $Variants, [String] $Filter,
                 $additionalConfig += " -DCMAKE_TOOLCHAIN_FILE=`"tools/toolchains/gcc/toolchain.cmake`""
             }
             Invoke-CommandLine -CommandLine "python -m pipenv run cmake -B '$buildFolder' -G Ninja -DFLAVOR=`"$platform`" -DSUBSYSTEM=`"$subsystem`" $additionalConfig"
-        
+
             # CMake clean all dead artifacts. Required when running incremented builds to delete obsolete artifacts.
             Invoke-CommandLine -CommandLine "python -m pipenv run cmake --build '$buildFolder' --target $Target -- -t cleandead"
             # CMake build
@@ -222,10 +223,10 @@ Function Run-CMake-Build([String] $Target, [String] $Variants, [String] $Filter,
 }
 
 # clones and runs the transformer to import new product variants
-Function Run-Transformer([String] $Source, [String] $Variant, [bool] $Clean) {
+Function Invoke-Transformer([String] $Source, [String] $Variant, [bool] $Clean) {
     $transformerDir = "./build/import/transformer"
     New-Item -ItemType "directory" -Path $transformerDir -Force
-    
+
     if (Test-Path -Path "$transformerDir/.git") {
         Remove-Item $transformerDir -Recurse -Force
     }

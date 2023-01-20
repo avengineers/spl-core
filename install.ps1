@@ -20,11 +20,11 @@ param(
 $splDir = "./build/spl-core"
 
 if ($useCurrent) {
-    Write-Host "Using current directory as SPL."
+    Write-Information -Tags "Info:" -MessageData "Using current directory as SPL."
     $splDir = $PSScriptRoot
 }
 else {
-    Write-Host "Cloning SPL version: $version from $repo_url"
+    Write-Information -Tags "Info:" -MessageData "Cloning SPL version: $version from $repo_url"
 
     if (-Not (Get-Command git -ErrorAction SilentlyContinue)) {
         throw "'git' executable not found, please install it."
@@ -33,7 +33,7 @@ else {
     # This check works for tags as versions, only.
     # Use with care when you give a branch as version (no git pull here)
     if (Test-Path $splDir/$version) {
-        Write-Host "SPL-core version already set to $version, no update."
+        Write-Information -Tags "Info:" -MessageData "SPL-core version already set to $version, no update."
     }
     else {
         if (Test-Path $splDir) {
@@ -47,19 +47,19 @@ else {
 Push-Location $splDir
 
 if ($skipInstall) {
-    Write-Host "Skipping installation of dependencies."
+    Write-Information -Tags "Info:" -MessageData "Skipping installation of dependencies."
 }
 else {
     . .\powershell\spl-variables.ps1
     . .\powershell\spl-functions.ps1
     
     if ($SPL_PROXY_HOST -and $SPL_PROXY_BYPASS_LIST) {
-        Setup-Proxy -ProxyHost $SPL_PROXY_HOST -NoProxy $SPL_PROXY_BYPASS_LIST
+        Initialize-Proxy -ProxyHost $SPL_PROXY_HOST -NoProxy $SPL_PROXY_BYPASS_LIST
     }
     
-    Install-Basic-Tools
+    Install-Basic-Toolset
     $SPL_INSTALL_DEPENDENCY_JSON_FILE_CONTENT = Get-Content -Raw -Path "dependencies.json" | ConvertFrom-Json
-    Install-Mandatory-Tools -JsonDependencies $SPL_INSTALL_DEPENDENCY_JSON_FILE_CONTENT
+    Install-Mandatory-Toolset -JsonDependencies $SPL_INSTALL_DEPENDENCY_JSON_FILE_CONTENT
 }
 
 Pop-Location #$splDir
