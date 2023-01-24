@@ -21,7 +21,7 @@ $splDir = "./build/spl-core"
 
 if ($useCurrent) {
     Write-Information -Tags "Info:" -MessageData "Using current directory as SPL."
-    $splDir = $PSScriptRoot
+    $splDir = "$PSScriptRoot"
 }
 else {
     Write-Information -Tags "Info:" -MessageData "Cloning SPL version: $version from $repo_url"
@@ -32,19 +32,19 @@ else {
 
     # This check works for tags as versions, only.
     # Use with care when you give a branch as version (no git pull here)
-    if (Test-Path $splDir/$version) {
+    if (Test-Path "$splDir/$version") {
         Write-Information -Tags "Info:" -MessageData "SPL-core version already set to $version, no update."
     }
     else {
-        if (Test-Path $splDir) {
-            Remove-Item $splDir -Recurse -Force
+        if (Test-Path "$splDir") {
+            Remove-Item "$splDir" -Recurse -Force
         }
-        git clone $repo_url --config advice.detachedHead=false --branch $version --depth 1 $splDir
-        Out-File -FilePath $splDir/$version
+        git clone $repo_url --config advice.detachedHead=false --branch $version --depth 1 "$splDir"
+        Out-File -FilePath "$splDir/$version"
     }
 }
 
-Push-Location $splDir
+Push-Location "$splDir"
 
 if ($skipInstall) {
     Write-Information -Tags "Info:" -MessageData "Skipping installation of dependencies."

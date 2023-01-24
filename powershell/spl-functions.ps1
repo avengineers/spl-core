@@ -96,9 +96,9 @@ Function Invoke-Setup-Script([string] $Location) {
 Function Install-Basic-Toolset() {
     if (-Not (Get-Command scoop -ErrorAction SilentlyContinue)) {
         if ((New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-            & $PSScriptRoot\install-scoop.ps1 -RunAsAdmin
+            & "$PSScriptRoot\install-scoop.ps1" -RunAsAdmin
         } else {
-            & $PSScriptRoot\install-scoop.ps1
+            & "$PSScriptRoot\install-scoop.ps1"
         }
 
         Invoke-CommandLine -CommandLine "scoop bucket rm main" -Silent $true -StopAtError $false

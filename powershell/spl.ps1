@@ -73,7 +73,7 @@ $ErrorActionPreference = "Stop"
 Write-Information -Tags "Info:" -MessageData "Running in ${pwd}"
 
 # load spl scripts
-. $PSScriptRoot\include.ps1
+. "$PSScriptRoot\include.ps1"
 
 if($install) {
     if ($installMandatory -or $installOptional) {
