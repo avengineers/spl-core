@@ -58,7 +58,7 @@ else {
     }
     
     Install-Basic-Toolset
-    Install-Toolset -FilePath "$PSScriptRoot/../Scoopfile.json"
+    Install-Toolset -FilePath "Scoopfile.json"
 }
 
 Pop-Location #$splDir

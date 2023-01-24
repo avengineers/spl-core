@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 
-. .\powershell\spl.ps1 -install -installMandatory
+& .\powershell\spl.ps1 -install -installMandatory
 
 Push-Location powershell\test\
 # TODO: ugly workaround to invoke tests twice, first time always fails.
