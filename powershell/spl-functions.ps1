@@ -13,7 +13,7 @@ Function Invoke-CommandLine {
         [bool]$Silent = $false
     )
     if (-Not $Silent) {
-        Write-Information -Tags "Info:" -MessageData "Executing: $CommandLine"
+        Write-Information -Tags "Info:" -MessageData "Executing: $CommandLine" -InformationAction Continue
     }
 
     try {
@@ -29,7 +29,7 @@ Function Invoke-CommandLine {
         }
         else {
             if (-Not $Silent) {
-                Write-Information -Tags "Info:" -MessageData "Command line call `"$CommandLine`" failed with exit code $LASTEXITCODE, continuing ..."
+                Write-Information -Tags "Info:" -MessageData "Command line call `"$CommandLine`" failed with exit code $LASTEXITCODE, continuing ..." -InformationAction Continue
             }
         }
     }
@@ -43,8 +43,8 @@ Function Initialize-Proxy([String] $ProxyHost, [String] $NoProxy) {
     $webProxy = New-Object System.Net.WebProxy($Env:HTTP_PROXY, $true, ($Env:NO_PROXY).split(','))
     [net.webrequest]::defaultwebproxy = $webProxy
     [net.webrequest]::defaultwebproxy.credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
-    Write-Information -Tags "Info:" -MessageData "Proxy set to: " + $Env:HTTP_PROXY
-    Write-Information -Tags "Info:" -MessageData "No-Proxy set to: " + $Env:NO_PROXY
+    Write-Information -Tags "Info:" -MessageData "Proxy set to: " + $Env:HTTP_PROXY -InformationAction Continue
+    Write-Information -Tags "Info:" -MessageData "No-Proxy set to: " + $Env:NO_PROXY -InformationAction Continue
 }
 
 # installs scoop packages; can be a single package or multiple packages at once
@@ -52,17 +52,6 @@ Function ScoopInstall ([string[]]$Packages) {
     if ($Packages) {
         Invoke-CommandLine -CommandLine "scoop install $Packages"
         ReloadEnvVars
-    }
-}
-
-# installs optional scoop packages; the user can decide to install or skip every package individually
-Function ScoopInstallOptional ([string[]]$Packages) {
-    foreach ($package in $Packages) {
-        $message = "Do you want to install '$package'? (y/n)"
-        [ValidateSet('y','n')]$Answer = Read-Host $message
-        if ($Answer -eq 'y') {
-            ScoopInstall($package)
-        }
     }
 }
 
@@ -86,7 +75,7 @@ Function PythonInstall ([string[]]$Packages, [string[]]$TrustedHosts) {
 Function Invoke-Setup-Script([string] $Location) {
     if (Test-Path -Path $Location) {
         Get-ChildItem $Location | ForEach-Object {
-            Write-Information("Run: " + $_.FullName)
+            Write-Information -Tags "Info:" -MessageData ("Run: " + $_.FullName) -InformationAction Continue
             & $_.FullName
         }
     }
@@ -98,6 +87,7 @@ Function Install-Basic-Toolset() {
         if ((New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
             & "$PSScriptRoot\install-scoop.ps1" -RunAsAdmin
         } else {
+            Write-Information -Tags "Error:" -MessageData "Failed installing Scoop." -InformationAction Continue
             & "$PSScriptRoot\install-scoop.ps1"
         }
 
@@ -116,23 +106,14 @@ Function Install-Basic-Toolset() {
 }
 
 # install all tools that are mandatory for building the project
-Function Install-Mandatory-Toolset([PSCustomObject]$JsonDependencies) {
-    Foreach ($repo in $JsonDependencies.mandatory.scoop_repos) {
-        $repo_and_name = $repo.Split("@")
-        Invoke-CommandLine -CommandLine "scoop bucket add $($repo_and_name[0]) $($repo_and_name[1])" -StopAtError $false -Silent $true
-        Invoke-CommandLine -CommandLine "scoop update"
+Function Install-Toolset([String]$FilePath) {
+    if (Test-Path -Path $FilePath) {
+        Invoke-CommandLine -CommandLine "scoop import $FilePath"
+        ReloadEnvVars
+        [string[]]$TrustedHosts = @("pypi.org")
+        [string[]]$Package = @("pipenv")
+        PythonInstall -Package $Package -TrustedHosts $TrustedHosts
     }
-
-    ScoopInstall($JsonDependencies.mandatory.scoop)
-    PythonInstall -Package $JsonDependencies.mandatory.python -TrustedHosts $JsonDependencies.mandatory.python_trusted_hosts
-}
-
-# install optional (GUI) tools that make life easier for developers
-Function Install-Optional-Toolset([PSCustomObject]$JsonDependencies) {
-    Invoke-CommandLine -CommandLine "scoop bucket add extras" -StopAtError $false
-    Invoke-CommandLine -CommandLine "scoop update"
-    ScoopInstallOptional($JsonDependencies.optional.scoop)
-    PythonInstall -Package $jsonDependJsonDependenciesencies.optional.python
 }
 
 # start CMake with given targets
@@ -166,12 +147,12 @@ Function Invoke-CMake-Build([String] $Target, [String] $Variants, [String] $Filt
             $variantsSelected = @()
             if (-Not $Variants) {
                 # variant selection if not specified
-                Write-Information -ForegroundColor Black -BackgroundColor Yellow "no '--variant <variant>' was given, please select from list:"
+                Write-Information -Tags "Info:" -MessageData "no '--variant <variant>' was given, please select from list:" -InformationAction Continue
                 Foreach ($variant in $variantsList) {
-                    Write-Information ("(" + [array]::IndexOf($variantsList, $variant) + ") " + $variant)
+                    Write-Information -Tags "Info:" -MessageData ("(" + [array]::IndexOf($variantsList, $variant) + ") " + $variant)
                 }
                 $variantsSelected += $variantsList[[int](Read-Host "Please enter selected variant number")]
-                Write-Information -ForegroundColor Black -BackgroundColor Yellow "Selected variant is: $variantsSelected"
+                Write-Information -Tags "Info:" -MessageData "Selected variant is: $variantsSelected" -InformationAction Continue
             }
             else {
                 $variantsSelected = $variantsList

@@ -20,11 +20,11 @@ param(
 $splDir = "./build/spl-core"
 
 if ($useCurrent) {
-    Write-Information -Tags "Info:" -MessageData "Using current directory as SPL."
+    Write-Information -Tags "Info:" -MessageData "Using current directory as SPL." -InformationAction Continue
     $splDir = "$PSScriptRoot"
 }
 else {
-    Write-Information -Tags "Info:" -MessageData "Cloning SPL version: $version from $repo_url"
+    Write-Information -Tags "Info:" -MessageData "Cloning SPL version: $version from $repo_url" -InformationAction Continue
 
     if (-Not (Get-Command git -ErrorAction SilentlyContinue)) {
         throw "'git' executable not found, please install it."
@@ -33,7 +33,7 @@ else {
     # This check works for tags as versions, only.
     # Use with care when you give a branch as version (no git pull here)
     if (Test-Path "$splDir/$version") {
-        Write-Information -Tags "Info:" -MessageData "SPL-core version already set to $version, no update."
+        Write-Information -Tags "Info:" -MessageData "SPL-core version already set to $version, no update." -InformationAction Continue
     }
     else {
         if (Test-Path "$splDir") {
@@ -47,7 +47,7 @@ else {
 Push-Location "$splDir"
 
 if ($skipInstall) {
-    Write-Information -Tags "Info:" -MessageData "Skipping installation of dependencies."
+    Write-Information -Tags "Info:" -MessageData "Skipping installation of dependencies." -InformationAction Continue
 }
 else {
     . .\powershell\spl-variables.ps1
@@ -58,8 +58,7 @@ else {
     }
     
     Install-Basic-Toolset
-    $SPL_INSTALL_DEPENDENCY_JSON_FILE_CONTENT = Get-Content -Raw -Path "dependencies.json" | ConvertFrom-Json
-    Install-Mandatory-Toolset -JsonDependencies $SPL_INSTALL_DEPENDENCY_JSON_FILE_CONTENT
+    Install-Toolset -FilePath "$PSScriptRoot/../Scoopfile.json"
 }
 
 Pop-Location #$splDir
