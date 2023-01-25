@@ -13,7 +13,7 @@ Function Invoke-CommandLine {
         [bool]$Silent = $false
     )
     if (-Not $Silent) {
-        Write-Information -Tags "Info:" -MessageData "Executing: $CommandLine" -InformationAction Continue
+        Write-Information -Tags "Info:" -MessageData "Executing: $CommandLine"
     }
 
     try {
@@ -29,7 +29,7 @@ Function Invoke-CommandLine {
         }
         else {
             if (-Not $Silent) {
-                Write-Information -Tags "Info:" -MessageData "Command line call `"$CommandLine`" failed with exit code $LASTEXITCODE, continuing ..." -InformationAction Continue
+                Write-Information -Tags "Info:" -MessageData "Command line call `"$CommandLine`" failed with exit code $LASTEXITCODE, continuing ..."
             }
         }
     }
@@ -43,8 +43,8 @@ Function Initialize-Proxy([String] $ProxyHost, [String] $NoProxy) {
     $webProxy = New-Object System.Net.WebProxy($Env:HTTP_PROXY, $true, ($Env:NO_PROXY).split(','))
     [net.webrequest]::defaultwebproxy = $webProxy
     [net.webrequest]::defaultwebproxy.credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
-    Write-Information -Tags "Info:" -MessageData "Proxy set to: " + $Env:HTTP_PROXY -InformationAction Continue
-    Write-Information -Tags "Info:" -MessageData "No-Proxy set to: " + $Env:NO_PROXY -InformationAction Continue
+    Write-Information -Tags "Info:" -MessageData "Proxy set to: " + $Env:HTTP_PROXY
+    Write-Information -Tags "Info:" -MessageData "No-Proxy set to: " + $Env:NO_PROXY
 }
 
 # installs scoop packages; can be a single package or multiple packages at once
@@ -75,7 +75,7 @@ Function PythonInstall ([string[]]$Packages, [string[]]$TrustedHosts) {
 Function Invoke-Setup-Script([string] $Location) {
     if (Test-Path -Path $Location) {
         Get-ChildItem $Location | ForEach-Object {
-            Write-Information -Tags "Info:" -MessageData ("Run: " + $_.FullName) -InformationAction Continue
+            Write-Information -Tags "Info:" -MessageData ("Run: " + $_.FullName)
             & $_.FullName
         }
     }
@@ -87,7 +87,7 @@ Function Install-Basic-Toolset() {
         if ((New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
             & "$PSScriptRoot\install-scoop.ps1" -RunAsAdmin
         } else {
-            Write-Information -Tags "Error:" -MessageData "Failed installing Scoop." -InformationAction Continue
+            Write-Information -Tags "Error:" -MessageData "Failed installing Scoop."
             & "$PSScriptRoot\install-scoop.ps1"
         }
 
@@ -147,12 +147,12 @@ Function Invoke-CMake-Build([String] $Target, [String] $Variants, [String] $Filt
             $variantsSelected = @()
             if (-Not $Variants) {
                 # variant selection if not specified
-                Write-Information -Tags "Info:" -MessageData "no '--variant <variant>' was given, please select from list:" -InformationAction Continue
+                Write-Information -Tags "Info:" -MessageData "no '--variant <variant>' was given, please select from list:"
                 Foreach ($variant in $variantsList) {
                     Write-Information -Tags "Info:" -MessageData ("(" + [array]::IndexOf($variantsList, $variant) + ") " + $variant)
                 }
                 $variantsSelected += $variantsList[[int](Read-Host "Please enter selected variant number")]
-                Write-Information -Tags "Info:" -MessageData "Selected variant is: $variantsSelected" -InformationAction Continue
+                Write-Information -Tags "Info:" -MessageData "Selected variant is: $variantsSelected"
             }
             else {
                 $variantsSelected = $variantsList

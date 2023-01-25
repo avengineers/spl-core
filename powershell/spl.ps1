@@ -70,7 +70,7 @@ param(
 
 
 $ErrorActionPreference = "Stop"
-Write-Information -Tags "Info:" -MessageData "Running in ${pwd}" -InformationAction Continue
+Write-Information -Tags "Info:" -MessageData "Running in ${pwd}"
 
 # load spl scripts
 . "$PSScriptRoot\include.ps1"
@@ -81,7 +81,7 @@ if($install -or $build) {
     }
 
     if ($installMandatory) {
-        Write-Information -Tags "Info:" -MessageData "Install SPL core mandatory dependencies." -InformationAction Continue
+        Write-Information -Tags "Info:" -MessageData "Install SPL core mandatory dependencies."
         Install-Toolset -FilePath "$PSScriptRoot/../Scoopfile.json"
         Invoke-Setup-Script -Location "$SPL_EXTENSIONS_SETUP_SCRIPTS_PATH\mandatory"
         New-Item -Path ".venv" -ItemType Directory -Force
@@ -89,7 +89,7 @@ if($install -or $build) {
     }
 
     if ($installOptional) {
-        Write-Information -Tags "Info:" -MessageData "Install SPL core optional dependencies." -InformationAction Continue
+        Write-Information -Tags "Info:" -MessageData "Install SPL core optional dependencies."
         Install-Toolset -FilePath "$PSScriptRoot/../ScoopfileOptional.json"
         Invoke-Setup-Script -Location "$SPL_EXTENSIONS_SETUP_SCRIPTS_PATH\optional"
     }

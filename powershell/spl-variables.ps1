@@ -9,7 +9,7 @@ Function Read-Environment-Variable-List {
             }
         }
     } catch {
-        Write-Information -Tags "Error:" -MessageData "Error while reading VSCode settings." -InformationAction Continue
+        Write-Information -Tags "Error:" -MessageData "Error while reading VSCode settings."
     }
 }
 
@@ -18,7 +18,7 @@ Read-Environment-Variable-List
 
 $SPL_EXTENSIONS_SETUP_SCRIPTS_PATH = "$Env:SPL_EXTENSION_ROOT_DIR$Env:SPL_EXTENSION_SETUP_SCRIPT_SUBDIR"
 if ($null -eq $SPL_EXTENSIONS_SETUP_SCRIPTS_PATH) {
-    Write-Information -Tags "Error:" -MessageData "SPL_EXTENSIONS_SETUP_SCRIPTS_PATH is not defined, maybe a configuration issue?" -InformationAction Continue
+    Write-Information -Tags "Error:" -MessageData "SPL_EXTENSIONS_SETUP_SCRIPTS_PATH is not defined, maybe a configuration issue?"
 }
 
 # proxy settings are read from configuration file and present as environment variables afterwards.

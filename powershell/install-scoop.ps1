@@ -83,7 +83,7 @@ function Write-InstallInfo {
         $host.UI.RawUI.ForegroundColor = $ForegroundColor
     }
 
-    Write-Information -Tags "Info:" -MessageData "$String" -InformationAction Continue
+    Write-Information -Tags "Info:" -MessageData "$String"
 
     $host.UI.RawUI.ForegroundColor = $backup
 }
