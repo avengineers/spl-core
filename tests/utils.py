@@ -129,6 +129,7 @@ class DirectoryTracker:
 
 
 class TestWorkspace:
+    __test__ = False
     DEFAULT_VARIANT = Variant('Flv1', 'Sys1')
 
     def __init__(self, out_dir_name: str):
