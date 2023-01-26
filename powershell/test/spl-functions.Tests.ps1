@@ -10,6 +10,7 @@ BeforeAll {
 Describe "invoking command line calls" {
   BeforeEach{
     Mock -CommandName Write-Information -MockWith {}
+    $global:LASTEXITCODE = 0
   }
 
   It "shall not write the command to console if silent" {
@@ -28,70 +29,6 @@ Describe "invoking command line calls" {
 
     Invoke-CommandLine -CommandLine "dir" -Silent $false -StopAtError $false
     Should -Invoke -CommandName Write-Information -Times 2
-  }
-}
-
-Describe "scoop installation" {
-  BeforeEach{
-    Mock -CommandName Invoke-CommandLine -MockWith {}
-  }
-
-  It "shall not call Invoke-CommandLine if no package is given" {
-    [String[]]$package = @() # empty array
-    ScoopInstall($package)
-    Should -Invoke -CommandName Invoke-CommandLine -Times 0
-  }
-
-  It "shall call Invoke-CommandLine once for all tools specified in package" {
-    [String[]]$package = "PowerShell", "MinGW", "MSys"
-    ScoopInstall($package)
-    Should -Invoke -CommandName Invoke-CommandLine -Times 1
-  }
-}
-
-Describe "scoop mandatory installation" {
-  BeforeEach{
-    Mock -CommandName ScoopInstall -MockWith {}
-  }
-
-  It "shall call scoop import" {
-    Mock -CommandName ScoopInstall -MockWith {}
-    Mock -CommandName PythonInstall -MockWith {}
-    Mock -CommandName Invoke-CommandLine -MockWith {}
-    Mock -CommandName Test-Path -MockWith {$true}
-
-    Install-Toolset("Scoopfile.json")
-
-    Should -Invoke -CommandName Invoke-CommandLine -Times 1
-  }
-}
-
-Describe "python installation" {
-  BeforeEach{
-    Mock -CommandName Invoke-CommandLine -MockWith {}
-  }
-
-  It "shall not call Invoke-CommandLine if no package is given" {
-
-    [String[]]$package = @() # empty array
-    PythonInstall -Package $package
-    Should -Invoke -CommandName Invoke-CommandLine -Times 0
-  }
-
-  It "shall call Invoke-CommandLine twice, once for installing packages and once for upgrading" {
-    [String[]]$package = "PowerShell", "MinGW", "MSys"
-    PythonInstall -Package $package
-    Should -Invoke -CommandName Invoke-CommandLine -Times 2
-  }
-}
-
-Describe "python installation advanced" {
-  It "shall add new trusted hosts to call" {
-    [String[]]$package = "pytest", "pipenv", "setuptools"
-    [String[]]$hosts = "pypi.org", "files.pythonhosted.org"
-    Mock -CommandName Invoke-CommandLine -MockWith {}
-    PythonInstall -Packages $package -TrustedHosts $hosts
-    Should -Invoke -CommandName Invoke-CommandLine -Times 2
   }
 }
 
@@ -116,32 +53,6 @@ Describe "running setup scripts" {
 
     Invoke-Setup-Script('mypath')
     Should -Invoke -CommandName ForEach-Object -Times 2
-  }
-}
-
-Describe "install basic tools" {
-  BeforeEach{
-    Mock -CommandName ScoopInstall -MockWith {}
-    Mock -CommandName invoke-expression -MockWith {}
-    Mock -CommandName Invoke-CommandLine -MockWith {}
-  }
-
-  It "shall install scoop if it does not find it and afterwards install tools using scoop" {
-    Mock -CommandName Get-Command -MockWith {$false} # does not find scoop
-
-    Install-Basic-Toolset
-    Should -Invoke -CommandName ScoopInstall -Times 2
-    # Should -Invoke -CommandName invoke-expression -Times 1  # complicated to count with different handling for admin and non-admin
-    Should -Invoke -CommandName Invoke-CommandLine -Times 3
-  }
-
-  It "shall skip install scoop if it finds it and afterwards install tools using scoop" {
-    Mock -CommandName Get-Command -MockWith {$true} # finds scoop
-
-    Install-Basic-Toolset
-    Should -Invoke -CommandName ScoopInstall -Times 2
-    Should -Invoke -CommandName invoke-expression -Times 0
-    Should -Invoke -CommandName Invoke-CommandLine -Times 1
   }
 }
 

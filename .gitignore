@@ -17,3 +17,9 @@ __pycache__/
 out
 *.egg-info/
 .eggs/
+
+# Pipfile to be generated out of requirements.txt
+/Pipfile
+
+# bootstrap for spl builds
+/bootstrap.ps1

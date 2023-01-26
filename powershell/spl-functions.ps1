@@ -1,10 +1,4 @@
-# Needed on Jenkins, somehow the env var PATH is not updated automatically
-# after tool installations by scoop
-Function ReloadEnvVars () {
-    $Env:Path = [System.Environment]::GetEnvironmentVariable("Path", "User") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "Machine")
-}
-
-# executes a command line call
+# executes a command line call and fails on first external error
 Function Invoke-CommandLine {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingInvokeExpression', '', Justification='Usually this statement must be avoided (https://learn.microsoft.com/en-us/powershell/scripting/learn/deep-dives/avoid-using-invoke-expression?view=powershell-7.3), here it is OK as it does not execute unknown code. Refactoring might still be good.')]
     param (
@@ -35,42 +29,6 @@ Function Invoke-CommandLine {
     }
 }
 
-# will configure the proxy if proxy variables were set in settings.json
-Function Initialize-Proxy([String] $ProxyHost, [String] $NoProxy) {
-    $Env:HTTP_PROXY = "http://" + $ProxyHost.replace('http://', '')
-    $Env:HTTPS_PROXY = $Env:HTTP_PROXY
-    $Env:NO_PROXY = $NoProxy
-    $webProxy = New-Object System.Net.WebProxy($Env:HTTP_PROXY, $true, ($Env:NO_PROXY).split(','))
-    [net.webrequest]::defaultwebproxy = $webProxy
-    [net.webrequest]::defaultwebproxy.credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
-    Write-Information -Tags "Info:" -MessageData "Proxy set to: " + $Env:HTTP_PROXY
-    Write-Information -Tags "Info:" -MessageData "No-Proxy set to: " + $Env:NO_PROXY
-}
-
-# installs scoop packages; can be a single package or multiple packages at once
-Function ScoopInstall ([string[]]$Packages) {
-    if ($Packages) {
-        Invoke-CommandLine -CommandLine "scoop install $Packages"
-        ReloadEnvVars
-    }
-}
-
-# installs a given set of PIP packages (single or multiple)
-Function PythonInstall ([string[]]$Packages, [string[]]$TrustedHosts) {
-    if ($Packages) {
-        $hosts = ""
-        Foreach ($trustedHost in $TrustedHosts) {
-            $hosts += " --trusted-host $trustedHost"
-        }
-
-        $pipInstaller = "python -m pip install $hosts"
-        Invoke-CommandLine -CommandLine "$pipInstaller $Packages"
-        ReloadEnvVars
-        Invoke-CommandLine -CommandLine "$pipInstaller --upgrade pip"
-        ReloadEnvVars
-    }
-}
-
 # the function will take a location/path to a directory that contains powershell.ps1 files and run all of them
 Function Invoke-Setup-Script([string] $Location) {
     if (Test-Path -Path $Location) {
@@ -81,38 +39,11 @@ Function Invoke-Setup-Script([string] $Location) {
     }
 }
 
-# installs required tools that are needed to use scoop and python as installers
-Function Install-Basic-Toolset() {
-    if (-Not (Get-Command scoop -ErrorAction SilentlyContinue)) {
-        if ((New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-            & "$PSScriptRoot\install-scoop.ps1" -RunAsAdmin
-        } else {
-            Write-Information -Tags "Error:" -MessageData "Failed installing Scoop."
-            & "$PSScriptRoot\install-scoop.ps1"
-        }
-
-        Invoke-CommandLine -CommandLine "scoop bucket rm main" -Silent $true -StopAtError $false
-        Invoke-CommandLine -CommandLine "scoop bucket add main" -Silent $true
-        ReloadEnvVars
-    }
-
-    # Necessary for 7zip installation, failed on Jenkins for unknown reason. See those issues:
-    # https://github.com/ScoopInstaller/Scoop/issues/460
-    # https://github.com/ScoopInstaller/Scoop/issues/4024
-    ScoopInstall('lessmsi')
-    Invoke-CommandLine -CommandLine "scoop config MSIEXTRACT_USE_LESSMSI $true"
-    # Default installer tools, e.g., dark is required for python
-    ScoopInstall('7zip', 'innounp', 'dark')
-}
-
 # install all tools that are mandatory for building the project
 Function Install-Toolset([String]$FilePath) {
     if (Test-Path -Path $FilePath) {
         Invoke-CommandLine -CommandLine "scoop import $FilePath"
-        ReloadEnvVars
-        [string[]]$TrustedHosts = @("pypi.org")
-        [string[]]$Package = @("pipenv")
-        PythonInstall -Package $Package -TrustedHosts $TrustedHosts
+        $Env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
     }
 }
 

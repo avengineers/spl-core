@@ -68,30 +68,43 @@ param(
     [switch]$installOptional ## install optional packages (e.g., VS Code)
 )
 
-
-$ErrorActionPreference = "Stop"
 Write-Information -Tags "Info:" -MessageData "Running in ${pwd}"
 
 # load spl scripts
 . "$PSScriptRoot\include.ps1"
 
-if($install -or $build) {
+if ($install -or $build) {
     if ($installMandatory -or $installOptional) {
-        Install-Basic-Toolset
-    }
+        $envProps = ConvertFrom-StringData (Get-Content '.env' -raw)
+        $bootstrap = $envProps.'BOOTSTRAP'
+        $extension_path = $envProps.'SPL_EXTENSIONS_SETUP_SCRIPTS_PATH'
+        $install_spl_deps = $envProps.'SPL_INSTALL_DEPENDENCIES'
 
-    if ($installMandatory) {
-        Write-Information -Tags "Info:" -MessageData "Install SPL core mandatory dependencies."
-        Install-Toolset -FilePath "$PSScriptRoot/../Scoopfile.json"
-        Invoke-Setup-Script -Location "$SPL_EXTENSIONS_SETUP_SCRIPTS_PATH\mandatory"
-        New-Item -Path ".venv" -ItemType Directory -Force
-        Invoke-CommandLine -CommandLine "python -m pipenv install"
-    }
+        (New-Object System.Net.WebClient).DownloadFile($bootstrap, ".\bootstrap.ps1")
+        . .\bootstrap.ps1
 
-    if ($installOptional) {
-        Write-Information -Tags "Info:" -MessageData "Install SPL core optional dependencies."
-        Install-Toolset -FilePath "$PSScriptRoot/../ScoopfileOptional.json"
-        Invoke-Setup-Script -Location "$SPL_EXTENSIONS_SETUP_SCRIPTS_PATH\optional"
+        if ($installMandatory) {
+            if ($install_spl_deps -eq 'true') {
+                Write-Information -Tags "Info:" -MessageData "Install SPL core mandatory dependencies."
+                Install-Toolset -FilePath "$PSScriptRoot\..\scoopfile.json"
+            }
+
+            if ($extension_path) {
+                Invoke-Setup-Script -Location "$extension_path\mandatory"
+            }
+        }
+
+        if ($installOptional) {
+            if ($install_spl_deps -eq 'true') {
+                Write-Information -Tags "Info:" -MessageData "Install SPL core optional dependencies."
+                Install-Toolset -FilePath "$PSScriptRoot\..\scoopfile-optional.json"
+                
+            }
+
+            if ($extension_path) {
+                Invoke-Setup-Script -Location "$extension_path\optional"
+            }
+        }
     }
 }
 
