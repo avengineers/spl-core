@@ -76,31 +76,15 @@ Write-Information -Tags "Info:" -MessageData "Running in ${pwd}"
 if ($install -or $build) {
     if ($installMandatory -or $installOptional) {
         $envProps = ConvertFrom-StringData (Get-Content '.env' -raw)
-        $bootstrap = $envProps.'BOOTSTRAP'
         $extension_path = $envProps.'SPL_EXTENSIONS_SETUP_SCRIPTS_PATH'
-        $install_spl_deps = $envProps.'SPL_INSTALL_DEPENDENCIES'
-
-        (New-Object System.Net.WebClient).DownloadFile($bootstrap, ".\bootstrap.ps1")
-        . .\bootstrap.ps1
 
         if ($installMandatory) {
-            if ($install_spl_deps -eq 'true') {
-                Write-Information -Tags "Info:" -MessageData "Install SPL core mandatory dependencies."
-                Install-Toolset -FilePath "$PSScriptRoot\..\scoopfile.json"
-            }
-
             if ($extension_path) {
                 Invoke-Setup-Script -Location "$extension_path\mandatory"
             }
         }
 
         if ($installOptional) {
-            if ($install_spl_deps -eq 'true') {
-                Write-Information -Tags "Info:" -MessageData "Install SPL core optional dependencies."
-                Install-Toolset -FilePath "$PSScriptRoot\..\scoopfile-optional.json"
-                
-            }
-
             if ($extension_path) {
                 Invoke-Setup-Script -Location "$extension_path\optional"
             }

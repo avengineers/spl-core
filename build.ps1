@@ -2,7 +2,9 @@ param(
     [switch]$clean
 )
 
-& .\powershell\spl.ps1 -install -installMandatory
+New-Item -ItemType Directory '.bootstrap'
+(New-Object System.Net.WebClient).DownloadFile("https://raw.githubusercontent.com/avengineers/bootstrap/develop/bootstrap.ps1", ".\.bootstrap\bootstrap.ps1")
+. .\.bootstrap\bootstrap.ps1
 
 # Unit Tests Powershell
 Push-Location powershell\test\

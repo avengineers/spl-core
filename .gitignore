@@ -21,5 +21,5 @@ out
 # Pipfile to be generated out of requirements.txt
 /Pipfile
 
-# bootstrap for spl builds
-/bootstrap.ps1
+# bootstrap folder for spl builds
+/.bootstrap/
