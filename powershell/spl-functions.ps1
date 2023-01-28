@@ -1,3 +1,8 @@
+# resets environment variables
+Function Edit-Env {
+    $Env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+}
+
 # executes a command line call and fails on first external error
 Function Invoke-CommandLine {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingInvokeExpression', '', Justification='Usually this statement must be avoided (https://learn.microsoft.com/en-us/powershell/scripting/learn/deep-dives/avoid-using-invoke-expression?view=powershell-7.3), here it is OK as it does not execute unknown code. Refactoring might still be good.')]
@@ -34,8 +39,9 @@ Function Invoke-Setup-Script([string] $Location) {
     if (Test-Path -Path $Location) {
         Get-ChildItem $Location | ForEach-Object {
             Write-Information -Tags "Info:" -MessageData ("Run: " + $_.FullName)
-            & $_.FullName
+            . $_.FullName
         }
+        Edit-Env
     }
 }
 
@@ -43,7 +49,7 @@ Function Invoke-Setup-Script([string] $Location) {
 Function Install-Toolset([String]$FilePath) {
     if (Test-Path -Path $FilePath) {
         Invoke-CommandLine -CommandLine "scoop import $FilePath"
-        $Env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+        Edit-Env
     }
 }
 
