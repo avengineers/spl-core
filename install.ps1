@@ -66,7 +66,7 @@ else {
     }
     
     Install-Basic-Toolset
-    Install-Toolset -FilePath "Scoopfile.json"
+    Install-Toolset -FilePath "scoopfile.json"
 }
 
 Pop-Location #$splDir
