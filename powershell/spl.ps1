@@ -83,6 +83,8 @@ if ($installMandatory) {
     Write-Output "Install SPL core mandatory dependencies defined in $SPL_CORE_INSTALL_DEPENDENCY_JSON_CONTENT"
     Install-Mandatory-Tools -JsonDependencies $SPL_CORE_INSTALL_DEPENDENCY_JSON_CONTENT
     Run-Setup-Scripts -Location "$SPL_EXTENSIONS_SETUP_SCRIPTS_PATH\mandatory"
+    Write-Output "Install project mandatory dependencies defined in $SPL_INSTALL_DEPENDENCY_JSON_CONTENT"
+    Install-Mandatory-Tools -JsonDependencies $SPL_INSTALL_DEPENDENCY_JSON_CONTENT
     New-Item -Path ".venv" -ItemType Directory -Force
     Invoke-CommandLine -CommandLine "python -m pipenv install"
 }
