@@ -1,6 +1,12 @@
 # resets environment variables
 Function Edit-Env {
-    $Env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+    # workaround for GithubActions
+    if ((New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+        (New-Object System.Net.WebClient).DownloadFile('https://raw.githubusercontent.com/xxthunder/ScoopInstall/master/install.ps1', "$PSScriptRoot\install-scoop.ps1")
+        $Env:Path = [System.Environment]::GetEnvironmentVariable("Path", "User") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "Machine")
+    } else {
+        $Env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+    }
 }
 
 # executes a command line call and fails on first external error
