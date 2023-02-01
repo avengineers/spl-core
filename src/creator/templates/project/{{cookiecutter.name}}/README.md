@@ -9,7 +9,7 @@ This is a tiny but fully fledged [SPL](https://en.wikipedia.org/wiki/Software_pr
 
 ## Preparation
 
-You can install required and optional tools and install some VS Code extensions. The installer uses Scoop/PowerShell, so it will only run on Windows. The full list of external dependencies is written to `dependencies.json`.
+You can install required and optional tools and install some VS Code extensions. The installer uses Scoop/PowerShell, so it will only run on Windows. The dependencies are in `Scoopfile.json` along with `requirements.txt`.
 * Install mandatory tools by executing `install-mandatory.bat` in the root directory of the repository.
 * Visual Studio Code can be installed by executing `install-optional.bat` in the root directory of the repository. VS Code is the recommended IDE for this SPL solution.
   * In VS Code you need to install the following extensions in order to fully utilize our SPL. Hit `Ctrl+Shift+x` to search and install them.

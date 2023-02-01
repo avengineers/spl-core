@@ -3,8 +3,9 @@ Function Read-Environment-Variable-List {
     try {
         $settingsJSON = Get-Content -Raw -Path .vscode/settings.json | ConvertFrom-Json
         if ($settingsJSON.'cmake.environment') {
-            $settingsJSON.'cmake.environment' | ForEach-Object {
-                [Environment]::SetEnvironmentVariable($_.Name, $_.Value)
+            $settingsJSON.'cmake.environment' | Get-Member -MemberType NoteProperty | ForEach-Object {
+                $key = $_.Name
+                [Environment]::SetEnvironmentVariable($key, $settingsJSON.'cmake.environment'.$key)
             }
         }
     } catch {
@@ -14,11 +15,6 @@ Function Read-Environment-Variable-List {
 
 ### Env Vars ###
 Read-Environment-Variable-List
-
-$SPL_CORE_INSTALL_DEPENDENCY_JSON_CONTENT = Get-Content -Raw -Path "$PSScriptRoot/../dependencies.json" | ConvertFrom-Json
-if ($null -eq $SPL_CORE_INSTALL_DEPENDENCY_JSON_CONTENT) {
-    Write-Information -Tags "Error:" -MessageData "SPL_CORE_INSTALL_DEPENDENCY_JSON_CONTENT is not defined, maybe a configuration issue?"
-}
 
 $SPL_EXTENSIONS_SETUP_SCRIPTS_PATH = "$Env:SPL_EXTENSION_ROOT_DIR$Env:SPL_EXTENSION_SETUP_SCRIPT_SUBDIR"
 if ($null -eq $SPL_EXTENSIONS_SETUP_SCRIPTS_PATH) {

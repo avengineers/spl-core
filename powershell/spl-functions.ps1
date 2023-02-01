@@ -55,17 +55,6 @@ Function ScoopInstall ([string[]]$Packages) {
     }
 }
 
-# installs optional scoop packages; the user can decide to install or skip every package individually
-Function ScoopInstallOptional ([string[]]$Packages) {
-    foreach ($package in $Packages) {
-        $message = "Do you want to install '$package'? (y/n)"
-        [ValidateSet('y','n')]$Answer = Read-Host $message
-        if ($Answer -eq 'y') {
-            ScoopInstall($package)
-        }
-    }
-}
-
 # installs a given set of PIP packages (single or multiple)
 Function PythonInstall ([string[]]$Packages, [string[]]$TrustedHosts) {
     if ($Packages) {
@@ -86,7 +75,7 @@ Function PythonInstall ([string[]]$Packages, [string[]]$TrustedHosts) {
 Function Invoke-Setup-Script([string] $Location) {
     if (Test-Path -Path $Location) {
         Get-ChildItem $Location | ForEach-Object {
-            Write-Information("Run: " + $_.FullName)
+            Write-Information -Tags "Info:" -MessageData ("Run: " + $_.FullName)
             & $_.FullName
         }
     }
@@ -98,6 +87,7 @@ Function Install-Basic-Toolset() {
         if ((New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
             & "$PSScriptRoot\install-scoop.ps1" -RunAsAdmin
         } else {
+            Write-Information -Tags "Error:" -MessageData "Failed installing Scoop."
             & "$PSScriptRoot\install-scoop.ps1"
         }
 
@@ -116,23 +106,14 @@ Function Install-Basic-Toolset() {
 }
 
 # install all tools that are mandatory for building the project
-Function Install-Mandatory-Toolset([PSCustomObject]$JsonDependencies) {
-    Foreach ($repo in $JsonDependencies.mandatory.scoop_repos) {
-        $repo_and_name = $repo.Split("@")
-        Invoke-CommandLine -CommandLine "scoop bucket add $($repo_and_name[0]) $($repo_and_name[1])" -StopAtError $false -Silent $true
-        Invoke-CommandLine -CommandLine "scoop update"
+Function Install-Toolset([String]$FilePath) {
+    if (Test-Path -Path $FilePath) {
+        Invoke-CommandLine -CommandLine "scoop import $FilePath"
+        ReloadEnvVars
+        [string[]]$TrustedHosts = @("pypi.org")
+        [string[]]$Package = @("pipenv")
+        PythonInstall -Package $Package -TrustedHosts $TrustedHosts
     }
-
-    ScoopInstall($JsonDependencies.mandatory.scoop)
-    PythonInstall -Package $JsonDependencies.mandatory.python -TrustedHosts $JsonDependencies.mandatory.python_trusted_hosts
-}
-
-# install optional (GUI) tools that make life easier for developers
-Function Install-Optional-Toolset([PSCustomObject]$JsonDependencies) {
-    Invoke-CommandLine -CommandLine "scoop bucket add extras" -StopAtError $false
-    Invoke-CommandLine -CommandLine "scoop update"
-    ScoopInstallOptional($JsonDependencies.optional.scoop)
-    PythonInstall -Package $jsonDependJsonDependenciesencies.optional.python
 }
 
 # start CMake with given targets
@@ -166,12 +147,12 @@ Function Invoke-CMake-Build([String] $Target, [String] $Variants, [String] $Filt
             $variantsSelected = @()
             if (-Not $Variants) {
                 # variant selection if not specified
-                Write-Information -ForegroundColor Black -BackgroundColor Yellow "no '--variant <variant>' was given, please select from list:"
+                Write-Information -Tags "Info:" -MessageData "no '--variant <variant>' was given, please select from list:"
                 Foreach ($variant in $variantsList) {
-                    Write-Information ("(" + [array]::IndexOf($variantsList, $variant) + ") " + $variant)
+                    Write-Information -Tags "Info:" -MessageData ("(" + [array]::IndexOf($variantsList, $variant) + ") " + $variant)
                 }
                 $variantsSelected += $variantsList[[int](Read-Host "Please enter selected variant number")]
-                Write-Information -ForegroundColor Black -BackgroundColor Yellow "Selected variant is: $variantsSelected"
+                Write-Information -Tags "Info:" -MessageData "Selected variant is: $variantsSelected"
             }
             else {
                 $variantsSelected = $variantsList

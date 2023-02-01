@@ -1,0 +1,34 @@
+{
+    "buckets": [
+        {
+            "Name": "extras",
+            "Source": "https://github.com/ScoopInstaller/Extras"
+        },
+        {
+            "Name": "main",
+            "Source": "https://github.com/ScoopInstaller/Main"
+        },
+        {
+            "Name": "versions",
+            "Source": "https://github.com/ScoopInstaller/Versions"
+        }
+    ],
+    "apps": [
+        {
+            "Source": "main",
+            "Name": "cmake"
+        },
+        {
+            "Source": "versions",
+            "Name": "python310"
+        },
+        {
+            "Source": "versions",
+            "Name": "mingw-winlibs-llvm-ucrt"
+        },
+        {
+            "Source": "extras",
+            "Name": "vscode"
+        }
+    ]
+}

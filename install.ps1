@@ -58,8 +58,7 @@ else {
     }
     
     Install-Basic-Toolset
-    $SPL_INSTALL_DEPENDENCY_JSON_FILE_CONTENT = Get-Content -Raw -Path "dependencies.json" | ConvertFrom-Json
-    Install-Mandatory-Toolset -JsonDependencies $SPL_INSTALL_DEPENDENCY_JSON_FILE_CONTENT
+    Install-Toolset -FilePath "Scoopfile.json"
 }
 
 Pop-Location #$splDir

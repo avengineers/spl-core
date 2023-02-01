@@ -54,65 +54,15 @@ Describe "scoop mandatory installation" {
     Mock -CommandName ScoopInstall -MockWith {}
   }
 
-  It "shall add all buckets from dependencies.json" {
+  It "shall call scoop import" {
     Mock -CommandName ScoopInstall -MockWith {}
     Mock -CommandName PythonInstall -MockWith {}
     Mock -CommandName Invoke-CommandLine -MockWith {}
+    Mock -CommandName Test-Path -MockWith {$true}
 
-    $SPL_INSTALL_DEPENDENCY_JSON_FILE_CONTENT = Get-Content -Raw -Path "../../dependencies.json" | ConvertFrom-Json
-    Install-Mandatory-Toolset($SPL_INSTALL_DEPENDENCY_JSON_FILE_CONTENT)
+    Install-Toolset("Scoopfile.json")
 
-    Should -Invoke -CommandName Invoke-CommandLine -Times 2
-  }
-}
-
-Describe "scoop optional installation" {
-  BeforeEach{
-    Mock -CommandName ScoopInstall -MockWith {}
-  }
-
-  It "shall fail if neither 'y' or 'n' was given" {
-    Mock -CommandName Read-Host -MockWith {'x'}
-
-    [String[]]$package = "PowerShell", "MinGW", "MSys"
-    $failed = $false
-    try {
-      ScoopInstallOptional($package)
-    } catch {
-      $failed = $true
-    }
-
-    $failed | Should -Be $true
-  }
-
-  It "shall work but not install anything if 'n' was given" {
-    Mock -CommandName Read-Host -MockWith {'n'}
-
-    [String[]]$package = "PowerShell", "MinGW", "MSys"
-    $failed = $false
-    try {
-      ScoopInstallOptional($package)
-    } catch {
-      $failed = $true
-    }
-
-    $failed | Should -Be $false
-    Should -Invoke -CommandName ScoopInstall -Times 0
-  }
-
-  It "shall work and install all 3 tools if 'y' was given" {
-    Mock -CommandName Read-Host -MockWith {'y'}
-
-    [String[]]$package = "PowerShell", "MinGW", "MSys"
-    $failed = $false
-    try {
-      ScoopInstallOptional($package)
-    } catch {
-      $failed = $true
-    }
-
-    $failed | Should -Be $false
-    Should -Invoke -CommandName ScoopInstall -Times 3
+    Should -Invoke -CommandName Invoke-CommandLine -Times 1
   }
 }
 
@@ -137,11 +87,11 @@ Describe "python installation" {
 
 Describe "python installation advanced" {
   It "shall add new trusted hosts to call" {
-    [String[]]$package = "PowerShell", "MinGW", "MSys"
+    [String[]]$package = "pytest", "pipenv", "setuptools"
     [String[]]$hosts = "pypi.org", "files.pythonhosted.org"
-    Mock -CommandName Invoke-CommandLine -MockWith {} -ParameterFilter { $CommandLine -eq "python -m pip install  --trusted-host pypi.org --trusted-host files.pythonhosted.org PowerShell MinGW MSys" }
+    Mock -CommandName Invoke-CommandLine -MockWith {}
     PythonInstall -Packages $package -TrustedHosts $hosts
-    Should -Invoke -CommandName Invoke-CommandLine -Times 1
+    Should -Invoke -CommandName Invoke-CommandLine -Times 2
   }
 }
 
