@@ -68,30 +68,27 @@ param(
     [switch]$installOptional ## install optional packages (e.g., VS Code)
 )
 
-
-$ErrorActionPreference = "Stop"
 Write-Information -Tags "Info:" -MessageData "Running in ${pwd}"
 
 # load spl scripts
 . "$PSScriptRoot\include.ps1"
 
-if($install -or $build) {
+if ($install -or $build) {
     if ($installMandatory -or $installOptional) {
-        Install-Basic-Toolset
-    }
+        $envProps = ConvertFrom-StringData (Get-Content '.env' -raw)
+        $extension_path = $envProps.'SPL_EXTENSIONS_SETUP_SCRIPTS_PATH'
 
-    if ($installMandatory) {
-        Write-Information -Tags "Info:" -MessageData "Install SPL core mandatory dependencies."
-        Install-Toolset -FilePath "$PSScriptRoot/../Scoopfile.json"
-        Invoke-Setup-Script -Location "$SPL_EXTENSIONS_SETUP_SCRIPTS_PATH\mandatory"
-        New-Item -Path ".venv" -ItemType Directory -Force
-        Invoke-CommandLine -CommandLine "python -m pipenv install"
-    }
+        if ($installMandatory) {
+            if ($extension_path) {
+                Invoke-Setup-Script -Location "$extension_path\mandatory"
+            }
+        }
 
-    if ($installOptional) {
-        Write-Information -Tags "Info:" -MessageData "Install SPL core optional dependencies."
-        Install-Toolset -FilePath "$PSScriptRoot/../ScoopfileOptional.json"
-        Invoke-Setup-Script -Location "$SPL_EXTENSIONS_SETUP_SCRIPTS_PATH\optional"
+        if ($installOptional) {
+            if ($extension_path) {
+                Invoke-Setup-Script -Location "$extension_path\optional"
+            }
+        }
     }
 }
 

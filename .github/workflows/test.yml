@@ -8,6 +8,9 @@ on:
 
   workflow_dispatch:
 
+env:
+  INVERT_PATH_VARIABLE: true
+
 jobs:
   test:
     runs-on: windows-latest

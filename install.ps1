@@ -1,3 +1,11 @@
+<#
+.DESCRIPTION
+    Deprecated Installation Bootstrap
+
+.Notes
+This file only exists for backwards compatibility reasons. Cannot be deleted. Should not be modified.
+#>
+
 param(
     [Parameter(
         Mandatory = $false
@@ -58,7 +66,7 @@ else {
     }
     
     Install-Basic-Toolset
-    Install-Toolset -FilePath "Scoopfile.json"
+    Install-Toolset -FilePath "scoopfile.json"
 }
 
 Pop-Location #$splDir
