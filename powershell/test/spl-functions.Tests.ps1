@@ -9,17 +9,17 @@ BeforeAll {
 
 Describe "invoking command line calls" {
   BeforeEach{
-    Mock -CommandName Write-Host -MockWith {}
+    Mock -CommandName Write-Information -MockWith {}
   }
 
   It "shall not write the command to console if silent" {
     Invoke-CommandLine -CommandLine "dir" -Silent $true -StopAtError $true
-    Should -Invoke -CommandName Write-Host -Times 0
+    Should -Invoke -CommandName Write-Information -Times 0
   }
 
   It "shall write the command to console as default" {
     Invoke-CommandLine -CommandLine "dir"
-    Should -Invoke -CommandName Write-Host -Times 1
+    Should -Invoke -CommandName Write-Information -Times 1
   }
 
   It "shall print an error on failure" {
@@ -27,7 +27,7 @@ Describe "invoking command line calls" {
     Mock -CommandName Invoke-Expression -MockWith {$global:LASTEXITCODE = 1}
 
     Invoke-CommandLine -CommandLine "dir" -Silent $false -StopAtError $false
-    Should -Invoke -CommandName Write-Host -Times 2
+    Should -Invoke -CommandName Write-Information -Times 2
   }
 }
 
@@ -60,7 +60,7 @@ Describe "scoop mandatory installation" {
     Mock -CommandName Invoke-CommandLine -MockWith {}
 
     $SPL_INSTALL_DEPENDENCY_JSON_FILE_CONTENT = Get-Content -Raw -Path "../../dependencies.json" | ConvertFrom-Json
-    Install-Mandatory-Tools($SPL_INSTALL_DEPENDENCY_JSON_FILE_CONTENT)
+    Install-Mandatory-Toolset($SPL_INSTALL_DEPENDENCY_JSON_FILE_CONTENT)
 
     Should -Invoke -CommandName Invoke-CommandLine -Times 2
   }
@@ -87,7 +87,7 @@ Describe "scoop optional installation" {
 
   It "shall work but not install anything if 'n' was given" {
     Mock -CommandName Read-Host -MockWith {'n'}
-    
+
     [String[]]$package = "PowerShell", "MinGW", "MSys"
     $failed = $false
     try {
@@ -102,7 +102,7 @@ Describe "scoop optional installation" {
 
   It "shall work and install all 3 tools if 'y' was given" {
     Mock -CommandName Read-Host -MockWith {'y'}
-    
+
     [String[]]$package = "PowerShell", "MinGW", "MSys"
     $failed = $false
     try {
@@ -122,7 +122,7 @@ Describe "python installation" {
   }
 
   It "shall not call Invoke-CommandLine if no package is given" {
-   
+
     [String[]]$package = @() # empty array
     PythonInstall -Package $package
     Should -Invoke -CommandName Invoke-CommandLine -Times 0
@@ -139,10 +139,9 @@ Describe "python installation advanced" {
   It "shall add new trusted hosts to call" {
     [String[]]$package = "PowerShell", "MinGW", "MSys"
     [String[]]$hosts = "pypi.org", "files.pythonhosted.org"
-    $global:counter = 0
-    Mock -CommandName Invoke-CommandLine -MockWith {$global:counter++} -ParameterFilter { $CommandLine -eq "python -m pip install  --trusted-host pypi.org --trusted-host files.pythonhosted.org PowerShell MinGW MSys" }
+    Mock -CommandName Invoke-CommandLine -MockWith {} -ParameterFilter { $CommandLine -eq "python -m pip install  --trusted-host pypi.org --trusted-host files.pythonhosted.org PowerShell MinGW MSys" }
     PythonInstall -Packages $package -TrustedHosts $hosts
-    $global:counter | Should -Be 1
+    Should -Invoke -CommandName Invoke-CommandLine -Times 1
   }
 }
 
@@ -150,8 +149,8 @@ Describe "running setup scripts" {
   It "shall not search for files if directory does not exist" {
     Mock -CommandName Test-Path -MockWith {$false}
     Mock -CommandName Get-ChildItem -MockWith {}
-    
-    Run-Setup-Scripts('mypath')
+
+    Invoke-Setup-Script('mypath')
     Should -Invoke -CommandName Get-ChildItem -Times 0
   }
 
@@ -164,8 +163,8 @@ Describe "running setup scripts" {
         @{"FullName" = "file2.txt"}
       )
     }
-    
-    Run-Setup-Scripts('mypath')
+
+    Invoke-Setup-Script('mypath')
     Should -Invoke -CommandName ForEach-Object -Times 2
   }
 }
@@ -179,8 +178,8 @@ Describe "install basic tools" {
 
   It "shall install scoop if it does not find it and afterwards install tools using scoop" {
     Mock -CommandName Get-Command -MockWith {$false} # does not find scoop
-    
-    Install-Basic-Tools
+
+    Install-Basic-Toolset
     Should -Invoke -CommandName ScoopInstall -Times 2
     # Should -Invoke -CommandName invoke-expression -Times 1  # complicated to count with different handling for admin and non-admin
     Should -Invoke -CommandName Invoke-CommandLine -Times 3
@@ -188,8 +187,8 @@ Describe "install basic tools" {
 
   It "shall skip install scoop if it finds it and afterwards install tools using scoop" {
     Mock -CommandName Get-Command -MockWith {$true} # finds scoop
-    
-    Install-Basic-Tools
+
+    Install-Basic-Toolset
     Should -Invoke -CommandName ScoopInstall -Times 2
     Should -Invoke -CommandName invoke-expression -Times 0
     Should -Invoke -CommandName Invoke-CommandLine -Times 1
@@ -209,7 +208,7 @@ Describe "import project with transformer" {
     Mock -CommandName Pop-Location -MockWith {}
     Mock -CommandName Test-Path -MockWith {$true}
 
-    Run-Transformer -Source "mysource" -Variant "myvariant"
+    Invoke-Transformer -Source "mysource" -Variant "myvariant"
     Should -Invoke -CommandName Remove-Item -Times 1
   }
 
@@ -223,7 +222,7 @@ Describe "import project with transformer" {
     Mock -CommandName Test-Path -MockWith {$false} -ParameterFilter { $Path -eq ".git" }
     Mock -CommandName Test-Path -MockWith {$true} -ParameterFilter { $Path -eq "./build/import/transformer/.git" }
 
-    Run-Transformer -Source "mysource" -Variant "myvariant" -Clean $true
+    Invoke-Transformer -Source "mysource" -Variant "myvariant" -Clean $true
     Should -Invoke -CommandName Remove-Item -Times 1
     Should -Invoke -CommandName git -Times 1
     Should -Invoke -CommandName New-Item -Times 1
@@ -236,7 +235,7 @@ Describe "running CMake" {
   }
 
   It "shall run target selftests" {
-    Run-CMake-Build -Target "selftests" -Variants "myvariant" -Filter "" -NinjaArgs "" -Clean $false -Reconfigure $false
+    Invoke-CMake-Build -Target "selftests" -Variants "myvariant" -Filter "" -NinjaArgs "" -Clean $false -Reconfigure $false
     Should -Invoke -CommandName Invoke-CommandLine -Times 1
   }
 
@@ -244,7 +243,7 @@ Describe "running CMake" {
     Mock -CommandName Remove-Item -MockWith {}
     Mock -CommandName Test-Path -MockWith {$true}
 
-    Run-CMake-Build -Target "selftests" -Variants "myvariant" -Filter "abc" -NinjaArgs "" -Clean $true -Reconfigure $false
+    Invoke-CMake-Build -Target "selftests" -Variants "myvariant" -Filter "abc" -NinjaArgs "" -Clean $true -Reconfigure $false
     Should -Invoke -CommandName Invoke-CommandLine -Times 1
     Should -Invoke -CommandName Remove-Item -Times 1
   }
@@ -253,7 +252,7 @@ Describe "running CMake" {
     Mock -CommandName Remove-Item -MockWith {}
     Mock -CommandName Test-Path -MockWith {$true}
 
-    Run-CMake-Build -Target "mytarget" -Variants "myvariant" -Filter "abc" -NinjaArgs "" -Clean $false -Reconfigure $true
+    Invoke-CMake-Build -Target "mytarget" -Variants "myvariant" -Filter "abc" -NinjaArgs "" -Clean $false -Reconfigure $true
     Should -Invoke -CommandName Invoke-CommandLine -Times 3
     Should -Invoke -CommandName Remove-Item -Times 2
   }
