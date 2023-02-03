@@ -2,9 +2,11 @@
 
 In this repository we construct the *SPL Core* functionality that can be integrated into CMake projects.
 
+See https://github.com/avengineers/SPLDemo for an example usage.
+
 ## CI (Continuous Integration)
 
-* [![selftests](https://github.com/avengineers/spl/actions/workflows/gate.yml/badge.svg)](https://github.com/avengineers/spl/actions/workflows/gate.yml)
+* [![selftests](https://github.com/avengineers/spl/actions/workflows/test.yml/badge.svg)](https://github.com/avengineers/spl/actions/workflows/test.yml)
 
 ## Getting started
 

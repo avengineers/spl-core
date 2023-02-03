@@ -29,7 +29,7 @@ $splDir = "./build/spl-core"
 
 if ($useCurrent) {
     Write-Information -Tags "Info:" -MessageData "Using current directory as SPL."
-    $splDir = "$PSScriptRoot"
+    $splDir = $PSScriptRoot
 }
 else {
     Write-Information -Tags "Info:" -MessageData "Cloning SPL version: $version from $repo_url"
