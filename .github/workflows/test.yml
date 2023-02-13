@@ -9,7 +9,9 @@ on:
   workflow_dispatch:
 
 env:
-  INVERT_PATH_VARIABLE: true
+  # Workaround to avoid usage of system wide installations
+  USER_PATH_FIRST: true
+
 
 jobs:
   test:

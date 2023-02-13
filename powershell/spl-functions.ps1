@@ -1,7 +1,8 @@
 # resets environment variables
 Function Edit-Env {
     # workaround for GithubActions
-    if ($Env:INVERT_PATH_VARIABLE -eq "true") {
+    if ($Env:USER_PATH_FIRST -eq "true") {
+
         $Env:Path = [System.Environment]::GetEnvironmentVariable("Path", "User") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "Machine")
     }
     else {
