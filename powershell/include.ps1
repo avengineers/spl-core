@@ -1,6 +1,8 @@
-. $PSScriptRoot\spl-variables.ps1
-. $PSScriptRoot\spl-functions.ps1
+# Always set the $InformationPreference variable to "Continue" globally, this way it gets printed on execution and continues execution afterwards.
+$InformationPreference = "Continue"
 
-if ($SPL_PROXY_HOST -and $SPL_PROXY_BYPASS_LIST) {
-    Setup-Proxy -ProxyHost $SPL_PROXY_HOST -NoProxy $SPL_PROXY_BYPASS_LIST
-}
+# Stop on first PS error
+$ErrorActionPreference = "Stop"
+
+# Import the variables and functions script
+. "$PSScriptRoot\spl-functions.ps1"

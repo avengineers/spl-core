@@ -8,7 +8,7 @@ policy for the user. You can do this by issuing the following PowerShell command
 
 PS C:\> Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
-For more information on Execution Policies: 
+For more information on Execution Policies:
 https://go.microsoft.com/fwlink/?LinkID=135170
 #>
 
@@ -68,37 +68,34 @@ param(
     [switch]$installOptional ## install optional packages (e.g., VS Code)
 )
 
-
-$ErrorActionPreference = "Stop"
-Write-Output "Running in ${pwd}"
+Write-Information -Tags "Info:" -MessageData "Running in ${pwd}"
 
 # load spl scripts
-. $PSScriptRoot\include.ps1
+. "$PSScriptRoot\include.ps1"
 
-if ($installMandatory -or $installOptional) {
-    Install-Basic-Tools
-}
+if ($install -or $build) {
+    if ($installMandatory -or $installOptional) {
+        $envProps = ConvertFrom-StringData (Get-Content '.env' -raw)
+        $extension_path = $envProps.'SPL_EXTENSIONS_SETUP_SCRIPTS_PATH'
 
-if ($installMandatory) {
-    Write-Output "Install SPL core mandatory dependencies defined in $SPL_CORE_INSTALL_DEPENDENCY_JSON_CONTENT"
-    Install-Mandatory-Tools -JsonDependencies $SPL_CORE_INSTALL_DEPENDENCY_JSON_CONTENT
-    Run-Setup-Scripts -Location "$SPL_EXTENSIONS_SETUP_SCRIPTS_PATH\mandatory"
-    Write-Output "Install project mandatory dependencies defined in $SPL_INSTALL_DEPENDENCY_JSON_CONTENT"
-    Install-Mandatory-Tools -JsonDependencies $SPL_INSTALL_DEPENDENCY_JSON_CONTENT
-    New-Item -Path ".venv" -ItemType Directory -Force
-    Invoke-CommandLine -CommandLine "python -m pipenv install"
-}
+        if ($installMandatory) {
+            if ($extension_path) {
+                Invoke-Setup-Script -Location "$extension_path\mandatory"
+            }
+        }
 
-if ($installOptional) {
-    Write-Output "Install SPL core optional dependencies defined in $SPL_CORE_INSTALL_DEPENDENCY_JSON_CONTENT"
-    Install-Optional-Tools -JsonDependencies $SPL_CORE_INSTALL_DEPENDENCY_JSON_CONTENT
-    Run-Setup-Scripts -Location "$SPL_EXTENSIONS_SETUP_SCRIPTS_PATH\optional"
+        if ($installOptional) {
+            if ($extension_path) {
+                Invoke-Setup-Script -Location "$extension_path\optional"
+            }
+        }
+    }
 }
 
 if ($build) {
-    Run-CMake-Build -Target $target -Variants $variants -Filter $filter -NinjaArgs $ninjaArgs -Clean $clean -Reconfigure $reconfigure
+    Invoke-CMake-Build -Target $target -Variants $variants -Filter $filter -NinjaArgs $ninjaArgs -Clean $clean -Reconfigure $reconfigure
 }
 
 if ($import) {
-    Run-Transformer -Source $source -Variant $variant -Clean $clean
+    Invoke-Transformer -Source $source -Variant $variant -Clean $clean
 }

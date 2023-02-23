@@ -1,4 +1,4 @@
-name: selftests
+name: Selftests
 
 on:
   push:
@@ -8,16 +8,22 @@ on:
 
   workflow_dispatch:
 
+env:
+  # Workaround to avoid usage of system wide installations
+  USER_PATH_FIRST: true
+
+
 jobs:
   test:
+    name: Unit and Integration Tests
     runs-on: windows-latest
-
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           submodules: true
       - name: install tools and run selftests
         run: |
+          .\build.ps1 -install
           .\build.ps1
         shell: powershell

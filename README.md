@@ -2,16 +2,18 @@
 
 In this repository we construct the *SPL Core* functionality that can be integrated into CMake projects.
 
+See https://github.com/avengineers/SPLDemo for an example usage.
+
 ## CI (Continuous Integration)
 
-* [![selftests](https://github.com/avengineers/spl/actions/workflows/gate.yml/badge.svg)](https://github.com/avengineers/spl/actions/workflows/gate.yml)
+* [![selftests](https://github.com/avengineers/spl/actions/workflows/test.yml/badge.svg)](https://github.com/avengineers/spl/actions/workflows/test.yml)
 
 ## Getting started
 
-First thing to do is to install all SPL dependencies by opening a terminal and running:
+First thing to do is to install all SPL dependencies and executing tests by opening a terminal and running:
 
 ```powershell
-pipenv install
+.\build.ps1
 ```
 
 Now you can just create a new SPL workspace. We recommend using the workspace creator wrapper for it.
