@@ -25,10 +25,6 @@
         {
             "Source": "versions",
             "Name": "mingw-winlibs-llvm-ucrt"
-        },
-        {
-            "Source": "extras",
-            "Name": "vscode"
         }
     ]
 }
