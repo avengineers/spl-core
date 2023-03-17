@@ -23,3 +23,6 @@ out
 
 # bootstrap folder for spl builds
 /.bootstrap/
+
+# version tag files created by installer
+/v*
