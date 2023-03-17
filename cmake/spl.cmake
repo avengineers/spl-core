@@ -35,10 +35,6 @@ if(BUILD_KIT STREQUAL prod)
         list(APPEND LINK_TARGET_DEPENDS ${VARIANT_LINKER_FILE})
     endif()
 
-    if(LINK_HEX_FILE)
-        list(APPEND LINK_TARGET_DEPENDS ${LINK_HEX_FILE})
-    endif()
-
     # create executable
     add_executable(${LINK_TARGET_NAME} ${LINK_TARGET_DEPENDS})
     target_compile_options(${LINK_TARGET_NAME} PRIVATE ${VARIANT_ADDITIONAL_LINK_FLAGS})
