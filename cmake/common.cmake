@@ -90,11 +90,6 @@ macro(spl_create_component)
     list(APPEND target_include_directories__INCLUDES ${CMAKE_CURRENT_LIST_DIR}/src)
     list(APPEND target_include_directories__INCLUDES ${CMAKE_CURRENT_BINARY_DIR})
 
-    foreach(source ${SOURCES})
-        get_filename_component(path ${source} DIRECTORY)
-        list(APPEND target_include_directories__INCLUDES ${path})
-    endforeach()
-
     list(APPEND target_include_directories__INCLUDES ${INCLUDES})
     list(REMOVE_DUPLICATES target_include_directories__INCLUDES)
     set(target_include_directories__INCLUDES ${target_include_directories__INCLUDES} PARENT_SCOPE)
