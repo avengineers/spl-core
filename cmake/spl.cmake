@@ -8,6 +8,12 @@ if(PIP_INSTALL_REQUIREMENTS)
     run_pip("${PIP_INSTALL_REQUIREMENTS}" $ENV{SPL_PIP_REPOSITORY} $ENV{SPL_PIP_TRUSTED_HOST})
 endif() 
 
+# set SPL relevant variables as environment variables, can easily be extended in CMakeLists.txt of project before including SPL core (used for KConfig variable expansion).
+list(APPEND ENVVARS FLAVOR SUBSYSTEM VARIANT BUILD_KIT BINARY_BASENAME CMAKE_SOURCE_DIR)
+foreach(ENVVAR IN LISTS ENVVARS)
+    set(ENV{${ENVVAR}} "${${ENVVAR}}")
+endforeach()
+
 # Include and run KConfig
 include(${CMAKE_CURRENT_LIST_DIR}/kconfig.cmake)
 

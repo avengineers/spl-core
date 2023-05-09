@@ -33,6 +33,32 @@ class TestKConfig:
         iut = KConfig(feature_model_file)
         cmake_expected = 'set(NAME "John Smith")\nset(STATUS "True")'
         assert iut.get_cmake_content() == cmake_expected
+        
+    def test_create_cmake_variable_expansion(self):
+        out_dir = TestUtils.create_clean_test_dir('')
+        feature_model_file = out_dir.write_file('kconfig.txt', r"""
+        config NAME
+            string "Just the name"
+            default "John Smith"
+        config REFERENCING
+            string "Just the name reference"
+            default "${NAME}"
+        """)
+        iut = KConfig(feature_model_file)
+        cmake_expected = 'set(NAME "John Smith")\nset(REFERENCING "John Smith")'
+        assert iut.get_cmake_content() == cmake_expected
+        
+    def test_create_cmake_environment_variable_expansion(self):
+        out_dir = TestUtils.create_clean_test_dir('')
+        os.environ["HowDoYouLikeThis"] = "ThisIsCool"
+        feature_model_file = out_dir.write_file('kconfig.txt', r"""
+        config NAME
+            string "Just the name"
+            default "${ENV:HowDoYouLikeThis}"
+        """)
+        iut = KConfig(feature_model_file)
+        cmake_expected = 'set(NAME "ThisIsCool")'
+        assert iut.get_cmake_content() == cmake_expected
 
     def test_load_user_config_file(self):
         out_dir = TestUtils.create_clean_test_dir('')
@@ -316,6 +342,7 @@ CONFIG_NAME="John Smith"
         """
         KConfigLib can generate the configuration as C-header file (like autoconf.h)
         """
+        os.environ["HowDoYouLikeThis"] = "ThisIsCool"
         out_dir = TestUtils.create_clean_test_dir('')
         feature_model_file = out_dir.write_file('kconfig.txt', """
                 menu "First menu"
@@ -323,18 +350,21 @@ CONFIG_NAME="John Smith"
                         bool "You can select FIRST_BOOL"
                     config FIRST_NAME
                         string "You can select FIRST_NAME"
+                    config REFERENCING
+                        string "Reference another KConfig value here"
                 endmenu
                 """)
 
-        user_config = out_dir.write_file('user.config', textwrap.dedent("""
+        user_config = out_dir.write_file('user.config', textwrap.dedent(r"""
                     CONFIG_FIRST_BOOL=y
                     CONFIG_FIRST_NAME="Dude"
+                    CONFIG_REFERENCING="KConfig expansion: ${FIRST_NAME}, environment variable: ${ENV:HowDoYouLikeThis}"
                     """))
         iut = KConfig(feature_model_file, user_config)
         header_file = out_dir.joinpath('gen/header.h')
         iut.generate_header(header_file)
         assert header_file.exists()
-        assert header_file.read_text() == """#ifndef autoconf\n#define autoconf\n\n#define CONFIG_FIRST_BOOL 1\n#define CONFIG_FIRST_NAME "Dude"\n\n#endif\n"""
+        assert header_file.read_text() == """#ifndef autoconf\n#define autoconf\n\n#define CONFIG_FIRST_BOOL 1\n#define CONFIG_FIRST_NAME "Dude"\n#define CONFIG_REFERENCING "KConfig expansion: Dude, environment variable: ThisIsCool"\n\n#endif\n"""
         timestamp = header_file.stat().st_ctime
         iut.generate_header(header_file)
         assert header_file.stat().st_ctime == timestamp, "the file shall not be written if content is not changed"
