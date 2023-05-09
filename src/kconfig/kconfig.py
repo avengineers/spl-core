@@ -4,6 +4,7 @@ import json
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Dict
+import re
 
 import kconfiglib
 
@@ -56,7 +57,7 @@ class KConfig:
                     f"File {k_config_file} does not exist.")
             self.config.load_config(k_config_file, replace=False)
 
-    def get_json_values(self) -> Dict:
+    def get_json_values(self, envvars_to_config = False) -> Dict:
         config_dict = {}
 
         def write_node(node):
@@ -76,6 +77,22 @@ class KConfig:
 
         for n in self.config.node_iter(False):
             write_node(n)
+
+        # replace text in KConfig with referenced variables (string type only)
+        # KConfig variables get replaced like: ${VARIABLE_NAME}, e.g. ${SPL_RELEASE_VERSION}
+        # environment variables get replaced with: ${ENV:VARIABLE_NAME}, e.g. ${ENV:VARIANT}  (yes, VARIANT is exposed as envvar, like BUILD_KIT)
+        environment_variables_to_expand = re.findall(r"\$\{ENV:(.*?)\}", "".join(value for value in config_dict.values() if isinstance(value, str)))
+        expanded_map = dict((f"${{{key}}}", f"{value}") for key, value in config_dict.items())
+        for envvar in environment_variables_to_expand:
+            expanded_map[f"${{ENV:{envvar}}}"] = os.environ.get(envvar, '')
+            if envvars_to_config:
+                config_dict[f"ENV:{envvar}"] = os.environ.get(envvar, '')
+            
+        for conf_key, conf_value in config_dict.items():
+            if isinstance(conf_value, str):
+                for key, value in expanded_map.items():
+                    config_dict[conf_key] = config_dict[conf_key].replace(key, value)
+
         return config_dict
     
 
@@ -90,6 +107,11 @@ class KConfig:
         
         with open(output_file, "r") as outfile:
             content = outfile.read()
+            
+        config_dict = self.get_json_values(envvars_to_config = True)
+        for key, value in config_dict.items():
+            if type(value) == str:
+                content = content.replace(f"${{{key}}}", value)
             
         with open(output_file, "w") as outfile:
             outfile.write('#ifndef autoconf\n#define autoconf\n\n' + content + '\n#endif\n')

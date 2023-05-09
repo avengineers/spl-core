@@ -23,3 +23,12 @@ cd <Your root directory of repository>
 ## Binary Location
 
 After the build all binaries can be found under `/build/{variant}`.
+
+
+## Configuration
+
+Configuration is done using KConfig. The target `Configuration` will open gui-config, a GUI tool to configure KConfig.
+Within this configuration a variable expansion is possible for `string` configs:
+
+* KConfig variables get replaced like: `${VARIABLE_NAME}`, e.g. `${SPL_RELEASE_VERSION}`
+* environment variables get replaced with: `${ENV:VARIABLE_NAME}`, e.g. `${ENV:VARIANT}`  (VARIANT is exposed as environment variable, other internal variables as well)
