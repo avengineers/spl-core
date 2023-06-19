@@ -22,19 +22,27 @@ if(EXISTS ${AUTOCONF_CMAKE})
 endif()
 
 if(BUILD_KIT STREQUAL prod)
-    # set default link target output name
-    if (LINK_FILE_BASENAME)
-        message("LINK_FILE is set to '${LINK_FILE_BASENAME}' and will be used.")
-    else()
-        set(LINK_FILE_BASENAME main)
-    endif()
+    # set default link target output name and extension
+    if (LINKER_OUTPUT_FILE)
+        get_filename_component(LINK_FILE_BASENAME ${LINKER_OUTPUT_FILE} NAME_WE)
+        message("LINK_FILE_BASENAME is set to '${LINK_FILE_BASENAME}' and will be used.")
 
-    # set default link target output name
-    if (LINK_FILE_EXTENSION)
+        get_filename_component(LINK_FILE_EXTENSION ${LINKER_OUTPUT_FILE} EXT)
         message("LINK_FILE_EXTENSION is set to '${LINK_FILE_EXTENSION}' and will be used.")
     else()
+        set(LINK_FILE_BASENAME main)
         set(LINK_FILE_EXTENSION .exe)
     endif()
+
+    #combine basename and byproduct extension
+    set(LINKER_BYPRODUCTS "")
+    string(REPLACE "," ";" LINKER_BYPRODUCTS_EXTENSIONS "${LINKER_BYPRODUCTS_EXTENSIONS}")
+    foreach(extension ${LINKER_BYPRODUCTS_EXTENSIONS})
+        string(APPEND LINKER_BYPRODUCTS "${LINK_FILE_BASENAME}.${extension};")
+    endforeach()
+    string(REGEX REPLACE ";$" "" LINKER_BYPRODUCTS "${LINKER_BYPRODUCTS}")  # Remove trailing semicolon
+
+    message("LINKER_BYPRODUCTS is set to '${LINKER_BYPRODUCTS}'")
 
     # add variant specific linker script if defined
     if(VARIANT_LINKER_FILE)
@@ -49,6 +57,15 @@ if(BUILD_KIT STREQUAL prod)
         SUFFIX ${LINK_FILE_EXTENSION}
         LINK_DEPENDS "${LINK_TARGET_DEPENDS}"
     )
+
+    if(LINKER_BYPRODUCTS)
+		add_custom_target(
+			linker_byproducts ALL
+            COMMAND CMAKE -E echo ""
+			DEPENDS ${LINKER_OUTPUT_FILE}
+            BYPRODUCTS ${LINKER_BYPRODUCTS}
+		)
+	endif()
 elseif(BUILD_KIT STREQUAL test)
     _spl_get_google_test()
     include(CTest)
