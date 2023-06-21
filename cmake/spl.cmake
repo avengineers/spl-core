@@ -6,7 +6,7 @@ set(SPL_CORE_PYTHON_MODULES_DIRECTORY ${SPL_CORE_ROOT_DIRECTORY}/src)
 
 if(PIP_INSTALL_REQUIREMENTS)
     run_pip("${PIP_INSTALL_REQUIREMENTS}" $ENV{SPL_PIP_REPOSITORY} $ENV{SPL_PIP_TRUSTED_HOST})
-endif() 
+endif(PIP_INSTALL_REQUIREMENTS) 
 
 # set SPL relevant variables as environment variables, can easily be extended in CMakeLists.txt of project before including SPL core (used for KConfig variable expansion).
 list(APPEND ENVVARS FLAVOR SUBSYSTEM VARIANT BUILD_KIT BINARY_BASENAME CMAKE_SOURCE_DIR)
@@ -19,27 +19,22 @@ include(${CMAKE_CURRENT_LIST_DIR}/kconfig.cmake)
 
 if(EXISTS ${AUTOCONF_CMAKE})
     include(${AUTOCONF_CMAKE})
-endif()
+endif(EXISTS ${AUTOCONF_CMAKE})
 
 if(BUILD_KIT STREQUAL prod)
-    # set default link target output name
-    if (LINK_FILE_BASENAME)
-        message("LINK_FILE is set to '${LINK_FILE_BASENAME}' and will be used.")
+    # set default link target output name and extension
+    if (LINKER_OUTPUT_FILE)
+        get_filename_component(LINK_FILE_BASENAME ${LINKER_OUTPUT_FILE} NAME_WE)
+        get_filename_component(LINK_FILE_EXTENSION ${LINKER_OUTPUT_FILE} EXT)
     else()
         set(LINK_FILE_BASENAME main)
-    endif()
-
-    # set default link target output name
-    if (LINK_FILE_EXTENSION)
-        message("LINK_FILE_EXTENSION is set to '${LINK_FILE_EXTENSION}' and will be used.")
-    else()
         set(LINK_FILE_EXTENSION .exe)
-    endif()
+    endif(LINKER_OUTPUT_FILE)
 
     # add variant specific linker script if defined
     if(VARIANT_LINKER_FILE)
         list(APPEND LINK_TARGET_DEPENDS ${VARIANT_LINKER_FILE})
-    endif()
+    endif(VARIANT_LINKER_FILE)
 
     # create executable
     add_executable(${LINK_TARGET_NAME} ${LINK_TARGET_DEPENDS})
@@ -49,6 +44,19 @@ if(BUILD_KIT STREQUAL prod)
         SUFFIX ${LINK_FILE_EXTENSION}
         LINK_DEPENDS "${LINK_TARGET_DEPENDS}"
     )
+
+    if(LINKER_BYPRODUCTS_EXTENSIONS)
+        #combine basename and byproduct extension
+        string(REPLACE "," ";" LINKER_BYPRODUCTS "${LINKER_BYPRODUCTS_EXTENSIONS}")
+        list(TRANSFORM LINKER_BYPRODUCTS PREPEND ${LINK_FILE_BASENAME}.)
+
+        add_custom_target(
+            linker_byproducts ALL
+            COMMAND CMAKE -E true
+            DEPENDS ${LINKER_OUTPUT_FILE}
+            BYPRODUCTS ${LINKER_BYPRODUCTS}
+        )
+    endif(LINKER_BYPRODUCTS_EXTENSIONS)
 elseif(BUILD_KIT STREQUAL test)
     _spl_get_google_test()
     include(CTest)
@@ -57,7 +65,7 @@ elseif(BUILD_KIT STREQUAL test)
     add_custom_target(coverage)
 else()
     message(FATAL_ERROR "Invalid BUILD_KIT selected!")
-endif()
+endif(BUILD_KIT STREQUAL prod)
 
 
 ## Things to be done at the very end of configure phase as if they would be at bottom of CMakelists.txt

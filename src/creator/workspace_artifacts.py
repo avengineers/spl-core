@@ -18,6 +18,10 @@ class WorkspaceArtifacts:
     @property
     def build_script(self) -> Path:
         return self.root_dir.joinpath('build.bat')
+    
+    @property
+    def kconfig_file(self) -> Path:
+        return self.root_dir.joinpath('KConfig')
 
     def get_build_dir(self, variant: Variant, build_kit: str) -> Path:
         return self.root_dir.joinpath(f"build/{variant}/{build_kit}")
