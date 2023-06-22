@@ -46,19 +46,19 @@ macro(_spl_get_google_test)
     # GoogleTest requires at least C++14
     set(CMAKE_CXX_STANDARD 14)
 
-    set(FETCHCONTENT_BASE_DIR ${CMAKE_BINARY_DIR}/gtest CACHE INTERNAL "")
+    if(NOT DEFINED FETCHCONTENT_GTEST_URL)
+        set(FETCHCONTENT_GTEST_URL https://github.com/google/googletest.git)
+    endif(NOT DEFINED FETCHCONTENT_GTEST_URL)
 
-    if(DEFINED ENV{SPL_GTEST_REPOSITORY})
-        set(FETCHCONTENT_GTEST_URL $ENV{SPL_GTEST_REPOSITORY} CACHE INTERNAL "")
-    else(DEFINED ENV{SPL_GTEST_REPOSITORY})
-        set(FETCHCONTENT_GTEST_URL https://github.com/google/googletest.git CACHE INTERNAL "")
-    endif(DEFINED ENV{SPL_GTEST_REPOSITORY})
+    if(NOT DEFINED FETCHCONTENT_GTEST_TAG)
+        set(FETCHCONTENT_GTEST_TAG v1.13.0)
+    endif(NOT DEFINED FETCHCONTENT_GTEST_TAG)
 
     include(FetchContent)
     FetchContent_Declare(
         googletest
         GIT_REPOSITORY ${FETCHCONTENT_GTEST_URL}
-        GIT_TAG release-1.12.1
+        GIT_TAG ${FETCHCONTENT_GTEST_TAG}
     )
 
     if(WIN32)

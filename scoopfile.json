@@ -15,12 +15,8 @@
     ],
     "apps": [
         {
-            "Source": "main",
-            "Name": "cmake"
-        },
-        {
             "Source": "versions",
-            "Name": "python310"
+            "Name": "python311"
         },
         {
             "Source": "versions",
