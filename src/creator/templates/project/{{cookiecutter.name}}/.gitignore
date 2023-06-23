@@ -7,6 +7,21 @@
 # What: Python: byte-compiled / optimized / DLL files
 # Why: automatically created by Python during script execution
 __pycache__/
+/.pytest_cache
 *.py[cod]
 *$py.class
-/.pytest_cache
+
+# Any log directory
+**/[Ll][Oo][Gg]/*
+
+# Any backup file of text editors
+*.bak
+
+# Backup files of KConfig
+*.old
+
+# Generated IDEA project files
+.idea
+
+# bootstrap files are downloaded during installation
+/.bootstrap

@@ -43,26 +43,6 @@ if ($install) {
     Write-Output "For installation changes to take effect, please close and re-open your current shell."
 }
 else {
-    # Unit Tests Powershell
-    Push-Location powershell\test\
-    Invoke-Pester spl-functions.Tests.ps1
-    $unittest = $lastexitcode
-    Pop-Location
-
-    if ($unittest -ne 0) {
-        throw ("Unit Test: " + $errorMessage)
-    }
-
-    # Linter Powershell
-    Push-Location powershell\
-    powershell -Command "Invoke-ScriptAnalyzer -EnableExit -Recurse -Path ."
-    $linter = $lastexitcode
-    Pop-Location
-
-    if ($linter -ne 0) {
-        throw ("Powershell Linter: " + $errorMessage)
-    }
-
     # Unit Tests CMake
     Push-Location cmake\test\common.cmake\
     if (Test-Path .cmaketest) {

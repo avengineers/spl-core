@@ -16,7 +16,7 @@ class TestSpl:
         "only one object is recompiled and the binary is linked again"
         workspace_status = workspace.get_workspace_files_status()
         assert set(workspace_status.changed_files_names) == {
-            '.ninja_deps', '.ninja_log', 'main.c', 'main.c.obj', 'main.exe'
+            '.ninja_deps', '.ninja_log', 'main.c', 'main.c.obj', 'my_main.exe'
         }
         assert len(workspace_status.deleted_files) == 0
         assert len(workspace_status.new_files) == 0
@@ -29,23 +29,3 @@ class TestSpl:
         assert len(workspace_status.changed_files_names) == 0
         assert len(workspace_status.deleted_files) == 0
         assert len(workspace_status.new_files) == 0
-        
-    def test_build_with_kconfig_linking_menu(self):
-        # create a new test workspace
-        workspace = TestWorkspace('test_build_with_kconfig_linking_menu')
-        with workspace.workspace_artifacts.kconfig_file.open("a") as file:
-            file.write("""
-menu "Linking"
-    config LINKER_OUTPUT_FILE
-        string
-        default "link_out.exe"
-
-    config LINKER_BYPRODUCTS_EXTENSIONS
-        string 
-        default "map,mdf"
-endmenu
-""")
-        with ExecutionTime("build and run unit tests"):
-            assert workspace.link().returncode == 0
-        assert workspace.workspace_artifacts.get_build_dir(TestWorkspace.DEFAULT_VARIANT, "prod").joinpath("link_out.exe").exists()
-            

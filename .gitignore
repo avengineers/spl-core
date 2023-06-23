@@ -1,28 +1,28 @@
-# See modules/.gitignore for explanation
-!*
+# Output directories of test results
+/out
+/cmake/test
 
-.cmaketest
-build/
-
-# Python: byte-compiled / optimized / DLL files
+# What: Python: byte-compiled / optimized / DLL files
+# Why: automatically created by Python during script execution
 __pycache__/
+/.pytest_cache
 *.py[cod]
 *$py.class
 
-# Pycharm project files
+# Any log directory
+**/[Ll][Oo][Gg]/*
+
+# Any backup file of text editors
+*.bak
+
+# Backup files of KConfig
+*.old
+
+# Generated IDEA project files
 .idea
 
-# Build/test artifacts
-.pytest_cache
-out
-*.egg-info/
-.eggs/
+# bootstrap files are downloaded during installation
+/.bootstrap
 
-# Pipfile to be generated out of requirements.txt
-/Pipfile
-
-# bootstrap folder for spl builds
-/.bootstrap/
-
-# version tag files created by installer
-/v*
+# Python virtual environment
+/.venv

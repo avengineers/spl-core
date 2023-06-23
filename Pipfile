@@ -4,16 +4,15 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-conan = {version="==1.59.0"}
+conan = "*"
 cookiecutter = "*"
 gcovr = "*"
 hammocking = "*"
 kconfiglib = "*"
 pytest = "*"
-pytest-env = "*"
 pipenv = "*"
-black = "*"
-flake8 = "*"
+
+[dev-packages]
 
 [requires]
 python_version = "3.11"

@@ -15,7 +15,6 @@ class TestUnitTests(unittest.TestCase):
     def build_unittests_and_expect_files(self, variant):
         exit_code = run_process([
             'build.bat',
-            '-build',
             '-variants', variant,
             '-target', 'unittests',
             '-reconfigure'

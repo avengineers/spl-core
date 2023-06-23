@@ -1,62 +1,69 @@
-# resets environment variables
-Function Edit-Env {
-    # workaround for GithubActions
-    if ($Env:USER_PATH_FIRST -eq "true") {
+﻿<#
+.DESCRIPTION
+    Wrapper for installing dependencies, running and testing the project
 
-        $Env:Path = [System.Environment]::GetEnvironmentVariable("Path", "User") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "Machine")
-    }
-    else {
-        $Env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
-    }
-}
+.Notes
+On Windows, it may be required to call this script with the proper execution policy.
+You can do this by issuing the following PowerShell command:
 
-# executes a command line call and fails on first external error
+PS C:\> powershell -ExecutionPolicy Bypass -File .\build.ps1
+
+For more information on Execution Policies:
+https://go.microsoft.com/fwlink/?LinkID=135170
+#>
+
+param(
+    [Parameter(Mandatory = $false, HelpMessage = 'Clean build, wipe out all build artifacts. (Switch, default: false)')]
+    [switch]$clean = $false,
+    [Parameter(Mandatory = $false, HelpMessage = 'Install mandatory packages. (Switch, default: false)')]
+    [switch]$install = $false,
+    [Parameter(Mandatory = $false, HelpMessage = 'Target to be built. (String, default: "all")')]
+    [string]$target = "all",
+    [Parameter(Mandatory = $false, HelpMessage = 'Variants (projects) to be built (List of strings, leave empty to be asked or "all" for automatic build of all variants)')]
+    [ValidateNotNullOrEmpty()]
+    [string[]]$variants,
+    [Parameter(Mandatory = $false, HelpMessage = 'filter for selftests; define in pytest syntax: https://docs.pytest.org/en/6.2.x/usage.html; e.g. "PYRO_C or test/test_unittests.py"')]
+    [string]$filter = "",
+    [Parameter(Mandatory = $false, HelpMessage = 'Additional build arguments for Ninja (e.g., "-d explain -d keepdepfile" for debugging purposes)')]
+    [string]$ninjaArgs = "",
+    [Parameter(Mandatory = $false, HelpMessage = 'Delete CMake cache and reconfigure')]
+    [switch]$reconfigure
+)
+
 Function Invoke-CommandLine {
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingInvokeExpression', '', Justification='Usually this statement must be avoided (https://learn.microsoft.com/en-us/powershell/scripting/learn/deep-dives/avoid-using-invoke-expression?view=powershell-7.3), here it is OK as it does not execute unknown code. Refactoring might still be good.')]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingInvokeExpression', '', Justification = 'Usually this statement must be avoided (https://learn.microsoft.com/en-us/powershell/scripting/learn/deep-dives/avoid-using-invoke-expression?view=powershell-7.3), here it is OK as it does not execute unknown code.')]
     param (
+        [Parameter(Mandatory = $true, Position = 0)]
         [string]$CommandLine,
+        [Parameter(Mandatory = $false, Position = 1)]
         [bool]$StopAtError = $true,
+        [Parameter(Mandatory = $false, Position = 2)]
         [bool]$Silent = $false
     )
     if (-Not $Silent) {
-        Write-Information -Tags "Info:" -MessageData "Executing: $CommandLine"
+        Write-Output "Executing: $CommandLine"
     }
-
-    try {
-        Invoke-Expression $CommandLine
-    } catch {
-        Write-Error "The command invokation failed: $CommandLine"
-    }
-
-    if ($LASTEXITCODE -ne 0) {
+    $global:LASTEXITCODE = 0
+    Invoke-Expression $CommandLine
+    if ($global:LASTEXITCODE -ne 0) {
         if ($StopAtError) {
-            Write-Error "Command line call `"$CommandLine`" failed with exit code $LASTEXITCODE"
-            exit 1
+            Write-Error "Command line call `"$CommandLine`" failed with exit code $global:LASTEXITCODE"
         }
         else {
             if (-Not $Silent) {
-                Write-Information -Tags "Info:" -MessageData "Command line call `"$CommandLine`" failed with exit code $LASTEXITCODE, continuing ..."
+                Write-Output "Command line call `"$CommandLine`" failed with exit code $global:LASTEXITCODE, continuing ..."
             }
         }
     }
 }
 
 # the function will take a location/path to a directory that contains powershell.ps1 files and run all of them
-Function Invoke-Setup-Script([string] $Location) {
+Function Invoke-Setup-Scripts-Location([string] $Location) {
     if (Test-Path -Path $Location) {
         Get-ChildItem $Location | ForEach-Object {
             Write-Information -Tags "Info:" -MessageData ("Run: " + $_.FullName)
             . $_.FullName
         }
-        Edit-Env
-    }
-}
-
-# install all tools that are mandatory for building the project
-Function Install-Toolset([String]$FilePath) {
-    if (Test-Path -Path $FilePath) {
-        Invoke-CommandLine -CommandLine "scoop import $FilePath"
-        Edit-Env
     }
 }
 
@@ -147,16 +154,42 @@ Function Invoke-CMake-Build([String] $Target, [String] $Variants, [String] $Filt
     }
 }
 
-# clones and runs the transformer to import new product variants
-Function Invoke-Transformer([String] $Source, [String] $Variant, [bool] $Clean) {
-    $transformerDir = "./build/import/transformer"
-    New-Item -ItemType "directory" -Path $transformerDir -Force
+## start of script
+# Always set the $InformationPreference variable to "Continue" globally, this way it gets printed on execution and continues execution afterwards.
+$InformationPreference = "Continue"
 
-    if (Test-Path -Path "$transformerDir/.git") {
-        Remove-Item $transformerDir -Recurse -Force
+# Stop on first PS error
+$ErrorActionPreference = "Stop"
+
+Push-Location $PSScriptRoot
+Write-Output "Running in ${pwd}"
+
+try {
+    if ($install) {
+        if (-Not (Test-Path -Path '.bootstrap')) {
+            New-Item -ItemType Directory '.bootstrap'
+        }
+        # Installation of Scoop, Python and pipenv via bootstrap
+        Invoke-RestMethod "https://raw.githubusercontent.com/avengineers/bootstrap/develop/bootstrap.ps1" -OutFile "$PSScriptRoot\.bootstrap\bootstrap.ps1"
+        Invoke-CommandLine ". $PSScriptRoot\.bootstrap\bootstrap.ps1" -Silent $true
+        Write-Output "For installation changes to take effect, please close and re-open your current shell."
     }
-
-    git clone https://github.com/avengineers/SPLTransformer.git $transformerDir
-
-    Invoke-CommandLine -CommandLine "$transformerDir\build.ps1 --source $Source --target $pwd --variant $Variant"
+    else {
+        if ($clean) {
+            # Remove all build artifacts
+            $buildDir = ".\build"
+            if (Test-Path -Path $buildDir) {
+                Remove-Item $buildDir -Force -Recurse
+            }
+        }
+        # Call CMake
+        Invoke-CMake-Build -Target $target -Variants $variants -Filter $filter -NinjaArgs $ninjaArgs -Clean $clean -Reconfigure $reconfigure
+    }
 }
+finally {
+    Pop-Location
+    if ((-Not $Env:JENKINS_URL) -and (-Not $Env:PYTEST_CURRENT_TEST) -and (-Not $Env:GITHUB_ACTIONS)) {
+        Read-Host -Prompt "Press Enter to continue ..."
+    }
+}
+## end of script

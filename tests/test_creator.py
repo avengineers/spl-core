@@ -190,7 +190,7 @@ def test_create_project_running_main():
     assert project_dir.joinpath('variants/Flv1/Sys1/config.cmake').exists()
     assert project_dir.joinpath('variants/Flv1/Sys2/config.cmake').exists()
 
-    result = execute_command(f"{project_artifacts.build_script} -build -target selftests")
+    result = execute_command(f"{project_artifacts.build_script} -target selftests")
     assert result.returncode == 0
 
     "Add new variant and build again"
@@ -202,7 +202,7 @@ def test_create_project_running_main():
     ]):
         main()
 
-    result = execute_command(f"{project_artifacts.build_script} -build -target selftests")
+    result = execute_command(f"{project_artifacts.build_script} -target selftests")
     assert result.returncode == 0
 
     "Remove two variants and build again"
@@ -215,5 +215,5 @@ def test_create_project_running_main():
     ]):
         main()
 
-    result = execute_command(f"{project_artifacts.build_script} -build -target selftests")
+    result = execute_command(f"{project_artifacts.build_script} -target selftests")
     assert result.returncode == 0
