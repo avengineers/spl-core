@@ -11,6 +11,7 @@ hammocking = "*"
 kconfiglib = "*"
 pytest = "*"
 pipenv = "*"
+flake8 = "*"
 
 [dev-packages]
 

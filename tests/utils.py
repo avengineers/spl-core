@@ -10,9 +10,9 @@ from time import perf_counter
 from typing import Dict, Collection
 
 from src.common.cmake import CMake
-from src.creator.creator import Creator
-from src.creator.variant import Variant
-from src.creator.workspace_artifacts import WorkspaceArtifacts
+from src.project_creator.creator import Creator
+from src.project_creator.variant import Variant
+from src.project_creator.workspace_artifacts import WorkspaceArtifacts
 
 
 class ExecutionTime(ContextDecorator):
@@ -21,12 +21,12 @@ class ExecutionTime(ContextDecorator):
 
     def __enter__(self):
         self.time = perf_counter()
-        print(f'[START] {self.name}')
+        print(f"[START] {self.name}")
         return self
 
     def __exit__(self, type, value, traceback):
         self.time = perf_counter() - self.time
-        print(f'[END] {self.name} execution took {self.time:.3f}s')
+        print(f"[END] {self.name} execution took {self.time:.3f}s")
 
 
 @dataclasses.dataclass
@@ -44,7 +44,7 @@ class TestDir:
 
     @staticmethod
     def gen_random_text(size: int) -> str:
-        return ''.join(random.choices(string.ascii_uppercase + string.digits, k=size))
+        return "".join(random.choices(string.ascii_uppercase + string.digits, k=size))
 
     def joinpath(self, path: str) -> Path:
         return self.path.joinpath(path)
@@ -54,15 +54,15 @@ class TestDir:
 
 
 class TestUtils:
-    DEFAULT_TEST_DIR = 'tmp_test'
+    DEFAULT_TEST_DIR = "tmp_test"
 
     @staticmethod
     def create_clean_test_dir(name: str = None) -> TestDir:
-        out_dir = TestUtils.this_repository_root_dir().joinpath('out')
+        out_dir = TestUtils.this_repository_root_dir().joinpath("out")
         test_dir = out_dir.joinpath(name if name else TestUtils.DEFAULT_TEST_DIR).absolute()
         if test_dir.exists():
             # rmtree throws an exception if any of the files to be deleted is read-only
-            if os.name == 'nt':
+            if os.name == "nt":
                 rm_dir_cmd = f"cmd /c rmdir /S /Q {test_dir}"
                 print(f"Execute: {rm_dir_cmd}")
                 subprocess.call(rm_dir_cmd)
@@ -78,8 +78,8 @@ class TestUtils:
 
     @staticmethod
     def force_spl_core_usage_to_this_repo():
-        os.environ['SPLCORE_PATH'] = TestUtils.this_repository_root_dir().as_posix()
-        os.environ['PIPENV_PIPFILE'] = TestUtils.this_repository_root_dir().as_posix() + '/Pipfile'
+        os.environ["SPLCORE_PATH"] = TestUtils.this_repository_root_dir().as_posix()
+        os.environ["PIPENV_PIPFILE"] = TestUtils.this_repository_root_dir().as_posix() + "/Pipfile"
 
 
 @dataclasses.dataclass
@@ -107,7 +107,7 @@ class DirectoryTracker:
         Store a set with all files and their timestamps
         """
         status = {}
-        for file in self.target_dir.glob('**/*'):
+        for file in self.target_dir.glob("**/*"):
             if Path(file).is_file():
                 status[file] = os.stat(file).st_mtime_ns
         return status
@@ -130,7 +130,7 @@ class DirectoryTracker:
 
 class TestWorkspace:
     __test__ = False
-    DEFAULT_VARIANT = Variant('Flv1', 'Sys1')
+    DEFAULT_VARIANT = Variant("Flv1", "Sys1")
 
     def __init__(self, out_dir_name: str):
         self.workspace_dir = self.create_my_workspace(out_dir_name)
@@ -141,20 +141,16 @@ class TestWorkspace:
     @staticmethod
     def create_my_workspace(out_dir_name: str) -> Path:
         out_dir = TestUtils.create_clean_test_dir(out_dir_name)
-        project_name = 'MyProject'
+        project_name = "MyProject"
         creator = Creator(project_name, out_dir.path)
-        variants = [
-            TestWorkspace.DEFAULT_VARIANT,
-            Variant('Flv1', 'Sys2')
-        ]
+        variants = [TestWorkspace.DEFAULT_VARIANT, Variant("Flv1", "Sys2")]
         return creator.materialize(variants)
 
     def install_mandatory(self):
         pass
 
     def link(self, variant: Variant = DEFAULT_VARIANT) -> subprocess.CompletedProcess:
-        return self.execute_command(f"{self.workspace_artifacts.build_script}"
-                                    f" -target link -variants {variant}")
+        return self.execute_command(f"{self.workspace_artifacts.build_script}" f" -target link -variants {variant}")
 
     def run_cmake(self, target: str, variant: Variant = DEFAULT_VARIANT) -> subprocess.CompletedProcess:
         return CMake(self.workspace_artifacts).build(variant, target=target)

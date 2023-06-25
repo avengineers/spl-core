@@ -1,7 +1,7 @@
 {
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
-    "python.formatting.provider": "black",
+    "python.formatting.provider": "none",
     "python.formatting.blackArgs": [
         "--line-length",
         "240"
@@ -11,6 +11,9 @@
     "python.linting.flake8Enabled": true,
     "python.linting.flake8Args": [
         "--ignore=W293"
+    ],
+    "python.analysis.extraPaths": [
+        "src"
     ],
     "workbench.colorCustomizations": {
         "activityBar.activeBackground": "#fbed80",
@@ -31,5 +34,9 @@
         "titleBar.inactiveBackground": "#f9e64f99",
         "titleBar.inactiveForeground": "#15202b99"
     },
-    "peacock.color": "#f9e64f"
+    "peacock.color": "#f9e64f",
+    "restructuredtext.preview.docutils.disabled": true,
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    }
 }
