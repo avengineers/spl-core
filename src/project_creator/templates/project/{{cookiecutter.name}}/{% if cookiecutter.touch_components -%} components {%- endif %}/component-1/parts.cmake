@@ -1,1 +1,0 @@
-spl_add_source(src/component-1.c)

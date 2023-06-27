@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-conan = "*"
+conan = {version="==1.59.0"}
 cookiecutter = "*"
 gcovr = "*"
 hammocking = "*"

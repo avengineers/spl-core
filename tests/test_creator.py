@@ -1,8 +1,10 @@
 import json
+from pathlib import Path
 import subprocess
 from subprocess import CompletedProcess
 from unittest.mock import patch
 import pytest
+import xml.etree.ElementTree as ET
 
 from project_creator.creator import Creator, main, parse_arguments
 from project_creator.variant import Variant
@@ -82,7 +84,7 @@ class TestProjectGenerator:
         with pytest.raises(SystemExit) as raised_exception:
             parse_arguments(user_arguments)
         "exit code is not zero for invalid arguments"
-        assert raised_exception.value.code is 2
+        assert raised_exception.value.code == 2
 
     @pytest.mark.parametrize(
         "user_arguments",
@@ -92,7 +94,7 @@ class TestProjectGenerator:
         with pytest.raises(SystemExit) as raised_exception:
             parse_arguments(user_arguments)
         "exit code is zero for valid arguments"
-        assert raised_exception.value.code is 0
+        assert raised_exception.value.code == 0
 
     def test_add_variant(self):
         workspace_dir = TestWorkspace.create_my_workspace("test_add_variant")
@@ -121,6 +123,7 @@ def test_create_project_running_main():
     """
     Generate, build and run unit tests for all flavors.
     """
+    # out_dir = Path("out/test_create_project_running_main")
     out_dir = TestUtils.create_clean_test_dir("test_create_project_running_main")
     with patch("sys.argv", ["some_name", "workspace", "--name", "MyProject1", "--variant", "Flv1/Sys1", "--variant", "Flv1/Sys2", "--out_dir", f"{out_dir.path}"]):
         main()
@@ -128,12 +131,38 @@ def test_create_project_running_main():
     project_dir = out_dir.joinpath("MyProject1")
     TestUtils.force_spl_core_usage_to_this_repo()
     project_artifacts = WorkspaceArtifacts(project_dir)
+    "Dependency files shall exist"
+    assert project_dir.joinpath("Pipfile").exists()
+    assert project_dir.joinpath("scoopfile.json").exists()
+    "CMake files shall exist"
     assert project_dir.joinpath("CMakeLists.txt").exists()
     assert project_dir.joinpath("variants/Flv1/Sys1/config.cmake").exists()
     assert project_dir.joinpath("variants/Flv1/Sys2/config.cmake").exists()
+    "git config script shall exist"
+    assert project_dir.joinpath("tools/setup/git-config.ps1").exists()
 
+    "Call selftests without dependency installation (build.bat -install)"
     result = execute_command(f"{project_artifacts.build_script} -target selftests")
+
+    "Build shall be successful"
     assert result.returncode == 0
+
+    "Expected build results for kit prod shall exist"
+    executable = project_artifacts.get_build_dir("Flv1/Sys1", "prod").joinpath("my_main.exe")
+    assert executable.exists()
+    my_main_result = subprocess.run([executable], capture_output=True)
+    assert 7 == my_main_result.returncode
+    assert "Main program calculating ..." == my_main_result.stdout.decode("utf-8").strip()
+
+    "Expected test results for kit test shall exist"
+    junitxml = project_artifacts.get_build_dir("Flv1/Sys2", "test").joinpath("components/component/junit.xml")
+    assert junitxml.exists()
+    testsuite = ET.parse(junitxml).getroot()
+    assert 1 == int(testsuite.attrib["tests"])
+    assert 0 == int(testsuite.attrib["failures"])
+    first_test_case = testsuite.find("testcase")
+    assert "component.test_someInterfaceOfComponent" == first_test_case.attrib["name"]
+    assert "run" == first_test_case.attrib["status"]
 
     "Add new variant and build again"
     with patch("sys.argv", ["some_name", "variant", "--add", "Flv2/Sys1", "--workspace_dir", f"{project_dir}"]):

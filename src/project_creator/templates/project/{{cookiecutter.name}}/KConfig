@@ -17,7 +17,7 @@ menu "Linking"
 endmenu
 
 menu "Feature Model"
-    config USE_COMPONENT_1
-        bool "this is component one"
+    config USE_COMPONENT
+        bool "Enable features of component"
         default n
 endmenu

@@ -1,12 +1,17 @@
 #include "autoconf.h"
-#if CONFIG_USE_COMPONENT_1
-#include "component-1.h"
+
+#if CONFIG_USE_COMPONENT
+#include "component.h"
 #endif
 
-int main(void){
-    
-    #if CONFIG_USE_COMPONENT_1
-    component1_run();
-    #endif
+#include <stdio.h>
+
+int main(void)
+{
+    printf("Main program calculating ...\n");
+#if CONFIG_USE_COMPONENT
+    return someInterfaceOfComponent();
+#else
     return 0;
+#endif
 }
