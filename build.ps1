@@ -30,6 +30,21 @@ Function Invoke-CommandLine {
     }
 }
 
+# Update/Reload current environment variable PATH with settings from registry
+Function Initialize-EnvPath {
+    # workaround for system-wide installations
+    if ($Env:USER_PATH_FIRST) {
+        $Env:Path = [System.Environment]::GetEnvironmentVariable("Path", "User") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "Machine")
+    }
+    else {
+        $Env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+    }
+}
+
+function Test-RunningInCIorTestEnvironment {
+    return [Boolean]($Env:JENKINS_URL -or $Env:PYTEST_CURRENT_TEST -or $Env:GITHUB_ACTIONS)
+}
+
 Push-Location $PSScriptRoot
 Write-Output "Running in ${pwd}"
 
@@ -43,6 +58,9 @@ if ($install) {
     Write-Output "For installation changes to take effect, please close and re-open your current shell."
 }
 else {
+    if (Test-RunningInCIorTestEnvironment -or $Env:USER_PATH_FIRST) {
+        Initialize-EnvPath
+    }
     # Unit Tests CMake
     Push-Location cmake\test\common.cmake\
     if (Test-Path .cmaketest) {
