@@ -1,0 +1,19 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+conan = {version="==1.59.0"}
+cookiecutter = "*"
+gcovr = "*"
+hammocking = "*"
+kconfiglib = "*"
+pytest = "*"
+pipenv = "*"
+flake8 = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.11"

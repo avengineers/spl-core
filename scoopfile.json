@@ -1,26 +1,22 @@
 {
     "buckets": [
         {
-            "Name": "extras",
-            "Source": "https://github.com/ScoopInstaller/Extras"
+            "Name": "versions",
+            "Source": "https://github.com/ScoopInstaller/Versions"
         },
         {
             "Name": "main",
             "Source": "https://github.com/ScoopInstaller/Main"
         },
         {
-            "Name": "versions",
-            "Source": "https://github.com/ScoopInstaller/Versions"
+            "Name": "extras",
+            "Source": "https://github.com/ScoopInstaller/Extras"
         }
     ],
     "apps": [
         {
-            "Source": "main",
-            "Name": "cmake"
-        },
-        {
             "Source": "versions",
-            "Name": "python310"
+            "Name": "python311"
         },
         {
             "Source": "versions",

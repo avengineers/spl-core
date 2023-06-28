@@ -1,6 +1,8 @@
-# Output directories of test results
-/out
-/cmake/test
+# Binary output dir, not recommended to push binary results to Git.
+/build
+
+# Output directory of test results
+/test/output
 
 # What: Python: byte-compiled / optimized / DLL files
 # Why: automatically created by Python during script execution
@@ -23,6 +25,3 @@ __pycache__/
 
 # bootstrap files are downloaded during installation
 /.bootstrap
-
-# Python virtual environment
-/.venv

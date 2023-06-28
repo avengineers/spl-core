@@ -1,0 +1,51 @@
+{
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.formatting.provider": "black",
+    "python.formatting.blackArgs": [
+        "--line-length",
+        "240"
+    ],
+    "python.formatting.blackPath": "black",
+    "python.linting.enabled": true,
+    "python.linting.flake8Enabled": true,
+    "python.linting.flake8Args": [
+        "--ignore=W293"
+    ],
+    "cmake.configureOnOpen": false,
+    "cmake.buildDirectory": "${workspaceFolder}/build/${variant:variant}/${buildKit}",
+    "cmake.configureSettings": {
+        "BUILD_KIT": "${buildKit}"
+    },
+    "cmake.generator": "Ninja",
+    "cmake.debugConfig": {
+        "MIMode": "gdb",
+        "miDebuggerPath": "gdb",
+        "stopAtEntry": true
+    },
+    "cmake.configureOnEdit": false,
+    "cmake.buildBeforeRun": false,
+    "cmake.environment": {},
+    "cmake.buildToolArgs": [],
+    "git.ignoreLimitWarning": true,
+    "C_Cpp.errorSquiggles": "enabled",
+    "C_Cpp.default.cStandard": "gnu17",
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "C_Cpp.formatting": "vcFormat",
+    "files.associations": {
+        "*.h": "c",
+        "*.c": "c",
+        "Jenkinsfile": "groovy",
+        "*.py": "python"
+    },
+    "files.exclude": {
+        "**/.git": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true
+    },
+    "git.repositoryScanMaxDepth": 3,
+    "git-graph.maxDepthOfRepoSearch": 3,
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    }
+}

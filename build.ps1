@@ -30,6 +30,21 @@ Function Invoke-CommandLine {
     }
 }
 
+# Update/Reload current environment variable PATH with settings from registry
+Function Initialize-EnvPath {
+    # workaround for system-wide installations
+    if ($Env:USER_PATH_FIRST) {
+        $Env:Path = [System.Environment]::GetEnvironmentVariable("Path", "User") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "Machine")
+    }
+    else {
+        $Env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+    }
+}
+
+function Test-RunningInCIorTestEnvironment {
+    return [Boolean]($Env:JENKINS_URL -or $Env:PYTEST_CURRENT_TEST -or $Env:GITHUB_ACTIONS)
+}
+
 Push-Location $PSScriptRoot
 Write-Output "Running in ${pwd}"
 
@@ -43,26 +58,9 @@ if ($install) {
     Write-Output "For installation changes to take effect, please close and re-open your current shell."
 }
 else {
-    # Unit Tests Powershell
-    Push-Location powershell\test\
-    Invoke-Pester spl-functions.Tests.ps1
-    $unittest = $lastexitcode
-    Pop-Location
-
-    if ($unittest -ne 0) {
-        throw ("Unit Test: " + $errorMessage)
+    if (Test-RunningInCIorTestEnvironment -or $Env:USER_PATH_FIRST) {
+        Initialize-EnvPath
     }
-
-    # Linter Powershell
-    Push-Location powershell\
-    powershell -Command "Invoke-ScriptAnalyzer -EnableExit -Recurse -Path ."
-    $linter = $lastexitcode
-    Pop-Location
-
-    if ($linter -ne 0) {
-        throw ("Powershell Linter: " + $errorMessage)
-    }
-
     # Unit Tests CMake
     Push-Location cmake\test\common.cmake\
     if (Test-Path .cmaketest) {

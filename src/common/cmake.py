@@ -2,8 +2,8 @@ import logging
 import subprocess
 from subprocess import CompletedProcess
 
-from src.creator.variant import Variant
-from src.creator.workspace_artifacts import WorkspaceArtifacts
+from project_creator.variant import Variant
+from project_creator.workspace_artifacts import WorkspaceArtifacts
 
 
 class CMake:
@@ -20,20 +20,20 @@ class CMake:
         return ret_status
 
     def configure(self, variant: Variant, build_kit: str = "prod"):
-        arguments = (f" -DBUILD_KIT:STRING={build_kit}"
-                     f" -DFLAVOR:STRING={variant.flavor}"
-                     f" -DSUBSYSTEM:STRING={variant.subsystem}"
-                     f" -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE"
-                     f" -DCMAKE_BUILD_TYPE:STRING={variant.to_string('_')}"
-                     f" -S{self.workspace_artifacts.root_dir}"
-                     f" -B{self.workspace_artifacts.get_build_dir(variant, build_kit)}"
-                     f" -G Ninja ")
+        arguments = (
+            f" -DBUILD_KIT:STRING={build_kit}"
+            f" -DFLAVOR:STRING={variant.flavor}"
+            f" -DSUBSYSTEM:STRING={variant.subsystem}"
+            f" -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE"
+            f" -DCMAKE_BUILD_TYPE:STRING={variant.to_string('_')}"
+            f" -S{self.workspace_artifacts.root_dir}"
+            f" -B{self.workspace_artifacts.get_build_dir(variant, build_kit)}"
+            f" -G Ninja "
+        )
         return self.run_cmake(arguments)
 
     def build(self, variant: Variant, build_kit: str = "prod", target: str = "all") -> CompletedProcess:
-        arguments = (f" --build {self.workspace_artifacts.get_build_dir(variant, build_kit)}"
-                     f" --config {variant.to_string('_')}"
-                     f" --target {target} -- ")
+        arguments = f" --build {self.workspace_artifacts.get_build_dir(variant, build_kit)}" f" --config {variant.to_string('_')}" f" --target {target} -- "
         return self.run_cmake(arguments)
 
     def run_cmake(self, arguments: str) -> CompletedProcess:
