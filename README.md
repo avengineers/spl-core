@@ -1,20 +1,19 @@
 # SPL (Software Product Line) Core
 
-In this repository we construct the *SPL Core* functionality that can be integrated into CMake projects.
-
-See https://github.com/avengineers/SPLDemo for an example usage.
+*SPL Core* is our CMake module to support multiple projects as variants of one SPL repository.
 
 ## CI (Continuous Integration)
 
 * [![selftests](https://github.com/avengineers/spl/actions/workflows/test.yml/badge.svg)](https://github.com/avengineers/spl/actions/workflows/test.yml)
 
-## Running selftests
+## Installation of Dependencies
 
-* Installing all dependencies:
 ```powershell
 .\build.ps1 -install
 ```
-* Running all tests
+
+## Execution of Tests
+  
 ```powershell
 .\build.ps1
 ```
@@ -24,7 +23,7 @@ See https://github.com/avengineers/SPLDemo for an example usage.
 With the integrated project creator you can create a new SPL workspace, e.g.:
 
 ```powershell
-pipenv run python src/project_creator/creator.py workspace --name MyProject --variant FLV1/SYS1 --out_dir C:\temp
+pipenv run python src/project_creator/creator.py workspace --name MyProject --variant FLV1/SYS1 --out_dir C:\dev
 ```
 
 Note: one can use the `--variant` argument several times to create a project with multiple variants.
