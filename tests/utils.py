@@ -152,6 +152,9 @@ class TestWorkspace:
     def link(self, variant: Variant = DEFAULT_VARIANT) -> subprocess.CompletedProcess:
         return self.execute_command(f"{self.workspace_artifacts.build_script}" f" -target link -variants {variant}")
 
+    def selftests(self) -> subprocess.CompletedProcess:
+        return self.execute_command(f"{self.workspace_artifacts.build_script}" f" -target selftests")
+
     def run_cmake(self, target: str, variant: Variant = DEFAULT_VARIANT) -> subprocess.CompletedProcess:
         return CMake(self.workspace_artifacts).build(variant, target=target)
 
