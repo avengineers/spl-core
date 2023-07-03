@@ -6,7 +6,6 @@ import pytest
 
 from project_creator.creator import Creator, main, parse_arguments
 from project_creator.variant import Variant
-from project_creator.workspace_artifacts import WorkspaceArtifacts
 from utils import TestUtils, TestWorkspace
 
 
@@ -154,7 +153,6 @@ class TestProjectGenerator:
             main()
 
         project_dir = out_dir.joinpath("MyProject1")
-        TestUtils.force_spl_core_usage_to_this_repo()
 
         "Dependency files shall exist"
         assert project_dir.joinpath("Pipfile").exists()

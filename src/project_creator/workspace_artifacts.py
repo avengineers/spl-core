@@ -20,7 +20,7 @@ class WorkspaceArtifacts:
         return self.root_dir.joinpath("build.bat")
 
     @property
-    def kconfig_file(self) -> Path:
+    def kconfig_model_file(self) -> Path:
         return self.root_dir.joinpath("KConfig")
 
     def get_build_dir(self, variant: Variant, build_kit: str) -> Path:
@@ -31,3 +31,6 @@ class WorkspaceArtifacts:
 
     def get_component_path(self, component_name: str) -> Path:
         return self.components_dir.joinpath(component_name)
+    
+    def get_kconfig_config_file(self, variant: Variant) -> Path:
+        return self.get_variant_dir(variant).joinpath("config.txt")

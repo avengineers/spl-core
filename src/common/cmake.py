@@ -21,15 +21,18 @@ class CMake:
 
     def configure(self, variant: Variant, build_kit: str = "prod"):
         arguments = (
+            f" -S{self.workspace_artifacts.root_dir}"
+            f" -B{self.workspace_artifacts.get_build_dir(variant, build_kit)}"
+            f" -G Ninja "
             f" -DBUILD_KIT:STRING={build_kit}"
             f" -DFLAVOR:STRING={variant.flavor}"
             f" -DSUBSYSTEM:STRING={variant.subsystem}"
             f" -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE"
             f" -DCMAKE_BUILD_TYPE:STRING={variant.to_string('_')}"
-            f" -S{self.workspace_artifacts.root_dir}"
-            f" -B{self.workspace_artifacts.get_build_dir(variant, build_kit)}"
-            f" -G Ninja "
         )
+        if build_kit == "test":
+            toolchain = self.workspace_artifacts.root_dir.joinpath("tools\\toolchains\\gcc\\toolchain.cmake")
+            arguments += f" -DCMAKE_TOOLCHAIN_FILE={toolchain}"
         return self.run_cmake(arguments)
 
     def build(self, variant: Variant, build_kit: str = "prod", target: str = "all") -> CompletedProcess:
