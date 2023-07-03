@@ -155,8 +155,11 @@ class TestWorkspace:
     def selftests(self) -> subprocess.CompletedProcess:
         return self.execute_command(f"{self.workspace_artifacts.build_script}" f" -target selftests")
 
-    def run_cmake(self, target: str, variant: Variant = DEFAULT_VARIANT) -> subprocess.CompletedProcess:
-        return CMake(self.workspace_artifacts).build(variant, target=target)
+    def run_cmake_configure(self, build_kit: str = "prod", variant: Variant = DEFAULT_VARIANT) -> subprocess.CompletedProcess:
+        return CMake(self.workspace_artifacts).configure(variant=variant, build_kit=build_kit)
+
+    def run_cmake_build(self, target: str = "all", build_kit: str = "prod", variant: Variant = DEFAULT_VARIANT) -> subprocess.CompletedProcess:
+        return CMake(self.workspace_artifacts).build(variant=variant, target=target, build_kit=build_kit)
 
     def execute_command(self, command: str) -> subprocess.CompletedProcess:
         if self.use_local_spl_core:
