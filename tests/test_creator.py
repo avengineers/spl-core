@@ -14,9 +14,9 @@ def execute_command(command: str) -> CompletedProcess:
 
 
 class TestProjectGenerator:
-    def test_materialize(self):
+    def test_creator_materialize(self):
         "Create a new project with two variants"
-        out_dir = TestUtils.create_clean_test_dir("test_materialize")
+        out_dir = TestUtils.create_clean_test_dir("test_creator_materialize")
         project_name = "MyProject"
         creator = Creator(project_name, out_dir.path)
         variants = [Variant("Flv1", "Sys1"), Variant("Flv1", "Sys2")]
@@ -44,13 +44,13 @@ class TestProjectGenerator:
         "Shall be able to find existing variants from a project"
         assert creator.collect_project_variants() == variants
 
-    def test_create_project_description(self):
+    def test_creator_project_description(self):
         "Call IUT"
         project_description = Creator.create_project_description("SomeProject", [Variant("Flv1", "Sys1"), Variant("Flv1", "Sys2")])
         "Check results"
         assert project_description == {"name": "SomeProject", "touch_components": True, "touch_tools": True, "variants": {"0": {"flavor": "Flv1", "subsystem": "Sys1"}, "1": {"flavor": "Flv1", "subsystem": "Sys2"}}}
 
-    def test_parse_arguments_project(self):
+    def test_creator_parse_arguments_project(self):
         out_dir = TestUtils.create_clean_test_dir()
         user_arguments = ["workspace", "--name", "MyProject1", "--variant", "Flv1/Sys1", "--out_dir", f"{out_dir.path}"]
 
@@ -73,7 +73,7 @@ class TestProjectGenerator:
         assert parsed_arguments.out_dir == out_dir.path
         assert parsed_arguments.variant == [Variant("Flv1", "Sys1"), Variant("Flv2", "Sys2")]
 
-    def test_parse_arguments_variant_add(self):
+    def test_creator_parse_arguments_variant_add(self):
         out_dir = TestUtils.create_clean_test_dir()
         user_arguments = ["variant", "--add", "Flv1/Sys1", "--workspace_dir", f"{out_dir.path}"]
 
@@ -85,7 +85,7 @@ class TestProjectGenerator:
         assert parsed_arguments.delete is None
         assert parsed_arguments.workspace_dir == out_dir.path
 
-    def test_parse_arguments_variant_delete(self):
+    def test_creator_parse_arguments_variant_delete(self):
         out_dir = TestUtils.create_clean_test_dir()
         user_arguments = ["variant", "--delete", "Flv1/Sys1", "--workspace_dir", f"{out_dir.path}"]
 
@@ -97,7 +97,7 @@ class TestProjectGenerator:
         assert parsed_arguments.delete == [Variant("Flv1", "Sys1")]
         assert parsed_arguments.workspace_dir == out_dir.path
 
-    def test_parse_arguments_invalid(self):
+    def test_creator_parse_arguments_invalid(self):
         out_dir = TestUtils.create_clean_test_dir()
         user_arguments = ["variant", "--name", "MyProject", "--workspace_dir", f"{out_dir.path}"]
 
@@ -112,15 +112,15 @@ class TestProjectGenerator:
         "user_arguments",
         [(["--help"]), (["workspace", "--help"]), (["variant", "--help"])],
     )
-    def test_parse_arguments_help(self, user_arguments):
+    def test_creator_parse_arguments_help(self, user_arguments):
         "Call IUT and catch SystemExit exception"
         with pytest.raises(SystemExit) as raised_exception:
             parse_arguments(user_arguments)
         "exit code is zero for valid arguments"
         assert raised_exception.value.code == 0
 
-    def test_add_variants(self):
-        workspace_dir = TestWorkspace.create_my_workspace("test_add_variant")
+    def test_creator_add_variant(self):
+        workspace_dir = TestWorkspace.create_my_workspace("test_creator_add_variant")
         workspace_dir.joinpath("variants/Flv1/Sys1/config.txt").write_text("")
         creator = Creator.from_folder(workspace_dir)
 
@@ -136,8 +136,8 @@ class TestProjectGenerator:
         cmake_variants_json = json.loads(cmake_variants_file.read_text().strip())
         assert len(cmake_variants_json["variant"]["choices"]) == 3
 
-    def test_delete_variant(self):
-        workspace_dir = TestWorkspace.create_my_workspace("test_delete_variant")
+    def test_creator_delete_variant(self):
+        workspace_dir = TestWorkspace.create_my_workspace("test_creator_delete_variant")
         creator = Creator.from_folder(workspace_dir)
 
         "Call IUT"
@@ -147,8 +147,10 @@ class TestProjectGenerator:
         assert workspace_dir.joinpath("variants/Flv1/Sys1/config.txt").exists()
         assert not workspace_dir.joinpath("variants/Flv1/Sys2/config.txt").exists()
 
-    def test_create_project_running_main(self):
-        out_dir = TestUtils.create_clean_test_dir("test_create_project_running_main")
+    def test_creator_main(self):
+        out_dir = TestUtils.create_clean_test_dir("test_creator_main")
+
+        "Call IUT"
         with patch("sys.argv", ["some_name", "workspace", "--name", "MyProject1", "--variant", "Flv1/Sys1", "--variant", "Flv1/Sys2", "--out_dir", f"{out_dir.path}"]):
             main()
 

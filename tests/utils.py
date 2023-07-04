@@ -31,6 +31,7 @@ class ExecutionTime(ContextDecorator):
 
 @dataclasses.dataclass
 class TestDir:
+    __test__ = False
     path: Path
 
     def write_file(self, name: str, content: str = None) -> Path:
@@ -54,6 +55,7 @@ class TestDir:
 
 
 class TestUtils:
+    __test__ = False
     DEFAULT_TEST_DIR = "tmp_test"
 
     @staticmethod
@@ -156,9 +158,13 @@ class TestWorkspace:
         return self.execute_command(f"{self.workspace_artifacts.build_script}" f" -target selftests")
 
     def run_cmake_configure(self, build_kit: str = "prod", variant: Variant = DEFAULT_VARIANT) -> subprocess.CompletedProcess:
+        if self.use_local_spl_core:
+            TestUtils.force_spl_core_usage_to_this_repo()
         return CMake(self.workspace_artifacts).configure(variant=variant, build_kit=build_kit)
 
     def run_cmake_build(self, target: str = "all", build_kit: str = "prod", variant: Variant = DEFAULT_VARIANT) -> subprocess.CompletedProcess:
+        if self.use_local_spl_core:
+            TestUtils.force_spl_core_usage_to_this_repo()
         return CMake(self.workspace_artifacts).build(variant=variant, target=target, build_kit=build_kit)
 
     def execute_command(self, command: str) -> subprocess.CompletedProcess:

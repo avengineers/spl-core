@@ -1,6 +1,5 @@
-# Output directories of test results
+# Output directory of tests
 /out
-/cmake/test
 
 # What: Python: byte-compiled / optimized / DLL files
 # Why: automatically created by Python during script execution

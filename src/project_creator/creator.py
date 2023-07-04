@@ -6,7 +6,7 @@ from typing import Dict, List
 
 from cookiecutter.main import cookiecutter
 
-from common.common import existing_path
+from common.path import existing_path
 from project_creator.variant import Variant
 from project_creator.workspace_artifacts import WorkspaceArtifacts
 

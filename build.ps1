@@ -45,45 +45,38 @@ function Test-RunningInCIorTestEnvironment {
     return [Boolean]($Env:JENKINS_URL -or $Env:PYTEST_CURRENT_TEST -or $Env:GITHUB_ACTIONS)
 }
 
+## start of script
+# Always set the $InformationPreference variable to "Continue" globally, this way it gets printed on execution and continues execution afterwards.
+$InformationPreference = "Continue"
+
+# Stop on first PS error
+$ErrorActionPreference = "Stop"
+
 Push-Location $PSScriptRoot
 Write-Output "Running in ${pwd}"
 
-if ($install) {
-    if (-Not (Test-Path -Path '.bootstrap')) {
-        New-Item -ItemType Directory '.bootstrap'
+try {
+    if ($install) {
+        if (-Not (Test-Path -Path '.bootstrap')) {
+            New-Item -ItemType Directory '.bootstrap'
+        }
+        $bootstrapSource = 'https://raw.githubusercontent.com/avengineers/bootstrap/develop/bootstrap.ps1'
+        Invoke-RestMethod $bootstrapSource -OutFile '.\.bootstrap\bootstrap.ps1'
+        . .\.bootstrap\bootstrap.ps1
+        Write-Output "For installation changes to take effect, please close and re-open your current shell."
     }
-    $bootstrapSource = 'https://raw.githubusercontent.com/avengineers/bootstrap/develop/bootstrap.ps1'
-    Invoke-RestMethod $bootstrapSource -OutFile '.\.bootstrap\bootstrap.ps1'
-    . .\.bootstrap\bootstrap.ps1
-    Write-Output "For installation changes to take effect, please close and re-open your current shell."
+    else {
+        if (Test-RunningInCIorTestEnvironment -or $Env:USER_PATH_FIRST) {
+            Initialize-EnvPath
+        }
+        # Execute all unit tests
+        pipenv run pytest 
+    }
 }
-else {
-    if (Test-RunningInCIorTestEnvironment -or $Env:USER_PATH_FIRST) {
-        Initialize-EnvPath
-    }
-    # Unit Tests CMake
-    Push-Location cmake\test\common.cmake\
-    if (Test-Path .cmaketest) {
-        Remove-Item .cmaketest -Recurse -Force
-    }
-    cmake -B .cmaketest -G Ninja
-    if ($lastexitcode -ne 0) {
-        throw ("common.cmake Tests: " + $errorMessage)
-    }
+finally {
     Pop-Location
-
-    Push-Location cmake\test\spl.cmake\
-    if (Test-Path .cmaketest) {
-        Remove-Item .cmaketest -Recurse -Force
+    if (-Not (Test-RunningInCIorTestEnvironment)) {
+        Read-Host -Prompt "Press Enter to continue ..."
     }
-    cmake -B .cmaketest -G Ninja
-    if ($lastexitcode -ne 0) {
-        throw ("spl.cmake Tests: " + $errorMessage)
-    }
-    Pop-Location
-
-    # Unit Tests
-    pipenv run pytest 
 }
-
-Pop-Location
+## end of script

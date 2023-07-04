@@ -9,8 +9,7 @@ class TestIntegration:
     @classmethod
     def setup_class(cls):
         # create a new test workspace
-        cls.workspace = TestWorkspace("test_incremental_build")
-        TestUtils.force_spl_core_usage_to_this_repo()
+        cls.workspace: TestWorkspace = TestWorkspace("test_integration")
 
     def test_build_prod(self):
         # create build output directory for build_kit "prod"
@@ -118,7 +117,7 @@ class TestIntegration:
         assert len(workspace_status.changed_files_names) == 0
         assert len(workspace_status.deleted_files) == 0
         assert len(workspace_status.new_files) == 0
-        
+
         "Simulate a configuration change"
         self.workspace.workspace_artifacts.get_kconfig_config_file(Variant.from_string("Flv1/Sys1")).touch()
         "store workspace status - all files with timestamps"
@@ -134,3 +133,7 @@ class TestIntegration:
         assert len(workspace_status.deleted_files) == 0
         assert len(workspace_status.new_files) == 0
 
+    def test_build_selftests(self):
+        "Call IUT"
+        with ExecutionTime("Build Wrapper (target: selftests)"):
+            assert 0 == self.workspace.selftests().returncode

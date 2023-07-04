@@ -1,11 +1,3 @@
-# variables
-set(spl_install_dir ${CMAKE_CURRENT_LIST_DIR} CACHE INTERNAL "")
-
-set(BUILD_BINARY_DIRECTORY ${CMAKE_BINARY_DIR})
-set(LINK_TARGET_NAME link)
-string(REPLACE "/" "_" BINARY_BASENAME ${VARIANT})
-
-# macros and functions
 macro(_spl_slash_to_underscore out in)
     string(REGEX REPLACE "/" "_" ${out} ${in})
 endmacro()
@@ -75,9 +67,6 @@ macro(_spl_get_google_test)
 
     enable_testing()
 endmacro(_spl_get_google_test)
-
-macro(spl_create_mocks fileName)
-endmacro()
 
 macro(spl_create_component)
     file(RELATIVE_PATH component_path ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_LIST_DIR})
@@ -213,7 +202,7 @@ endmacro(spl_add_conan_install_settings)
 macro(spl_run_conan)
     if(CONAN__BUILD_REQUIRES OR CONAN__REQUIRES)
         # This is the wrapper-code
-        include(${spl_install_dir}/conan.cmake)
+        include(${SPL_CORE_CMAKE_DIRECTORY}/conan.cmake)
 
         # This replaces file conanfile.txt
         conan_cmake_configure(
@@ -245,6 +234,7 @@ macro(spl_run_conan)
     endif()
 endmacro(spl_run_conan)
 
+# TODO: this should be removed. We are using pipenv before calling CMake. All dependencies shall be defined in project's Pipfile
 macro(spl_run_pip PIP_INSTALL_REQUIREMENTS)
     message("Execute PIP")
     execute_process(
@@ -263,6 +253,7 @@ macro(_spl_set_ninja_wrapper_as_cmake_make)
     set(CMAKE_MAKE_PROGRAM ${NINJA_WRAPPER} CACHE FILEPATH "Custom ninja wrapper to activate the Conan virtual environment" FORCE)
 endmacro()
 
+# TODO: this should be removed. We are using pipenv before calling CMake. All dependencies shall be defined in project's Pipfile
 macro(spl_install_extensions)
     # Strange hack found here: https://stackoverflow.com/questions/5248749/passing-a-list-to-a-cmake-macro
     set(_ARGN_LIST ${ARGN})
@@ -289,6 +280,8 @@ macro(spl_install_extensions)
 
     spl_run_conan()
 endmacro()
+
+# TODO: do we really need these warnings? Nobody cares.
 
 # deprecated
 macro(add_include)
