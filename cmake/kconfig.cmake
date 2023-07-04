@@ -16,8 +16,12 @@ if(EXISTS ${KCONFIG_MODEL_FILE})
         message(STATUS "No variant configuration found, using defaults.")
     endif()
 
+    # TODO: kconfig.py should not update its outputs when the inputs did not change.
+    # So an incremental build with configure is not possible. autoconf.h gets updated
+    # everytime (although the content did not change). Therefore stuff gets compiled.
     execute_process(
-        COMMAND python ${SPL_CORE_PYTHON_MODULES_DIRECTORY}/kconfig/kconfig.py
+        WORKING_DIRECTORY ${SPL_CORE_ROOT_DIRECTORY} # TODO: is there a better way to let kconfig.py find other modules?
+        COMMAND python ${SPL_CORE_PYTHON_DIRECTORY}/kconfig/kconfig.py
         --kconfig_model_file ${KCONFIG_MODEL_FILE} ${_KCONFIG_CONFIG_FILE_option}
         --out_header_file ${AUTOCONF_H}
         --out_json_file ${AUTOCONF_JSON}

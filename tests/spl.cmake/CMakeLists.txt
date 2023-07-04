@@ -15,10 +15,14 @@ set(BUILD_KIT prod)
 
 
 # when
-include(${CMAKE_CURRENT_LIST_DIR}/../../spl.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/../../cmake/spl.cmake)
 
 
 # expect
+if (NOT LINK_TARGET_NAME STREQUAL "link")
+    message(FATAL_ERROR "Failing Test case: LINK_TARGET_NAME = ${LINK_TARGET_NAME}.")
+endif()
+
 spl_test_expect_is_called(add_executable 1)
 spl_test_expect_is_called(target_compile_options 1)
 spl_test_expect_is_called(set_target_properties 1)
