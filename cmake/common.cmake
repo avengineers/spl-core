@@ -11,6 +11,7 @@ macro(_spl_get_absolute_path out in)
 endmacro()
 
 macro(spl_add_component component_path)
+    message(DEBUG "spl_add_component: component_path=${component_path}")
     _spl_slash_to_underscore(component_name ${component_path})
     add_subdirectory(${CMAKE_SOURCE_DIR}/${component_path})
 
@@ -20,8 +21,14 @@ macro(spl_add_component component_path)
 endmacro()
 
 macro(spl_add_source fileName)
+    message(DEBUG "spl_add_source: fileName=${fileName}")
+    cmake_parse_arguments(ADD_SOURCE_ARGS "" "" "COMPILE_OPTIONS" ${ARGN})
     _spl_get_absolute_path(to_be_appended ${fileName})
     list(APPEND SOURCES ${to_be_appended})
+    if (ADD_SOURCE_ARGS_COMPILE_OPTIONS)
+        message(DEBUG "spl_add_source: ADD_SOURCE_ARGS_COMPILE_OPTIONS=${ADD_SOURCE_ARGS_COMPILE_OPTIONS}")
+        set_source_files_properties(${to_be_appended} PROPERTIES COMPILE_OPTIONS "${ADD_SOURCE_ARGS_COMPILE_OPTIONS}")
+    endif()
 endmacro()
 
 macro(spl_add_include includeDirectory)

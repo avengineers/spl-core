@@ -1,5 +1,6 @@
+import textwrap
 from project_creator.variant import Variant
-from utils import TestUtils, TestWorkspace, ExecutionTime
+from utils import TestWorkspace, ExecutionTime
 import subprocess
 import xml.etree.ElementTree as ET
 from os import makedirs
@@ -69,7 +70,7 @@ class TestIntegration:
         makedirs(build_dir_test, exist_ok=False)
 
         "Call IUT"
-        with ExecutionTime("CMake Configure (build_kit: test, target=all)"):
+        with ExecutionTime("CMake Configure (build_kit: test)"):
             assert 0 == self.workspace.run_cmake_configure(build_kit="test").returncode
 
         "Expected configuration output"
@@ -137,3 +138,91 @@ class TestIntegration:
         "Call IUT"
         with ExecutionTime("Build Wrapper (target: selftests)"):
             assert 0 == self.workspace.selftests().returncode
+
+    def test_build_modified_file_compile_options(self):
+        # create build output directory for build_kit "prod"
+        build_dir_prod = self.workspace.workspace_artifacts.get_build_dir("Flv1/Sys1", "prod")
+        makedirs(build_dir_prod, exist_ok=True)
+
+        "Modify compile options of a single file"
+        self.workspace.get_component_file("component", "parts.cmake").write_text(
+            textwrap.dedent(
+                """
+                spl_add_source(src/component.c COMPILE_OPTIONS "-DTHE_ANSWER=42")
+
+                spl_add_test_source(test/test_component.cc)
+                """
+            )
+        )
+
+        "Call IUT"
+        with ExecutionTime("CMake Configure and Build (build_kit: prod, target: all)"):
+            assert 0 == self.workspace.run_cmake_configure(build_kit="prod").returncode
+            assert 0 == self.workspace.run_cmake_build(build_kit="prod", target="all").returncode
+
+        "Expected build results shall exist"
+        executable = build_dir_prod.joinpath("my_main.exe")
+        assert executable.exists()
+        my_main_result = subprocess.run([executable])
+        assert 42 == my_main_result.returncode
+
+        "Modify compile options again"
+        self.workspace.get_component_file("component", "parts.cmake").write_text(
+            textwrap.dedent(
+                """
+                spl_add_source(src/component.c COMPILE_OPTIONS "-DTHE_ANSWER=42" "-DTHE_OFFSET=3")
+
+                spl_add_test_source(test/test_component.cc)
+                """
+            )
+        )
+
+        "Call IUT, CMake shall reconfigure automatically"
+        with ExecutionTime("CMake Build (build_kit: prod, target=all)"):
+            assert 0 == self.workspace.run_cmake_build(build_kit="prod", target="all").returncode
+
+        "Expected build results shall exist"
+        executable = build_dir_prod.joinpath("my_main.exe")
+        assert executable.exists()
+        my_main_result = subprocess.run([executable])
+        assert 45 == my_main_result.returncode
+
+        "Modify compile options again"
+        self.workspace.get_component_file("component", "parts.cmake").write_text(
+            textwrap.dedent(
+                """
+                spl_add_source(src/component.c COMPILE_OPTIONS "-DTHE_OFFSET=3")
+
+                spl_add_test_source(test/test_component.cc)
+                """
+            )
+        )
+
+        "Call IUT, CMake shall reconfigure automatically"
+        with ExecutionTime("CMake Build (build_kit: prod, target=all)"):
+            assert 0 == self.workspace.run_cmake_build(build_kit="prod", target="all").returncode
+
+        "Expected build results shall exist"
+        executable = build_dir_prod.joinpath("my_main.exe")
+        assert executable.exists()
+        my_main_result = subprocess.run([executable])
+        assert 10 == my_main_result.returncode
+
+        # create build output directory for build_kit "test"
+        build_dir_test = self.workspace.workspace_artifacts.get_build_dir("Flv1/Sys1", "test")
+        makedirs(build_dir_test, exist_ok=True)
+
+        "Call IUT"
+        with ExecutionTime("CMake Configure and Build (build_kit: test, target: unittests)"):
+            assert 0 == self.workspace.run_cmake_configure(build_kit="test").returncode
+            assert 1 == self.workspace.run_cmake_build(build_kit="test", target="unittests").returncode
+
+        "Expected test results for kit test shall exist"
+        junitxml = build_dir_test.joinpath("components/component/junit.xml")
+        assert junitxml.exists()
+        testsuite = ET.parse(junitxml).getroot()
+        assert 1 == int(testsuite.attrib["tests"])
+        assert 1 == int(testsuite.attrib["failures"])
+        first_test_case = testsuite.find("testcase")
+        assert "component.test_someInterfaceOfComponent" == first_test_case.attrib["name"]
+        assert "fail" == first_test_case.attrib["status"]

@@ -135,17 +135,21 @@ class TestWorkspace:
     DEFAULT_VARIANT = Variant("Flv1", "Sys1")
 
     def __init__(self, out_dir_name: str):
-        self.workspace_dir = self.create_my_workspace(out_dir_name)
+        self.workspace_dir = self.create_default(out_dir_name)
         self.workspace_artifacts = WorkspaceArtifacts(self.workspace_dir)
         self.directory_tracker = DirectoryTracker(self.workspace_dir)
         self.use_local_spl_core = True
 
     @staticmethod
-    def create_my_workspace(out_dir_name: str) -> Path:
+    def create_default(out_dir_name: str) -> Path:
         out_dir = TestUtils.create_clean_test_dir(out_dir_name)
         project_name = "MyProject"
-        creator = Creator(project_name, out_dir.path)
         variants = [TestWorkspace.DEFAULT_VARIANT, Variant("Flv1", "Sys2")]
+        return TestWorkspace.create(out_dir, project_name, variants)
+
+    @staticmethod
+    def create(out_dir, project_name, variants):
+        creator = Creator(project_name, out_dir.path)
         return creator.materialize(variants)
 
     def install_mandatory(self):
