@@ -120,7 +120,7 @@ class TestProjectGenerator:
         assert raised_exception.value.code == 0
 
     def test_creator_add_variant(self):
-        workspace_dir = TestWorkspace.create_my_workspace("test_creator_add_variant")
+        workspace_dir = TestWorkspace.create_default("test_creator_add_variant")
         workspace_dir.joinpath("variants/Flv1/Sys1/config.txt").write_text("")
         creator = Creator.from_folder(workspace_dir)
 
@@ -137,7 +137,7 @@ class TestProjectGenerator:
         assert len(cmake_variants_json["variant"]["choices"]) == 3
 
     def test_creator_delete_variant(self):
-        workspace_dir = TestWorkspace.create_my_workspace("test_creator_delete_variant")
+        workspace_dir = TestWorkspace.create_default("test_creator_delete_variant")
         creator = Creator.from_folder(workspace_dir)
 
         "Call IUT"
