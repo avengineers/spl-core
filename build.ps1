@@ -49,7 +49,7 @@ function Test-RunningInCIorTestEnvironment {
 # Always set the $InformationPreference variable to "Continue" globally, this way it gets printed on execution and continues execution afterwards.
 $InformationPreference = "Continue"
 
-# Stop on first PS error
+# Stop on first error
 $ErrorActionPreference = "Stop"
 
 Push-Location $PSScriptRoot
@@ -60,8 +60,7 @@ try {
         if (-Not (Test-Path -Path '.bootstrap')) {
             New-Item -ItemType Directory '.bootstrap'
         }
-        $bootstrapSource = 'https://raw.githubusercontent.com/avengineers/bootstrap/develop/bootstrap.ps1'
-        Invoke-RestMethod $bootstrapSource -OutFile '.\.bootstrap\bootstrap.ps1'
+        Invoke-RestMethod 'https://raw.githubusercontent.com/avengineers/bootstrap/v1.0.0/bootstrap.ps1' -OutFile '.\.bootstrap\bootstrap.ps1'
         . .\.bootstrap\bootstrap.ps1
         Write-Output "For installation changes to take effect, please close and re-open your current shell."
     }
@@ -69,8 +68,11 @@ try {
         if (Test-RunningInCIorTestEnvironment -or $Env:USER_PATH_FIRST) {
             Initialize-EnvPath
         }
-        # Execute all unit tests
-        pipenv run pytest 
+        # Execute all tests
+        pipenv run pytest
+
+        # Build documentation
+        pipenv run sphinx-build docs out/docs/html
     }
 }
 finally {

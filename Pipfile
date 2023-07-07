@@ -5,15 +5,20 @@ name = "pypi"
 
 [packages]
 conan = {version="==1.59.0"}
-cookiecutter = "*"
+cookiecutter = {version="==2.1.1"}
 gcovr = "*"
 hammocking = "*"
 kconfiglib = "*"
 pytest = "*"
 pipenv = "*"
-flake8 = "*"
 
 [dev-packages]
+flake8 = "*"
+sphinx = "*"
+sphinx-rtd-theme = "*"
+myst-parser = "*"
+m2r = "*"
+sphinxcontrib-mermaid = "*"
 
 [requires]
 python_version = "3.11"

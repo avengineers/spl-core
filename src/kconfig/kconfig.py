@@ -11,7 +11,6 @@ import kconfiglib
 # Get the directory where the script is located and add it to sys.path.
 # Same as modifying environment variable PYTHONPATH
 sys.path.append(str(Path(__file__).absolute().parent.parent))
-print(sys.path)
 
 from common.path import existing_path, non_existing_path
 
