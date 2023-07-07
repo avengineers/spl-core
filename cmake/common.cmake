@@ -106,7 +106,7 @@ macro(_spl_set_coverage_create_overall_report_is_necessary)
     set(_SPL_COVERAGE_CREATE_OVERALL_REPORT_IS_NECESSARY TRUE PARENT_SCOPE)
 endmacro(_spl_set_coverage_create_overall_report_is_necessary)
 
-# TODO: replace global json filter pattern with config file listing components' json files explicitely
+
 function(_spl_coverage_create_overall_report)
     if(_SPL_COVERAGE_CREATE_OVERALL_REPORT_IS_NECESSARY)
         set(COV_OUT_VARIANT_HTML coverage/index.html)
@@ -241,15 +241,6 @@ macro(spl_run_conan)
     endif()
 endmacro(spl_run_conan)
 
-# TODO: this should be removed. We are using pipenv before calling CMake. All dependencies shall be defined in project's Pipfile
-macro(spl_run_pip PIP_INSTALL_REQUIREMENTS)
-    message("Execute PIP")
-    execute_process(
-        COMMAND python -m pip install --trusted-host $ENV{SPL_PIP_TRUSTED_HOST} --index-url $ENV{SPL_PIP_REPOSITORY} ${PIP_INSTALL_REQUIREMENTS}
-        COMMAND_ERROR_IS_FATAL ANY
-    )
-endmacro()
-
 macro(_spl_set_ninja_wrapper_as_cmake_make)
     set(NINJA_WRAPPER ${CMAKE_SOURCE_DIR}/build/${VARIANT}/${BUILD_KIT}/ninja_wrapper.bat)
     file(WRITE ${NINJA_WRAPPER}
@@ -260,60 +251,17 @@ macro(_spl_set_ninja_wrapper_as_cmake_make)
     set(CMAKE_MAKE_PROGRAM ${NINJA_WRAPPER} CACHE FILEPATH "Custom ninja wrapper to activate the Conan virtual environment" FORCE)
 endmacro()
 
-# TODO: this should be removed. We are using pipenv before calling CMake. All dependencies shall be defined in project's Pipfile
-macro(spl_install_extensions)
-    # Strange hack found here: https://stackoverflow.com/questions/5248749/passing-a-list-to-a-cmake-macro
-    set(_ARGN_LIST ${ARGN})
-
-    foreach(arg IN LISTS _ARGN_LIST)
-        string(REPLACE "@" ";" arglist ${arg})
-        list(LENGTH arglist len)
-
-        if(len EQUAL 2)
-            list(GET arglist 0 NAME)
-            list(GET arglist 1 VERSION)
-            spl_run_pip(${NAME}==${VERSION})
-            execute_process(
-                COMMAND python -c "import pathlib, ${NAME}; print(pathlib.Path(${NAME}.__file__).resolve().parent, end='')"
-                OUTPUT_VARIABLE ${NAME}_EXTENSION_PATH
-            )
-            set(${NAME}_CMAKE_MODULE_PATH ${${NAME}_EXTENSION_PATH}/cmake)
-            list(APPEND CMAKE_MODULE_PATH ${${NAME}_CMAKE_MODULE_PATH})
-            include(${NAME})
-        else()
-            message(FATAL_ERROR "Requested extension \"${arg}\" does not contain a version suffix with @.")
-        endif()
-    endforeach()
-
-    spl_run_conan()
-endmacro()
-
-# TODO: do we really need these warnings? Nobody cares.
-
 # deprecated
 macro(add_include)
     spl_add_include(${ARGN})
-
-    if(NOT add_include_warning)
-        set(add_include_warning ON)
-        message(WARNING "'add_include' is deprecated, use 'spl_add_include' instead. This warning is only printed once!")
-    endif()
 endmacro()
 
+# deprecated
 macro(add_source)
     spl_add_source(${ARGN})
-
-    if(NOT add_source_warning)
-        set(add_source_warning ON)
-        message(WARNING "'add_source' is deprecated, use 'spl_add_source' instead. This warning is only printed once!")
-    endif()
 endmacro()
 
+# deprecated
 macro(create_component)
     spl_create_component(${ARGN})
-
-    if(NOT create_component_warning)
-        set(create_component_warning ON)
-        message(WARNING "'create_component' is deprecated, use 'spl_create_component' instead. This warning is only printed once!")
-    endif()
 endmacro()
