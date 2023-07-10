@@ -14,7 +14,7 @@ env:
 
 jobs:
   test:
-    name: Unit and Integration Tests
+    name: CI Gate
     runs-on: windows-latest
     steps:
       - name: Checkout
