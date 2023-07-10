@@ -12,7 +12,7 @@ sys.path.insert(0, sources_path.as_posix())
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "SPLBuildExtensions"
+project = "SPL Core"
 copyright = "2023, RMT"
 author = "RMT"
 release = "0.0.0"

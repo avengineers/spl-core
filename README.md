@@ -12,7 +12,10 @@
 .\build.ps1 -install
 ```
 
-## Execution of Tests
+## Building
+
+* Execution of all tests
+* Building documentation
   
 ```powershell
 .\build.ps1
