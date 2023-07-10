@@ -8,4 +8,4 @@ Welcome to SPL Core documentation
 
     usage/index
     design/index
-    project_info
+    readme

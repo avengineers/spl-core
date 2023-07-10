@@ -46,6 +46,9 @@ extensions.extend(
 # Enable links to sections
 extensions.append("sphinx.ext.autosectionlabel")
 
+# sphinx_needs
+extensions.append("sphinx_needs")
+
 # The suffix of source filenames.
 source_suffix = [
     ".rst",
