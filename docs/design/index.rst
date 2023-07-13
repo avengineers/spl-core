@@ -10,6 +10,9 @@ are defined and supported:
 * *prod*: compilation and linking of an executable for a specific target device.
 * *test*: compilation, linking and execution of SW component tests, creation of documentation and reports.
 
+Build kit *prod*
+^^^^^^^^^^^^^^^^
+
 .. req:: Build Kit Prod
    :status: done
 
@@ -43,13 +46,47 @@ Build kit *test*
    least the two files conf.py and index.rst as input to Sphinx.
 
 .. req:: Support Documentation
-   :status: done
+   :status: open
 
    Build kit 'test' shall provide a build target 'docs', that creates the documentation of all SW components.
 
-.. req:: Support Creation of Test Report
+.. req:: Support Creation of a Component Report
    :status: open
 
-   Build kit 'test' shall provide a build target '<component>_reports', that creates a test report of a SW component containing
+   Build kit 'test' shall provide a build target '<component>_reports', that creates a report of a SW component containing
    the documentation, test specification and all test results.
-   Precondition of this build target is the existence of a conf.py and index.rst inside the test folder of a component.
+   Precondition of this build target is the existence of a conf.py and index.rst inside the root folder of a component.
+
+Folder structure for report creation
+************************************
+
+<project root>
+  build/
+    <Variant>/
+      test/
+        src/
+          <Component>/
+            doc/
+              html/
+                index.html (<Component>_DetailedDesign)
+            test/
+              html/
+                index.html (<Component>_UnitTestResults-UnitTestSpecification)
+            report/
+              html/
+                index.html (SWE.4-Report for <Component>, contains DD + Test Results + Test Spec)
+            junit.xml
+  src/
+    App/
+      <Component>/
+        doc/
+          conf.py
+          index.rst
+        src/
+          <Component>.c  
+        test/
+          <Component>_test.cc
+          index.rst
+        conf.py
+        index.rst
+  
