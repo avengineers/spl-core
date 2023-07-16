@@ -1,12 +1,22 @@
 {
+    "config": {
+        "use_lessmsi": true,
+        "autostash_on_conflict": true,
+        "scoop_repo": "https://github.com/xxthunder/Scoop",
+        "scoop_branch": "develop"
+    },
     "buckets": [
         {
-            "Name": "versions",
-            "Source": "https://github.com/ScoopInstaller/Versions"
+            "Name": "spl",
+            "Source": "https://github.com/avengineers/spl-bucket"
         },
         {
             "Name": "main",
             "Source": "https://github.com/ScoopInstaller/Main"
+        },
+        {
+            "Name": "versions",
+            "Source": "https://github.com/ScoopInstaller/Versions"
         },
         {
             "Name": "extras",
@@ -15,12 +25,25 @@
     ],
     "apps": [
         {
+            "Source": "main",
+            "Name": "dark"
+        },
+        {
+            "Source": "main",
+            "Name": "innounp"
+        },
+        {
+            "Source": "main",
+            "Name": "lessmsi"
+        },
+        {
             "Source": "versions",
             "Name": "python311"
         },
         {
-            "Source": "versions",
-            "Name": "mingw-winlibs-llvm-ucrt"
+            "Source": "spl",
+            "Name": "mingw-winlibs-llvm-ucrt",
+            "Version": "12.3.0-16.0.4-11.0.0-ucrt-r1"
         }
     ]
 }
