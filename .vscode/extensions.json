@@ -6,6 +6,10 @@
       "kevinrose.vsc-python-indent",
       "njpwerner.autodocstring",
       "wholroyd.jinja",
-      "visualstudioexptteam.vscodeintellicode"
+      "visualstudioexptteam.vscodeintellicode",
+      "josetr.cmake-language-support-vscode",
+      "ms-vscode.cmake-tools",
+      "twxs.cmake",
+      "cheshirekow.cmake-format"
    ]
 }
