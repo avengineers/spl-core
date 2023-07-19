@@ -18,6 +18,7 @@ def configuration_data():
             ConfigElement(ConfigElementType.BOOL, "STATUS_SET", TriState.Y),
             ConfigElement(ConfigElementType.BOOL, "STATUS_NOT_SET", TriState.N),
             ConfigElement(ConfigElementType.INT, "MY_INT", 13),
+            ConfigElement(ConfigElementType.HEX, "MY_HEX", 0x10),
         ]
     )
 
@@ -80,7 +81,8 @@ def test_header_writer(tmp_path: Path, configuration_data: ConfigurationData) ->
     #define CONFIG_NAME "John Smith"
     #define CONFIG_STATUS_SET 1
     #define CONFIG_MY_INT 13
-
+    #define CONFIG_MY_HEX 0x10
+    
     #endif /* __autoconf_h__ */
     """
     )
@@ -130,7 +132,8 @@ def test_json_writer(configuration_data: ConfigurationData):
             "NAME": "John Smith",
             "STATUS_SET": true,
             "STATUS_NOT_SET": false,
-            "MY_INT": 13
+            "MY_INT": 13,
+            "MY_HEX": 16
         }
     }"""
     )
@@ -143,7 +146,8 @@ def test_cmake_writer(configuration_data: ConfigurationData):
         set(NAME "John Smith")
         set(STATUS_SET "True")
         set(STATUS_NOT_SET "False")
-        set(MY_INT "13")"""
+        set(MY_INT "13")
+        set(MY_HEX "16")"""
     )
 
 
@@ -210,6 +214,28 @@ def test_boolean_with_description():
 
     iut = KConfig(feature_model_file, user_config)
     assert iut.config.elements == [ConfigElement(ConfigElementType.BOOL, "FIRST_BOOL", TriState.Y), ConfigElement(ConfigElementType.STRING, "FIRST_NAME", "Dude")]
+
+
+def test_hex():
+    """
+    A configuration with description can be selected by the user
+    """
+    out_dir = TestUtils.create_clean_test_dir("")
+    feature_model_file = out_dir.write_file(
+        "kconfig.txt",
+        """
+        menu "First menu"
+            config MY_HEX
+                hex
+                default 0x00FF
+                help
+                    my hex value
+        endmenu
+    """,
+    )
+
+    iut = KConfig(feature_model_file)
+    assert iut.config.elements == [ConfigElement(ConfigElementType.HEX, "MY_HEX", 0xFF)]
 
 
 def test_define_boolean_choices():
