@@ -115,8 +115,8 @@ class HeaderWriter(FileWriter):
                 add('#define {}{} "{}"'.format(self.config_prefix, element.name, kconfiglib.escape(val)))
 
             else:  # element.type in [INT, HEX]:
-                if element.type is ConfigElementType.HEX and not val.startswith(("0x", "0X")):
-                    val = "0x" + val
+                if element.type is ConfigElementType.HEX:
+                    val = hex(val)
 
                 add("#define {}{} {}".format(self.config_prefix, element.name, val))
         result.extend(["", "#endif /* __autoconf_h__ */", ""])
