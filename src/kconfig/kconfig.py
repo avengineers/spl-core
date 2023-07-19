@@ -1,10 +1,13 @@
+from abc import ABC, abstractmethod
 import argparse
+from dataclasses import dataclass
+from enum import Enum, auto
 import sys
 import os
 import json
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Dict
+from typing import Any, List, Optional
 import re
 import kconfiglib
 
@@ -13,6 +16,141 @@ import kconfiglib
 sys.path.append(str(Path(__file__).absolute().parent.parent))
 
 from common.path import existing_path, non_existing_path
+
+
+class GeneratedFile:
+    def __init__(self, path: Path, content: str = "", skip_writing_if_unchanged=False) -> None:
+        self.path = path
+
+        self.content = content
+
+        self.skip_writing_if_unchanged = skip_writing_if_unchanged
+
+    def to_string(self) -> str:
+        return self.content
+
+    def to_file(self) -> None:
+        """Only write to file if the content has changed.
+        The directory of the file is created if it does not exist."""
+
+        content = self.to_string()
+
+        if not self.path.exists() or not self.skip_writing_if_unchanged or self.path.read_text() != content:
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            self.path.write_text(content)
+
+
+class TriState(Enum):
+    Y = auto()
+    M = auto()
+    N = auto()
+
+
+class ConfigElementType(Enum):
+    UNKNOWN = auto()
+    BOOL = auto()
+    TRISTATE = auto()
+    STRING = auto()
+    INT = auto()
+    HEX = auto()
+
+
+@dataclass
+class ConfigElement:
+    type: ConfigElementType
+    name: str
+    value: Any
+    #: Is determined when the value is calculated. This is a hidden function call due to property magic.
+    _write_to_conf: bool = True
+
+
+@dataclass
+class ConfigurationData:
+    """- holds the variant configuration data
+    - requires no variable substitution (this should have been already done)"""
+
+    elements: List[ConfigElement]
+
+
+class FileWriter(ABC):
+    """- writes the ConfigurationData to a file"""
+
+    def __init__(self, output_file: Path):
+        self.output_file = output_file
+
+    def write(self, configuration_data: ConfigurationData):
+        """- writes the ConfigurationData to a file
+        The file shall not be modified if the content is the same as the existing one"""
+        content = self.generate_content(configuration_data)
+        GeneratedFile(self.output_file, content, skip_writing_if_unchanged=True).to_file()
+
+    @abstractmethod
+    def generate_content(self, configuration_data: ConfigurationData) -> str:
+        """- generates the content of the file from the ConfigurationData"""
+
+
+class HeaderWriter(FileWriter):
+    """Writes the ConfigurationData as pre-processor defines in a C Header file"""
+
+    config_prefix = "CONFIG_"  # Prefix for all configuration defines
+
+    def generate_content(self, configuration_data: ConfigurationData) -> str:
+        """This method does exactly what the kconfiglib.write_autoconf() method does.
+        We had to implemented here because we refactor the file writers to use the ConfigurationData
+        instead of the KConfig configuration. ConfigurationData has variable substitution already done."""
+        result: List[str] = ["#ifndef __autoconf_h__", "#define __autoconf_h__", ""]
+        add = result.append
+        for element in configuration_data.elements:
+            val = element.value
+            if not element._write_to_conf:
+                continue
+
+            if element.type in [ConfigElementType.BOOL, ConfigElementType.TRISTATE]:
+                if val == TriState.Y:
+                    add("#define {}{} 1".format(self.config_prefix, element.name))
+                elif val == TriState.M:
+                    add("#define {}{}_MODULE 1".format(self.config_prefix, element.name))
+
+            elif element.type is ConfigElementType.STRING:
+                add('#define {}{} "{}"'.format(self.config_prefix, element.name, kconfiglib.escape(val)))
+
+            else:  # element.type in [INT, HEX]:
+                if element.type is ConfigElementType.HEX and not val.startswith(("0x", "0X")):
+                    val = "0x" + val
+
+                add("#define {}{} {}".format(self.config_prefix, element.name, val))
+        result.extend(["", "#endif /* __autoconf_h__ */", ""])
+        return "\n".join(result)
+
+
+class JsonWriter(FileWriter):
+    """Writes the ConfigurationData in json format"""
+
+    def generate_content(self, configuration_data: ConfigurationData) -> str:
+        result = {}
+        for element in configuration_data.elements:
+            if element.type is ConfigElementType.BOOL:
+                result[element.name] = True if element.value == TriState.Y else False
+            else:
+                result[element.name] = element.value
+        return json.dumps({"features": result}, indent=4)
+
+
+class CMakeWriter(FileWriter):
+    """Writes the ConfigurationData as CMake variables"""
+
+    def generate_content(self, configuration_data: ConfigurationData) -> str:
+        result: List[str] = []
+        add = result.append
+        for element in configuration_data.elements:
+            val = element.value
+            if element.type is ConfigElementType.BOOL:
+                val = True if element.value == TriState.Y else False
+            if not element._write_to_conf:
+                continue
+            add(f'set({element.name} "{val}")')
+
+        return "\n".join(result)
 
 
 @contextmanager
@@ -26,7 +164,7 @@ def working_directory(some_directory: Path):
 
 
 class KConfig:
-    def __init__(self, k_config_model_file: Path, k_config_file: Path = None, k_config_root_directory: Path = None):
+    def __init__(self, k_config_model_file: Path, k_config_file: Optional[Path] = None, k_config_root_directory: Optional[Path] = None):
         """
         :param k_config_model_file: Feature model definition (KConfig format)
         :param k_config_file: User feature selection configuration file
@@ -35,87 +173,50 @@ class KConfig:
         if not k_config_model_file.exists():
             raise FileNotFoundError(f"File {k_config_model_file} does not exist.")
         with working_directory(k_config_root_directory or k_config_model_file.parent):
-            self.config = kconfiglib.Kconfig(k_config_model_file)
+            self._config = kconfiglib.Kconfig(k_config_model_file.absolute().as_posix())
         if k_config_file:
             if not k_config_file.exists():
                 raise FileNotFoundError(f"File {k_config_file} does not exist.")
-            self.config.load_config(k_config_file, replace=False)
+            self._config.load_config(k_config_file, replace=False)
+        self.config = self.create_config_data(self._config)
 
-    def get_json_values(self, envvars_to_config=False) -> Dict:
-        config_dict = {}
+    def create_config_data(self, config: kconfiglib.Kconfig) -> ConfigurationData:
+        """- creates the ConfigurationData from the KConfig configuration"""
+        elements = []
+        elements_dict = {}
 
-        def write_node(node):
+        def process_node(node):
             sym = node.item
             if not isinstance(sym, kconfiglib.Symbol):
                 return
 
             if sym.config_string:
                 val = sym.str_value
+                type = ConfigElementType.STRING
                 if sym.type in [kconfiglib.BOOL, kconfiglib.TRISTATE]:
-                    val = val != "n"
+                    val = getattr(TriState, str(val).upper())
+                    type = ConfigElementType.BOOL if sym.type == kconfiglib.BOOL else ConfigElementType.TRISTATE
                 elif sym.type == kconfiglib.HEX:
-                    val = int(val, 16)
+                    val = int(str(val), 16)
+                    type = ConfigElementType.HEX
                 elif sym.type == kconfiglib.INT:
                     val = int(val)
-                config_dict[sym.name] = val
+                    type = ConfigElementType.INT
+                new_element = ConfigElement(type, sym.name, val, sym._write_to_conf)
+                elements.append(new_element)
+                elements_dict[sym.name] = new_element
 
-        for n in self.config.node_iter(False):
-            write_node(n)
+        for n in config.node_iter(False):
+            process_node(n)
 
         # replace text in KConfig with referenced variables (string type only)
-        # KConfig variables get replaced like: ${VARIABLE_NAME}, e.g. ${SPL_RELEASE_VERSION}
-        # environment variables get replaced with: ${ENV:VARIABLE_NAME}, e.g. ${ENV:VARIANT}  (yes, VARIANT is exposed as envvar, like BUILD_KIT)
-        environment_variables_to_expand = re.findall(r"\$\{ENV:(.*?)\}", "".join(value for value in config_dict.values() if isinstance(value, str)))
-        expanded_map = dict((f"${{{key}}}", f"{value}") for key, value in config_dict.items())
-        for envvar in environment_variables_to_expand:
-            expanded_map[f"${{ENV:{envvar}}}"] = os.environ.get(envvar, "")
-            if envvars_to_config:
-                config_dict[f"ENV:{envvar}"] = os.environ.get(envvar, "")
+        # KConfig variables get replaced like: ${VARIABLE_NAME}, e.g. ${CONFIG_FOO}
+        for element in elements:
+            if element.type == ConfigElementType.STRING:
+                element.value = re.sub(r"\$\{([A-Za-z0-9_]+)\}", lambda m: str(elements_dict[m.group(1)].value), element.value)
+                element.value = re.sub(r"\$\{ENV:([A-Za-z0-9_]+)\}", lambda m: str(os.environ.get(m.group(1), "")), element.value)
 
-        for conf_key, conf_value in config_dict.items():
-            if isinstance(conf_value, str):
-                for key, value in expanded_map.items():
-                    config_dict[conf_key] = config_dict[conf_key].replace(key, value)
-
-        return config_dict
-
-    def get_cmake_content(self) -> str:
-        config_dict = self.get_json_values()
-        return "\n".join([f'set({key} "{value}")' for key, value in config_dict.items()])
-
-    def generate_header(self, output_file: Path):
-        output_file.parent.mkdir(parents=True, exist_ok=True)
-        self.config.write_autoconf(filename=output_file)
-
-        with open(output_file, "r") as outfile:
-            content = outfile.read()
-
-        config_dict = self.get_json_values(envvars_to_config=True)
-        for key, value in config_dict.items():
-            if type(value) == str:
-                content = content.replace(f"${{{key}}}", value)
-
-        with open(output_file, "w") as outfile:
-            outfile.write("#ifndef autoconf\n#define autoconf\n\n" + content + "\n#endif\n")
-
-    def generate_json(self, output_file: Path):
-        output_file.parent.mkdir(parents=True, exist_ok=True)
-
-        # Serializing json
-        feature_json = {"features": self.get_json_values()}
-        json_object = json.dumps(feature_json, indent=4)
-
-        # Writing to sample.json
-        with open(output_file, "w") as outfile:
-            outfile.write(json_object)
-
-        self.get_json_values
-
-    def generate_cmake(self, output_file: Path):
-        output_file.parent.mkdir(parents=True, exist_ok=True)
-
-        with open(output_file, "w") as outfile:
-            outfile.write(self.get_cmake_content())
+        return ConfigurationData(elements)
 
 
 def main():
@@ -126,15 +227,13 @@ def main():
     parser.add_argument("--out_json_file", required=False, type=non_existing_path)
     parser.add_argument("--out_cmake_file", required=False, type=non_existing_path)
     arguments = parser.parse_args()
-    kconfig = KConfig(arguments.kconfig_model_file, arguments.kconfig_config_file)
+    config = KConfig(arguments.kconfig_model_file, arguments.kconfig_config_file).config
 
-    kconfig.generate_header(arguments.out_header_file)
-
+    HeaderWriter(arguments.out_header_file).write(config)
     if arguments.out_json_file:
-        kconfig.generate_json(arguments.out_json_file)
-
+        JsonWriter(arguments.out_json_file).write(config)
     if arguments.out_cmake_file:
-        kconfig.generate_cmake(arguments.out_cmake_file)
+        CMakeWriter(arguments.out_cmake_file).write(config)
 
 
 if __name__ == "__main__":
