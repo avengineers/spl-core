@@ -25,7 +25,8 @@ macro(spl_add_source fileName)
     cmake_parse_arguments(ADD_SOURCE_ARGS "" "" "COMPILE_OPTIONS" ${ARGN})
     _spl_get_absolute_path(to_be_appended ${fileName})
     list(APPEND SOURCES ${to_be_appended})
-    if (ADD_SOURCE_ARGS_COMPILE_OPTIONS)
+
+    if(ADD_SOURCE_ARGS_COMPILE_OPTIONS)
         message(DEBUG "spl_add_source: ADD_SOURCE_ARGS_COMPILE_OPTIONS=${ADD_SOURCE_ARGS_COMPILE_OPTIONS}")
         set_source_files_properties(${to_be_appended} PROPERTIES COMPILE_OPTIONS "${ADD_SOURCE_ARGS_COMPILE_OPTIONS}")
     endif()
@@ -97,16 +98,32 @@ macro(spl_create_component)
     list(REMOVE_DUPLICATES target_include_directories__INCLUDES)
     set(target_include_directories__INCLUDES ${target_include_directories__INCLUDES} PARENT_SCOPE)
 
-    if((BUILD_KIT STREQUAL test) AND TEST_SOURCES)
-        set(exe_name ${component_name}_test)
-        _spl_add_test_suite("${SOURCES}" ${TEST_SOURCES})
+    if(BUILD_KIT STREQUAL test)
+        if(TEST_SOURCES)
+            set(exe_name ${component_name}_test)
+            _spl_add_test_suite("${SOURCES}" ${TEST_SOURCES})
+        endif()
+
+        set(SPHINX_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/doc)
+
+        if(EXISTS ${SPHINX_SOURCE_DIR}/conf.py)
+            set(SPHINX_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/doc)
+            set(SPHINX_OUTPUT_HTML_DIR ${CMAKE_CURRENT_BINARY_DIR}/doc/html)
+            set(SPHINX_OUTPUT_INDEX_HTML ${SPHINX_OUTPUT_HTML_DIR}/index.html)
+            add_custom_target(
+                ${component_name}_docs
+                COMMAND ${CMAKE_COMMAND} -E make_directory ${SPHINX_OUTPUT_DIR}
+                COMMAND sphinx-build -b html ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_HTML_DIR}
+                BYPRODUCTS ${SPHINX_OUTPUT_INDEX_HTML}
+            )
+            add_dependencies(docs ${component_name}_docs)
+        endif()
     endif()
 endmacro()
 
 macro(_spl_set_coverage_create_overall_report_is_necessary)
     set(_SPL_COVERAGE_CREATE_OVERALL_REPORT_IS_NECESSARY TRUE PARENT_SCOPE)
 endmacro(_spl_set_coverage_create_overall_report_is_necessary)
-
 
 function(_spl_coverage_create_overall_report)
     if(_SPL_COVERAGE_CREATE_OVERALL_REPORT_IS_NECESSARY)
