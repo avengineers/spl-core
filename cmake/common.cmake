@@ -45,6 +45,7 @@ macro(_spl_get_google_test)
     # GoogleTest requires at least C++14
     set(CMAKE_CXX_STANDARD 14)
 
+    # Make source of googletest configurable
     if(NOT DEFINED FETCHCONTENT_GTEST_URL)
         set(FETCHCONTENT_GTEST_URL https://github.com/google/googletest.git)
     endif(NOT DEFINED FETCHCONTENT_GTEST_URL)
@@ -60,17 +61,17 @@ macro(_spl_get_google_test)
         GIT_TAG ${FETCHCONTENT_GTEST_TAG}
     )
 
+    # Prevent overriding the parent project's compiler/linker settings on Windows
     if(WIN32)
-        # Prevent overriding the parent project's compiler/linker
-        # settings on Windows
         set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
     endif()
 
+    # The Python version we want to use is in the PATH, so disable any search for it.
+    # Got it from here: https://stackoverflow.com/questions/73514630/make-cmake-not-search-for-python-components-on-reconfigure
+    set(CMAKE_DISABLE_FIND_PACKAGE_Python TRUE)
+
     FetchContent_MakeAvailable(googletest)
-
     include(GoogleTest)
-
-    find_package(Threads REQUIRED)
 
     enable_testing()
 endmacro(_spl_get_google_test)
@@ -188,7 +189,7 @@ macro(_spl_add_test_suite PROD_SRC TEST_SOURCES)
         ${component_name}
         GTest::gtest_main
         GTest::gmock_main
-        Threads::Threads
+        pthread
     )
 
     gtest_discover_tests(${exe_name})
