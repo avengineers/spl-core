@@ -92,9 +92,9 @@ class TestIntegration:
         assert "run" == first_test_case.attrib["status"]
 
         "Simulate a configuration change"
-        kconfig_file = self.workspace.workspace_artifacts.kconfig_model_file
-        content = kconfig_file.read_text()
-        kconfig_file.write_text(content.replace('default "map"', 'default "mdf"'))
+        kconfig_model_file = self.workspace.workspace_artifacts.kconfig_model_file
+        content = kconfig_model_file.read_text()
+        kconfig_model_file.write_text(content.replace('default "map"', 'default "mdf"'))
         "store workspace status - all files with timestamps"
         self.workspace.take_files_snapshot()
 
@@ -122,9 +122,29 @@ class TestIntegration:
         assert len(workspace_status.new_files) == 0
 
         "Simulate a configuration change"
-        kconfig_file = self.workspace.workspace_artifacts.kconfig_model_file
-        content = kconfig_file.read_text()
-        kconfig_file.write_text(content.replace('default "mdf"', 'default "map"'))
+        variant_config_file = self.workspace.workspace_artifacts.get_kconfig_config_file(Variant.from_string("Flv1/Sys1"))
+        content = variant_config_file.read_text()
+        variant_config_file.write_text(content.replace("CONFIG_USE_COMPONENT=y", "CONFIG_USE_COMPONENT=n"))
+        "store workspace status - all files with timestamps"
+        self.workspace.take_files_snapshot()
+
+        "Call IUT"
+        with ExecutionTime("CMake (build_kit: test, target=unittests)"):
+            assert 0 == self.workspace.run_cmake_build(build_kit="test", target="unittests").returncode
+
+        "Configuration output shall be recreated"
+        workspace_status = self.workspace.get_workspace_files_status()
+        assert {"autoconf.h", "autoconf.json", "autoconf.cmake"}.issubset(workspace_status.changed_files_names)
+        assert len(workspace_status.deleted_files) == 0
+        assert len(workspace_status.new_files) == 0
+
+        "Revert configuration changes"
+        kconfig_model_file = self.workspace.workspace_artifacts.kconfig_model_file
+        content = kconfig_model_file.read_text()
+        kconfig_model_file.write_text(content.replace('default "mdf"', 'default "map"'))
+        variant_config_file = self.workspace.workspace_artifacts.get_kconfig_config_file(Variant.from_string("Flv1/Sys1"))
+        content = variant_config_file.read_text()
+        variant_config_file.write_text(content.replace("CONFIG_USE_COMPONENT=n", "CONFIG_USE_COMPONENT=y"))
         "store workspace status - all files with timestamps"
         self.workspace.take_files_snapshot()
 
