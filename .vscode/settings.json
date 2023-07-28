@@ -1,7 +1,7 @@
 {
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
-    "python.formatting.provider": "none",
+    "python.formatting.provider": "black",
     "python.formatting.blackArgs": [
         "--line-length",
         "240"
@@ -38,5 +38,6 @@
     "restructuredtext.preview.docutils.disabled": true,
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter"
-    }
+    },
+    "esbonio.sphinx.confDir": ""
 }

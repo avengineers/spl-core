@@ -10,17 +10,18 @@ gcovr = "*"
 hammocking = "*"
 kconfiglib = "*"
 pytest = "*"
+pytest-cov = "*"
 pipenv = "*"
-
-[dev-packages]
-flake8 = "*"
 sphinx = "*"
 sphinx-rtd-theme = "*"
-myst-parser = "*"
-m2r = "*"
 sphinxcontrib-mermaid = "*"
 sphinx-needs = "*"
 sphinxcontrib-plantuml = "*"
+sphinx-test-reports = "*"
+
+[dev-packages]
+flake8 = "*"
+black = "*"
 
 [requires]
 python_version = "3.11"

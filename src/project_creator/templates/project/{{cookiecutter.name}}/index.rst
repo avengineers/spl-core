@@ -1,8 +1,6 @@
-Welcome to Project documentation
-################################
+Index in project root
+=====================
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Contents:
-
-   components/component/doc/index
+   
+   {{ build_docs_dir }}/index.rst

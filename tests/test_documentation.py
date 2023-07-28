@@ -25,5 +25,6 @@ class TestDocumentation:
             assert 0 == self.workspace.run_cmake_build(build_kit="test", target="docs").returncode
 
         assert build_dir_test.joinpath("components/component/doc/html/index.html").exists()
-        assert build_dir_test.joinpath("components/component/doc/html/design.html").exists()
+        assert build_dir_test.joinpath("components/component/doc/html/components/component/doc/index.html").exists()
+        assert build_dir_test.joinpath("components/component/doc/html/components/component/doc/design.html").exists()
         assert build_dir_test.joinpath("components/component/doc/html/_images/screenshot.png").exists()
