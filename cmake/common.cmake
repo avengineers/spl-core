@@ -82,6 +82,7 @@ macro(spl_create_component)
     _spl_slash_to_underscore(component_name ${component_path})
     add_library(${component_name} OBJECT ${SOURCES})
 
+    # Add debug options based on build configuration (kit)
     if(BUILD_KIT STREQUAL test)
         target_compile_options(${component_name} PRIVATE ${VARIANT_ADDITIONAL_COMPILE_C_FLAGS} -ggdb --coverage)
     else()
@@ -99,25 +100,45 @@ macro(spl_create_component)
     set(target_include_directories__INCLUDES ${target_include_directories__INCLUDES} PARENT_SCOPE)
 
     if(BUILD_KIT STREQUAL test)
+        # Create component unittests target
         if(TEST_SOURCES)
             set(exe_name ${component_name}_test)
             _spl_add_test_suite("${SOURCES}" ${TEST_SOURCES})
         endif()
 
-        set(SPHINX_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/doc)
-
-        if(EXISTS ${SPHINX_SOURCE_DIR}/conf.py)
+        # Create component docs target if there is an index.rst file in the component doc directory
+        set(_component_doc_dir ${CMAKE_CURRENT_LIST_DIR}/doc)
+        set(_component_doc_file ${_component_doc_dir}/index.rst)
+        if(EXISTS ${_component_doc_file})
+            # The Sphinx source directory is always the project root
+            set(SPHINX_SOURCE_DIR ${PROJECT_SOURCE_DIR})
             set(SPHINX_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/doc)
             set(SPHINX_OUTPUT_HTML_DIR ${CMAKE_CURRENT_BINARY_DIR}/doc/html)
             set(SPHINX_OUTPUT_INDEX_HTML ${SPHINX_OUTPUT_HTML_DIR}/index.html)
+            # create the config.json file. This is exported as SPHINX_BUILD_CONFIGURATION_FILE env variable
+            set(_docs_config_json ${SPHINX_OUTPUT_DIR}/config.json)
+            file(RELATIVE_PATH _build_docs_dir ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_DIR})
+            file(RELATIVE_PATH _component_doc_dir ${SPHINX_SOURCE_DIR} ${_component_doc_dir})
+            file(WRITE ${_docs_config_json} "{\"build_docs_dir\": \"${_build_docs_dir}\", \"component_doc_dir\": \"${_component_doc_dir}\"}")
+            # create the index.rst file
+            set(_docs_index_rst ${SPHINX_OUTPUT_DIR}/index.rst)
+            file(WRITE ${_docs_index_rst} "Index in build directory
+========================
+
+.. toctree::
+    
+    /{{ component_doc_dir }}/index
+")
             add_custom_target(
                 ${component_name}_docs
                 COMMAND ${CMAKE_COMMAND} -E make_directory ${SPHINX_OUTPUT_DIR}
-                COMMAND sphinx-build -b html ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_HTML_DIR}
+                COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_docs_config_json} sphinx-build -b html ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_HTML_DIR}
                 BYPRODUCTS ${SPHINX_OUTPUT_INDEX_HTML}
             )
+
             add_dependencies(docs ${component_name}_docs)
         endif()
+
     endif()
 endmacro()
 
