@@ -19,6 +19,7 @@ sphinx-needs = "*"
 sphinx-test-reports = "*"
 m2r = "*"
 sphinxcontrib-plantuml = "*"
+doxysphinx = "*"
 
 [dev-packages]
 flake8 = "*"
