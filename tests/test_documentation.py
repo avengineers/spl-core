@@ -34,5 +34,4 @@ class TestDocumentation:
             assert 0 == self.workspace.run_cmake_build(build_kit="test", target="reports").returncode
 
         assert build_dir_test.joinpath("components/component/reports/html/index.html").exists()
-
-    
+        assert build_dir_test.joinpath("components/component/reports/doxygen/html/index.html").exists()

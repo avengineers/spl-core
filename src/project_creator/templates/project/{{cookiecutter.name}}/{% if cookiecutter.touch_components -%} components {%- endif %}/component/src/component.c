@@ -1,4 +1,19 @@
+/** @file */
+
 #include "component.h"
+
+
+/*!
+* @rst
+*
+* .. impl:: someInterfaceOfComponent
+*    :id: I_001
+*    :implements: S_001
+*
+*    This function returns the magical number
+*
+* @endrst
+*/
 
 int someInterfaceOfComponent()
 {
