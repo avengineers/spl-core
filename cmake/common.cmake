@@ -107,7 +107,8 @@ macro(spl_create_component)
         endif()
 
         # Create component docs target if there is an index.rst file in the component doc directory
-        set(_component_doc_dir ${CMAKE_CURRENT_LIST_DIR}/doc)
+        set(_component_dir ${CMAKE_CURRENT_LIST_DIR})
+        set(_component_doc_dir ${_component_dir}/doc)
         set(_component_doc_file ${_component_doc_dir}/index.rst)
         set(_component_test_junit_xml ${CMAKE_CURRENT_BINARY_DIR}/junit.xml)
 
@@ -120,9 +121,9 @@ macro(spl_create_component)
             # create the config.json file. This is exported as SPHINX_BUILD_CONFIGURATION_FILE env variable
             set(_docs_config_json ${SPHINX_OUTPUT_DIR}/config.json)
             set(_docs_index_rst ${SPHINX_OUTPUT_DIR}/index.rst)
-            file(RELATIVE_PATH _target_index_rst_file ${SPHINX_SOURCE_DIR} ${_docs_index_rst})
-            file(RELATIVE_PATH _component_doc_dir ${SPHINX_SOURCE_DIR} ${_component_doc_dir})
-            file(WRITE ${_docs_config_json} "{\"target_index_rst_file\": \"${_target_index_rst_file}\", \"component_doc_dir\": \"${_component_doc_dir}\"}")
+            file(RELATIVE_PATH _rel_target_index_rst_file ${SPHINX_SOURCE_DIR} ${_docs_index_rst})
+            file(RELATIVE_PATH _rel_component_doc_dir ${SPHINX_SOURCE_DIR} ${_component_doc_dir})
+            file(WRITE ${_docs_config_json} "{\"target_index_rst_file\": \"${_rel_target_index_rst_file}\", \"component_doc_dir\": \"${_rel_component_doc_dir}\"}")
             # create the index.rst file
             file(WRITE ${_docs_index_rst} "Index in build directory
 ========================
@@ -147,8 +148,8 @@ macro(spl_create_component)
                 # create the config.json file. This is exported as SPHINX_BUILD_CONFIGURATION_FILE env variable
                 set(_reports_config_json ${SPHINX_OUTPUT_DIR}/config.json)
                 set(_reports_index_rst ${SPHINX_OUTPUT_DIR}/index.rst)
-                file(RELATIVE_PATH _target_index_rst_file ${SPHINX_SOURCE_DIR} ${_reports_index_rst})
-                file(WRITE ${_reports_config_json} "{\"target_index_rst_file\": \"${_target_index_rst_file}\", \"component_doc_dir\": \"${_component_doc_dir}\", \"component_test_junit_xml\": \"${_component_test_junit_xml}\"}")
+                file(RELATIVE_PATH _rel_target_index_rst_file ${SPHINX_SOURCE_DIR} ${_reports_index_rst})
+                file(WRITE ${_reports_config_json} "{\"target_index_rst_file\": \"${_rel_target_index_rst_file}\", \"component_doc_dir\": \"${_rel_component_doc_dir}\", \"component_test_junit_xml\": \"${_component_test_junit_xml}\"}")
                 # create the index.rst file
                 file(WRITE ${_reports_index_rst} "Index in build directory
 ========================
@@ -157,6 +158,7 @@ macro(spl_create_component)
     
     /{{ component_doc_dir }}/index
     test_results
+    doxygen/html/index
 ")
                 # create the test_results.rst file
                 set(_reports_test_results_rst ${SPHINX_OUTPUT_DIR}/test_results.rst)
@@ -167,9 +169,21 @@ macro(spl_create_component)
     :id: COMPONENT_REPORT
     :file: {{ component_test_junit_xml }}
 ")
+                set(_component_doxyfile ${SPHINX_OUTPUT_DIR}/Doxyfile)
+                # generate Doxyfile from template
+                set(DOXYGEN_PROJECT_NAME "Doxygen Documentation")
+                set(DOXYGEN_OUTPUT_DIRECTORY ${SPHINX_OUTPUT_DIR}/doxygen)
+                set(DOXYGEN_INPUT "${_component_dir}/src ${_component_dir}/test")
+                # We need to add the googletest include directory to the doxygen include path
+                # to be able to resolve the TEST() macros in the test files.
+                set(DOXYGEN_INCLUDE_PATH "${SPHINX_SOURCE_DIR}/build/modules/googletest-src/googletest/include")
+                configure_file(${SPHINX_SOURCE_DIR}/doc/Doxyfile.in ${_component_doxyfile} @ONLY)
+                file(RELATIVE_PATH _rel_component_doxyfile ${CMAKE_CURRENT_BINARY_DIR} ${_component_doxyfile})
                 add_custom_target(
                     ${component_name}_reports
                     COMMAND ${CMAKE_COMMAND} -E make_directory ${SPHINX_OUTPUT_DIR}
+                    COMMAND ${CMAKE_COMMAND} -E make_directory ${SPHINX_OUTPUT_DIR}/doxygen
+                    COMMAND doxygen ${_rel_component_doxyfile}
                     COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_reports_config_json} sphinx-build -b html ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_HTML_DIR}
                     BYPRODUCTS ${SPHINX_OUTPUT_INDEX_HTML}
                     DEPENDS ${_component_test_junit_xml}
