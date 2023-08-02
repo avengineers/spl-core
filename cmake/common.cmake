@@ -177,6 +177,7 @@ macro(spl_create_component)
                 # We need to add the googletest include directory to the doxygen include path
                 # to be able to resolve the TEST() macros in the test files.
                 set(DOXYGEN_INCLUDE_PATH "${SPHINX_SOURCE_DIR}/build/modules/googletest-src/googletest/include")
+                set(DOXYGEN_AWESOME_PATH "${SPHINX_SOURCE_DIR}/doc/doxygen-awesome")
                 configure_file(${SPHINX_SOURCE_DIR}/doc/Doxyfile.in ${_component_doxyfile} @ONLY)
                 file(RELATIVE_PATH _rel_component_doxyfile ${CMAKE_CURRENT_BINARY_DIR} ${_component_doxyfile})
                 add_custom_target(

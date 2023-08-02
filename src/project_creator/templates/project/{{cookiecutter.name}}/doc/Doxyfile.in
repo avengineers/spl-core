@@ -1316,7 +1316,7 @@ HTML_FILE_EXTENSION    = .html
 # of the possible markers and block names see the documentation.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_HEADER            =
+HTML_HEADER            = 
 
 # The HTML_FOOTER tag can be used to specify a user-defined HTML footer for each
 # generated HTML page. If the tag is left blank doxygen will generate a standard
@@ -1356,7 +1356,7 @@ HTML_STYLESHEET        =
 # documentation.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-#HTML_EXTRA_STYLESHEET  = C:/D/doxygen-awesome-css/doxygen-awesome.css
+HTML_EXTRA_STYLESHEET  = @DOXYGEN_AWESOME_PATH@/doxygen-awesome.css
 
 # The HTML_EXTRA_FILES tag can be used to specify one or more extra images or
 # other source files which should be copied to the HTML output directory. Note
@@ -2400,7 +2400,7 @@ TAGFILES               = swunit.tag=swunit.tag
 # tag file that is based on the input files it reads. See section "Linking to
 # external documentation" for more information about the usage of tag files.
 
-GENERATE_TAGFILE       =  output\doxygen\html\tagfile.xml
+GENERATE_TAGFILE       = @DOXYGEN_OUTPUT_DIRECTORY@/html/tagfile.xml
 
 # If the ALLEXTERNALS tag is set to YES, all external class will be listed in
 # the class index. If set to NO, only the inherited external classes will be
