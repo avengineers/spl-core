@@ -72,6 +72,7 @@ elseif(BUILD_KIT STREQUAL test)
 
     add_custom_target(coverage)
     add_custom_target(docs)
+    add_custom_target(reports)
 else()
     message(FATAL_ERROR "Invalid BUILD_KIT selected!")
 endif(BUILD_KIT STREQUAL prod)

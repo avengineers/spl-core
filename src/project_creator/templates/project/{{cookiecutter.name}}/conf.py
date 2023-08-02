@@ -59,6 +59,7 @@ needs_extra_links = [
 
 # sphinxcontrib-test-reports
 extensions.append("sphinxcontrib.test_reports")
+tr_report_template = "doc/test_report_template.txt"
 
 # The suffix of source filenames.
 source_suffix = [".rst"]
