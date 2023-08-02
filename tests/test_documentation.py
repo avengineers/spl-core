@@ -35,3 +35,4 @@ class TestDocumentation:
 
         assert build_dir_test.joinpath("components/component/reports/html/index.html").exists()
         assert build_dir_test.joinpath("components/component/reports/doxygen/html/index.html").exists()
+        assert build_dir_test.joinpath("components/component/reports/doxygen/html/index.rst").exists()

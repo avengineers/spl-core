@@ -18,6 +18,7 @@ sphinxcontrib-mermaid = "*"
 sphinx-needs = "*"
 sphinxcontrib-plantuml = "*"
 sphinx-test-reports = "*"
+doxysphinx = "*"
 
 [dev-packages]
 flake8 = "*"

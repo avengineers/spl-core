@@ -85,7 +85,7 @@ class TestIntegration:
         junitxml = build_dir_test.joinpath("components/component/junit.xml")
         assert junitxml.exists()
         testsuite = ET.parse(junitxml).getroot()
-        assert 1 == int(testsuite.attrib["tests"])
+        assert 2 == int(testsuite.attrib["tests"])
         assert 0 == int(testsuite.attrib["failures"])
         first_test_case = testsuite.find("testcase")
         assert "component.test_someInterfaceOfComponent" == first_test_case.attrib["name"]
@@ -245,8 +245,8 @@ class TestIntegration:
         junitxml = build_dir_test.joinpath("components/component/junit.xml")
         assert junitxml.exists()
         testsuite = ET.parse(junitxml).getroot()
-        assert 1 == int(testsuite.attrib["tests"])
-        assert 1 == int(testsuite.attrib["failures"])
+        assert 2 == int(testsuite.attrib["tests"])
+        assert 2 == int(testsuite.attrib["failures"])
         first_test_case = testsuite.find("testcase")
         assert "component.test_someInterfaceOfComponent" == first_test_case.attrib["name"]
         assert "fail" == first_test_case.attrib["status"]
