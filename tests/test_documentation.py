@@ -24,7 +24,15 @@ class TestDocumentation:
         with ExecutionTime("CMake (build_kit: test, target=docs)"):
             assert 0 == self.workspace.run_cmake_build(build_kit="test", target="docs").returncode
 
-        assert build_dir_test.joinpath("components/component/doc/html/index.html").exists()
-        assert build_dir_test.joinpath("components/component/doc/html/components/component/doc/index.html").exists()
-        assert build_dir_test.joinpath("components/component/doc/html/components/component/doc/design.html").exists()
-        assert build_dir_test.joinpath("components/component/doc/html/_images/screenshot.png").exists()
+        assert build_dir_test.joinpath("components/component/docs/html/index.html").exists()
+        assert build_dir_test.joinpath("components/component/docs/html/components/component/doc/index.html").exists()
+        assert build_dir_test.joinpath("components/component/docs/html/components/component/doc/design.html").exists()
+        assert build_dir_test.joinpath("components/component/docs/html/_images/screenshot.png").exists()
+    
+        "Call IUT"
+        with ExecutionTime("CMake (build_kit: test, target=reports)"):
+            assert 0 == self.workspace.run_cmake_build(build_kit="test", target="reports").returncode
+
+        assert build_dir_test.joinpath("components/component/reports/html/index.html").exists()
+
+    

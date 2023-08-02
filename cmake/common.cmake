@@ -109,19 +109,21 @@ macro(spl_create_component)
         # Create component docs target if there is an index.rst file in the component doc directory
         set(_component_doc_dir ${CMAKE_CURRENT_LIST_DIR}/doc)
         set(_component_doc_file ${_component_doc_dir}/index.rst)
+        set(_component_test_junit_xml ${CMAKE_CURRENT_BINARY_DIR}/junit.xml)
+
         if(EXISTS ${_component_doc_file})
             # The Sphinx source directory is always the project root
             set(SPHINX_SOURCE_DIR ${PROJECT_SOURCE_DIR})
-            set(SPHINX_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/doc)
-            set(SPHINX_OUTPUT_HTML_DIR ${CMAKE_CURRENT_BINARY_DIR}/doc/html)
+            set(SPHINX_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/docs)
+            set(SPHINX_OUTPUT_HTML_DIR ${SPHINX_OUTPUT_DIR}/html)
             set(SPHINX_OUTPUT_INDEX_HTML ${SPHINX_OUTPUT_HTML_DIR}/index.html)
             # create the config.json file. This is exported as SPHINX_BUILD_CONFIGURATION_FILE env variable
             set(_docs_config_json ${SPHINX_OUTPUT_DIR}/config.json)
-            file(RELATIVE_PATH _build_docs_dir ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_DIR})
-            file(RELATIVE_PATH _component_doc_dir ${SPHINX_SOURCE_DIR} ${_component_doc_dir})
-            file(WRITE ${_docs_config_json} "{\"build_docs_dir\": \"${_build_docs_dir}\", \"component_doc_dir\": \"${_component_doc_dir}\"}")
-            # create the index.rst file
             set(_docs_index_rst ${SPHINX_OUTPUT_DIR}/index.rst)
+            file(RELATIVE_PATH _target_index_rst_file ${SPHINX_SOURCE_DIR} ${_docs_index_rst})
+            file(RELATIVE_PATH _component_doc_dir ${SPHINX_SOURCE_DIR} ${_component_doc_dir})
+            file(WRITE ${_docs_config_json} "{\"target_index_rst_file\": \"${_target_index_rst_file}\", \"component_doc_dir\": \"${_component_doc_dir}\"}")
+            # create the index.rst file
             file(WRITE ${_docs_index_rst} "Index in build directory
 ========================
 
@@ -137,6 +139,44 @@ macro(spl_create_component)
             )
 
             add_dependencies(docs ${component_name}_docs)
+
+            if(TEST_SOURCES)
+                set(SPHINX_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/reports)
+                set(SPHINX_OUTPUT_HTML_DIR ${SPHINX_OUTPUT_DIR}/html)
+                set(SPHINX_OUTPUT_INDEX_HTML ${SPHINX_OUTPUT_HTML_DIR}/index.html)
+                # create the config.json file. This is exported as SPHINX_BUILD_CONFIGURATION_FILE env variable
+                set(_reports_config_json ${SPHINX_OUTPUT_DIR}/config.json)
+                set(_reports_index_rst ${SPHINX_OUTPUT_DIR}/index.rst)
+                file(RELATIVE_PATH _target_index_rst_file ${SPHINX_SOURCE_DIR} ${_reports_index_rst})
+                file(WRITE ${_reports_config_json} "{\"target_index_rst_file\": \"${_target_index_rst_file}\", \"component_doc_dir\": \"${_component_doc_dir}\", \"component_test_junit_xml\": \"${_component_test_junit_xml}\"}")
+                # create the index.rst file
+                file(WRITE ${_reports_index_rst} "Index in build directory
+========================
+
+.. toctree::
+    
+    /{{ component_doc_dir }}/index
+    test_results
+")
+                # create the test_results.rst file
+                set(_reports_test_results_rst ${SPHINX_OUTPUT_DIR}/test_results.rst)
+                file(WRITE ${_reports_test_results_rst} "Unit Test Results
+=================
+
+.. test-report:: Unit Test Results
+    :id: COMPONENT_REPORT
+    :file: {{ component_test_junit_xml }}
+")
+                add_custom_target(
+                    ${component_name}_reports
+                    COMMAND ${CMAKE_COMMAND} -E make_directory ${SPHINX_OUTPUT_DIR}
+                    COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_reports_config_json} sphinx-build -b html ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_HTML_DIR}
+                    BYPRODUCTS ${SPHINX_OUTPUT_INDEX_HTML}
+                    DEPENDS ${_component_test_junit_xml}
+                )
+
+                add_dependencies(reports ${component_name}_reports)
+            endif(TEST_SOURCES)
         endif()
 
     endif()
