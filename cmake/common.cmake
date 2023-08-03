@@ -128,7 +128,7 @@ macro(spl_create_component)
             file(WRITE ${_docs_config_json} "{
                 \"target_index_rst_file\": \"${_rel_target_index_rst_file}\", 
                 \"component_doc_dir\": \"${_rel_component_doc_dir}\",
-                \"include_patterns\": [\"${_rel_component_doc_dir}/*\",\"${_rel_sphinx_output_dir}/*\"]
+                \"include_patterns\": [\"${_rel_component_doc_dir}/**\",\"${_rel_sphinx_output_dir}/**\"]
             }")
             # create the index.rst file
             file(WRITE ${_docs_index_rst} "Index in build directory
@@ -162,7 +162,7 @@ macro(spl_create_component)
                     \"target_index_rst_file\": \"${_rel_target_index_rst_file}\", 
                     \"component_doc_dir\": \"${_rel_component_doc_dir}\", 
                     \"component_test_junit_xml\": \"${_component_test_junit_xml}\",
-                    \"include_patterns\": [\"${_rel_component_doc_dir}/*\",\"${_rel_sphinx_output_dir}/*\"]
+                    \"include_patterns\": [\"${_rel_component_doc_dir}/**\",\"${_rel_sphinx_output_dir}/**\"]
                 }")
                 # create the index.rst file
                 file(WRITE ${_reports_index_rst} "Index in build directory
