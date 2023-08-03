@@ -138,6 +138,8 @@ macro(spl_create_component)
     
     /{{ component_doc_dir }}/index
 ")
+            # add the generated files as dependency to cmake configure step
+            set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_docs_config_json} ${_docs_index_rst})
             add_custom_target(
                 ${component_name}_docs
                 COMMAND ${CMAKE_COMMAND} -E make_directory ${SPHINX_OUTPUT_DIR}
@@ -192,6 +194,10 @@ macro(spl_create_component)
                 set(DOXYGEN_AWESOME_PATH "${SPHINX_SOURCE_DIR}/doc/doxygen-awesome")
                 configure_file(${SPHINX_SOURCE_DIR}/doc/Doxyfile.in ${_component_doxyfile} @ONLY)
                 file(RELATIVE_PATH _rel_component_doxyfile ${CMAKE_CURRENT_BINARY_DIR} ${_component_doxyfile})
+
+                # add the generated files as dependency to cmake configure step
+                set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_reports_config_json} ${_reports_index_rst} ${_reports_test_results_rst} ${_component_doxyfile})
+
                 add_custom_target(
                     ${component_name}_reports
                     COMMAND ${CMAKE_COMMAND} -E make_directory ${SPHINX_OUTPUT_DIR}
