@@ -122,24 +122,15 @@ macro(spl_create_component)
             set(SPHINX_OUTPUT_INDEX_HTML ${SPHINX_OUTPUT_HTML_DIR}/index.html)
             # create the config.json file. This is exported as SPHINX_BUILD_CONFIGURATION_FILE env variable
             set(_docs_config_json ${SPHINX_OUTPUT_DIR}/config.json)
-            set(_docs_index_rst ${SPHINX_OUTPUT_DIR}/index.rst)
-            file(RELATIVE_PATH _rel_target_index_rst_file ${SPHINX_SOURCE_DIR} ${_docs_index_rst})
             file(RELATIVE_PATH _rel_component_doc_dir ${SPHINX_SOURCE_DIR} ${_component_doc_dir})
             file(WRITE ${_docs_config_json} "{
-                \"target_index_rst_file\": \"${_rel_target_index_rst_file}\", 
+                \"generated_rst_content\": \".. toctree::\\n    :maxdepth: 2\\n\\n    /${_rel_component_doc_dir}/index\",
                 \"component_doc_dir\": \"${_rel_component_doc_dir}\",
                 \"include_patterns\": [\"${_rel_component_doc_dir}/**\",\"${_rel_sphinx_output_dir}/**\"]
             }")
-            # create the index.rst file
-            file(WRITE ${_docs_index_rst} "Index in build directory
-========================
 
-.. toctree::
-    
-    /{{ component_doc_dir }}/index
-")
             # add the generated files as dependency to cmake configure step
-            set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_docs_config_json} ${_docs_index_rst})
+            set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_docs_config_json})
             add_custom_target(
                 ${component_name}_docs
                 COMMAND ${CMAKE_COMMAND} -E make_directory ${SPHINX_OUTPUT_DIR}
@@ -156,26 +147,9 @@ macro(spl_create_component)
                 set(SPHINX_OUTPUT_INDEX_HTML ${SPHINX_OUTPUT_HTML_DIR}/index.html)
                 # create the config.json file. This is exported as SPHINX_BUILD_CONFIGURATION_FILE env variable
                 set(_reports_config_json ${SPHINX_OUTPUT_DIR}/config.json)
-                set(_reports_index_rst ${SPHINX_OUTPUT_DIR}/index.rst)
-                file(RELATIVE_PATH _rel_target_index_rst_file ${SPHINX_SOURCE_DIR} ${_reports_index_rst})
-                file(WRITE ${_reports_config_json} "{
-                    \"target_index_rst_file\": \"${_rel_target_index_rst_file}\", 
-                    \"component_doc_dir\": \"${_rel_component_doc_dir}\", 
-                    \"component_test_junit_xml\": \"${_component_test_junit_xml}\",
-                    \"include_patterns\": [\"${_rel_component_doc_dir}/**\",\"${_rel_sphinx_output_dir}/**\"]
-                }")
-                # create the index.rst file
-                file(WRITE ${_reports_index_rst} "Index in build directory
-========================
-
-.. toctree::
-    
-    /{{ component_doc_dir }}/index
-    test_results
-    doxygen/html/index
-")
                 # create the test_results.rst file
                 set(_reports_test_results_rst ${SPHINX_OUTPUT_DIR}/test_results.rst)
+                file(RELATIVE_PATH _rel_reports_test_results_rst ${SPHINX_SOURCE_DIR} ${_reports_test_results_rst})
                 file(WRITE ${_reports_test_results_rst} "Unit Test Results
 =================
 
@@ -187,16 +161,24 @@ macro(spl_create_component)
                 # generate Doxyfile from template
                 set(DOXYGEN_PROJECT_NAME "Doxygen Documentation")
                 set(DOXYGEN_OUTPUT_DIRECTORY ${SPHINX_OUTPUT_DIR}/doxygen)
-                set(DOXYGEN_INPUT "${_component_dir}/src ${_component_dir}/test")
+                set(DOXYGEN_INPUT "${_component_dir}/src ${_component_dir}/test ${KCONFIG_OUT_DIR}")
                 # We need to add the googletest include directory to the doxygen include path
                 # to be able to resolve the TEST() macros in the test files.
-                set(DOXYGEN_INCLUDE_PATH "${SPHINX_SOURCE_DIR}/build/modules/googletest-src/googletest/include")
+                set(DOXYGEN_INCLUDE_PATH "${SPHINX_SOURCE_DIR}/build/modules/googletest-src/googletest/include ${KCONFIG_OUT_DIR}")
                 set(DOXYGEN_AWESOME_PATH "${SPHINX_SOURCE_DIR}/doc/doxygen-awesome")
                 configure_file(${SPHINX_SOURCE_DIR}/doc/Doxyfile.in ${_component_doxyfile} @ONLY)
                 file(RELATIVE_PATH _rel_component_doxyfile ${CMAKE_CURRENT_BINARY_DIR} ${_component_doxyfile})
+                file(RELATIVE_PATH _rel_component_doxysphinx_index_rst ${SPHINX_SOURCE_DIR} ${DOXYGEN_OUTPUT_DIRECTORY}/html/index)
+
+                file(WRITE ${_reports_config_json} "{
+                    \"generated_rst_content\": \".. toctree::\\n    :maxdepth: 2\\n\\n    /${_rel_component_doc_dir}/index\\n    /${_rel_reports_test_results_rst}\\n    ${_rel_component_doxysphinx_index_rst}\",
+                    \"component_doc_dir\": \"${_rel_component_doc_dir}\", 
+                    \"component_test_junit_xml\": \"${_component_test_junit_xml}\",
+                    \"include_patterns\": [\"${_rel_component_doc_dir}/**\",\"${_rel_sphinx_output_dir}/**\"]
+                }")
 
                 # add the generated files as dependency to cmake configure step
-                set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_reports_config_json} ${_reports_index_rst} ${_reports_test_results_rst} ${_component_doxyfile})
+                set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_reports_config_json} ${_reports_test_results_rst} ${_component_doxyfile})
 
                 add_custom_target(
                     ${component_name}_reports

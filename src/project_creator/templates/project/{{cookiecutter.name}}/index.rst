@@ -1,6 +1,4 @@
-Index in project root
-=====================
+Table of Contents
+=================
 
-.. toctree::
-   
-   {{ target_index_rst_file }}
+{{ generated_rst_content }}
