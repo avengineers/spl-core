@@ -117,6 +117,7 @@ macro(spl_create_component)
             # The Sphinx source directory is always the project root
             set(SPHINX_SOURCE_DIR ${PROJECT_SOURCE_DIR})
             set(SPHINX_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/docs)
+            file(RELATIVE_PATH _rel_sphinx_output_dir ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_DIR})
             set(SPHINX_OUTPUT_HTML_DIR ${SPHINX_OUTPUT_DIR}/html)
             set(SPHINX_OUTPUT_INDEX_HTML ${SPHINX_OUTPUT_HTML_DIR}/index.html)
             # create the config.json file. This is exported as SPHINX_BUILD_CONFIGURATION_FILE env variable
@@ -124,7 +125,11 @@ macro(spl_create_component)
             set(_docs_index_rst ${SPHINX_OUTPUT_DIR}/index.rst)
             file(RELATIVE_PATH _rel_target_index_rst_file ${SPHINX_SOURCE_DIR} ${_docs_index_rst})
             file(RELATIVE_PATH _rel_component_doc_dir ${SPHINX_SOURCE_DIR} ${_component_doc_dir})
-            file(WRITE ${_docs_config_json} "{\"target_index_rst_file\": \"${_rel_target_index_rst_file}\", \"component_doc_dir\": \"${_rel_component_doc_dir}\"}")
+            file(WRITE ${_docs_config_json} "{
+                \"target_index_rst_file\": \"${_rel_target_index_rst_file}\", 
+                \"component_doc_dir\": \"${_rel_component_doc_dir}\",
+                \"include_patterns\": [\"${_rel_component_doc_dir}/*\",\"${_rel_sphinx_output_dir}/*\"]
+            }")
             # create the index.rst file
             file(WRITE ${_docs_index_rst} "Index in build directory
 ========================
@@ -144,13 +149,19 @@ macro(spl_create_component)
 
             if(TEST_SOURCES)
                 set(SPHINX_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/reports)
+                file(RELATIVE_PATH _rel_sphinx_output_dir ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_DIR})
                 set(SPHINX_OUTPUT_HTML_DIR ${SPHINX_OUTPUT_DIR}/html)
                 set(SPHINX_OUTPUT_INDEX_HTML ${SPHINX_OUTPUT_HTML_DIR}/index.html)
                 # create the config.json file. This is exported as SPHINX_BUILD_CONFIGURATION_FILE env variable
                 set(_reports_config_json ${SPHINX_OUTPUT_DIR}/config.json)
                 set(_reports_index_rst ${SPHINX_OUTPUT_DIR}/index.rst)
                 file(RELATIVE_PATH _rel_target_index_rst_file ${SPHINX_SOURCE_DIR} ${_reports_index_rst})
-                file(WRITE ${_reports_config_json} "{\"target_index_rst_file\": \"${_rel_target_index_rst_file}\", \"component_doc_dir\": \"${_rel_component_doc_dir}\", \"component_test_junit_xml\": \"${_component_test_junit_xml}\"}")
+                file(WRITE ${_reports_config_json} "{
+                    \"target_index_rst_file\": \"${_rel_target_index_rst_file}\", 
+                    \"component_doc_dir\": \"${_rel_component_doc_dir}\", 
+                    \"component_test_junit_xml\": \"${_component_test_junit_xml}\",
+                    \"include_patterns\": [\"${_rel_component_doc_dir}/*\",\"${_rel_sphinx_output_dir}/*\"]
+                }")
                 # create the index.rst file
                 file(WRITE ${_reports_index_rst} "Index in build directory
 ========================

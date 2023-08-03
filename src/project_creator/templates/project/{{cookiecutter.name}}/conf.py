@@ -20,7 +20,7 @@ release = "0.0.0"
 
 extensions = []
 exclude_patterns = [".git", ".venv", "build/modules", "**/.venv"]
-# include_patterns = ["**/doc"]
+include_patterns = ["index.rst", "doc/**"]
 
 
 # mermaid config - @see https://pypi.org/project/sphinxcontrib-mermaid/
@@ -93,6 +93,8 @@ html_theme_options = {
 if "SPHINX_BUILD_CONFIGURATION_FILE" in os.environ:
     with open(os.environ["SPHINX_BUILD_CONFIGURATION_FILE"], "r") as file:
         html_context = json.load(file)
+        include_patterns.extend(html_context.get("include_patterns", []))
+        
 
 # Check if the SPHINX_BUILD_CONFIGURATION_FILE environment variable exists
 # and if so, load the JSON file and set the 'html_context' variable

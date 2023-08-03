@@ -6,3 +6,4 @@ Welcome to Component documentation
    :caption: Contents:
 
    design
+   /doc/common/index
