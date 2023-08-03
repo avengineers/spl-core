@@ -28,7 +28,7 @@ class TestDocumentation:
         assert build_dir_test.joinpath("components/component/docs/html/components/component/doc/index.html").exists()
         assert build_dir_test.joinpath("components/component/docs/html/components/component/doc/design.html").exists()
         assert build_dir_test.joinpath("components/component/docs/html/_images/screenshot.png").exists()
-    
+
         "Call IUT"
         with ExecutionTime("CMake (build_kit: test, target=reports)"):
             assert 0 == self.workspace.run_cmake_build(build_kit="test", target="reports").returncode
@@ -36,3 +36,10 @@ class TestDocumentation:
         assert build_dir_test.joinpath("components/component/reports/html/index.html").exists()
         assert build_dir_test.joinpath("components/component/reports/doxygen/html/index.html").exists()
         assert build_dir_test.joinpath("components/component/reports/doxygen/html/index.rst").exists()
+
+        # Delete the config.json files and run the build again - this should retrigger cmake configure and not fail
+        build_dir_test.joinpath("components/component/reports/config.json").unlink()
+
+        "Call IUT"
+        with ExecutionTime("CMake (build_kit: test, target=reports)"):
+            assert 0 == self.workspace.run_cmake_build(build_kit="test", target="reports").returncode
