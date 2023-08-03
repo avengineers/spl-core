@@ -91,9 +91,14 @@ html_theme_options = {
 # Check if the SPHINX_BUILD_CONFIGURATION_FILE environment variable exists
 # and if so, load the JSON file and set the 'html_context' variable
 if "SPHINX_BUILD_CONFIGURATION_FILE" in os.environ:
-    SPHINX_BUILD_CONFIGURATION_FILE = os.environ["SPHINX_BUILD_CONFIGURATION_FILE"]
-    with open(SPHINX_BUILD_CONFIGURATION_FILE, "r") as file:
+    with open(os.environ["SPHINX_BUILD_CONFIGURATION_FILE"], "r") as file:
         html_context = json.load(file)
+
+# Check if the SPHINX_BUILD_CONFIGURATION_FILE environment variable exists
+# and if so, load the JSON file and set the 'html_context' variable
+if "AUTOCONF_JSON_FILE" in os.environ:
+    with open(os.environ["AUTOCONF_JSON_FILE"], "r") as file:
+        html_context["config"] = json.load(file)["features"]
 
 
 def rstjinja(app, docname, source):
