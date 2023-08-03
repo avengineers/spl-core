@@ -75,12 +75,17 @@ def test_header_writer(tmp_path: Path, configuration_data: ConfigurationData) ->
     writer.write(configuration_data)
     assert header_file.read_text() == textwrap.dedent(
         """\
+    /** @file */
     #ifndef __autoconf_h__
     #define __autoconf_h__
 
+    /** NAME */
     #define CONFIG_NAME "John Smith"
+    /** STATUS_SET */
     #define CONFIG_STATUS_SET 1
+    /** MY_INT */
     #define CONFIG_MY_INT 13
+    /** MY_HEX */
     #define CONFIG_MY_HEX 0x10
     
     #endif /* __autoconf_h__ */
