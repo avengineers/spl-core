@@ -98,8 +98,12 @@ class HeaderWriter(FileWriter):
         """This method does exactly what the kconfiglib.write_autoconf() method does.
         We had to implemented here because we refactor the file writers to use the ConfigurationData
         instead of the KConfig configuration. ConfigurationData has variable substitution already done."""
-        result: List[str] = ["#ifndef __autoconf_h__", "#define __autoconf_h__", ""]
-        add = result.append
+        result: List[str] = ["/** @file */", "#ifndef __autoconf_h__", "#define __autoconf_h__", ""]
+
+        def add_define(define_decl: str, description: str):
+            result.append(f"/** {description} */")
+            result.append(define_decl)
+
         for element in configuration_data.elements:
             val = element.value
             if not element._write_to_conf:
@@ -107,18 +111,17 @@ class HeaderWriter(FileWriter):
 
             if element.type in [ConfigElementType.BOOL, ConfigElementType.TRISTATE]:
                 if val == TriState.Y:
-                    add("#define {}{} 1".format(self.config_prefix, element.name))
+                    add_define("#define {}{} 1".format(self.config_prefix, element.name), element.name)
                 elif val == TriState.M:
-                    add("#define {}{}_MODULE 1".format(self.config_prefix, element.name))
+                    add_define("#define {}{}_MODULE 1".format(self.config_prefix, element.name), element.name)
 
             elif element.type is ConfigElementType.STRING:
-                add('#define {}{} "{}"'.format(self.config_prefix, element.name, kconfiglib.escape(val)))
+                add_define('#define {}{} "{}"'.format(self.config_prefix, element.name, kconfiglib.escape(val)), element.name)
 
             else:  # element.type in [INT, HEX]:
                 if element.type is ConfigElementType.HEX:
                     val = hex(val)
-
-                add("#define {}{} {}".format(self.config_prefix, element.name, val))
+                add_define("#define {}{} {}".format(self.config_prefix, element.name, val), element.name)
         result.extend(["", "#endif /* __autoconf_h__ */", ""])
         return "\n".join(result)
 
