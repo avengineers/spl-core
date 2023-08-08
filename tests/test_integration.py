@@ -239,7 +239,7 @@ class TestIntegration:
         "Call IUT"
         with ExecutionTime("CMake Configure and Build (build_kit: test, target: unittests)"):
             assert 0 == self.workspace.run_cmake_configure(build_kit="test").returncode
-            assert 1 == self.workspace.run_cmake_build(build_kit="test", target="unittests").returncode
+            assert 0 == self.workspace.run_cmake_build(build_kit="test", target="unittests").returncode
 
         "Expected test results for kit test shall exist"
         junitxml = build_dir_test.joinpath("components/component/junit.xml")
