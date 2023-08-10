@@ -34,37 +34,34 @@ if(BUILD_KIT STREQUAL prod)
     if(LINKER_OUTPUT_FILE)
         get_filename_component(LINK_FILE_BASENAME ${LINKER_OUTPUT_FILE} NAME_WE)
         get_filename_component(LINK_FILE_EXTENSION ${LINKER_OUTPUT_FILE} EXT)
-    else()
-        set(LINK_FILE_BASENAME main)
-        set(LINK_FILE_EXTENSION .exe)
-    endif(LINKER_OUTPUT_FILE)
 
-    # add variant specific linker script if defined
-    if(VARIANT_LINKER_FILE)
-        list(APPEND LINK_TARGET_DEPENDS ${VARIANT_LINKER_FILE})
-    endif(VARIANT_LINKER_FILE)
+        # add variant specific linker script if defined
+        if(VARIANT_LINKER_FILE)
+            list(APPEND LINK_TARGET_DEPENDS ${VARIANT_LINKER_FILE})
+        endif(VARIANT_LINKER_FILE)
 
-    # create executable
-    add_executable(${LINK_TARGET_NAME} ${LINK_TARGET_DEPENDS})
-    target_compile_options(${LINK_TARGET_NAME} PRIVATE ${VARIANT_ADDITIONAL_LINK_FLAGS})
-    set_target_properties(${LINK_TARGET_NAME} PROPERTIES
-        OUTPUT_NAME ${LINK_FILE_BASENAME}
-        SUFFIX ${LINK_FILE_EXTENSION}
-        LINK_DEPENDS "${LINK_TARGET_DEPENDS}"
-    )
-
-    if(LINKER_BYPRODUCTS_EXTENSIONS)
-        # combine basename and byproduct extension
-        string(REPLACE "," ";" LINKER_BYPRODUCTS "${LINKER_BYPRODUCTS_EXTENSIONS}")
-        list(TRANSFORM LINKER_BYPRODUCTS PREPEND ${LINK_FILE_BASENAME}.)
-
-        add_custom_target(
-            linker_byproducts ALL
-            COMMAND CMAKE -E true
-            DEPENDS ${LINKER_OUTPUT_FILE}
-            BYPRODUCTS ${LINKER_BYPRODUCTS}
+        # create executable
+        add_executable(${LINK_TARGET_NAME} ${LINK_TARGET_DEPENDS})
+        target_compile_options(${LINK_TARGET_NAME} PRIVATE ${VARIANT_ADDITIONAL_LINK_FLAGS})
+        set_target_properties(${LINK_TARGET_NAME} PROPERTIES
+            OUTPUT_NAME ${LINK_FILE_BASENAME}
+            SUFFIX ${LINK_FILE_EXTENSION}
+            LINK_DEPENDS "${LINK_TARGET_DEPENDS}"
         )
-    endif(LINKER_BYPRODUCTS_EXTENSIONS)
+
+        if(LINKER_BYPRODUCTS_EXTENSIONS)
+            # combine basename and byproduct extension
+            string(REPLACE "," ";" LINKER_BYPRODUCTS "${LINKER_BYPRODUCTS_EXTENSIONS}")
+            list(TRANSFORM LINKER_BYPRODUCTS PREPEND ${LINK_FILE_BASENAME}.)
+
+            add_custom_target(
+                linker_byproducts ALL
+                COMMAND CMAKE -E true
+                DEPENDS ${LINKER_OUTPUT_FILE}
+                BYPRODUCTS ${LINKER_BYPRODUCTS}
+            )
+        endif(LINKER_BYPRODUCTS_EXTENSIONS)
+    endif(LINKER_OUTPUT_FILE)
 elseif(BUILD_KIT STREQUAL test)
     _spl_get_google_test()
     include(CTest)
