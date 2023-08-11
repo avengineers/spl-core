@@ -159,7 +159,7 @@ macro(spl_create_component)
 ")
                 set(_component_doxyfile ${SPHINX_OUTPUT_DIR}/Doxyfile)
                 # generate Doxyfile from template
-                set(DOXYGEN_PROJECT_NAME "Doxygen Documentation")
+                set(DOXYGEN_PROJECT_NAME "Unit Test Specification")
                 set(DOXYGEN_OUTPUT_DIRECTORY ${SPHINX_OUTPUT_DIR}/doxygen)
                 set(DOXYGEN_INPUT "${_component_dir}/src ${_component_dir}/test ${KCONFIG_OUT_DIR}")
                 # We need to add the googletest include directory to the doxygen include path
@@ -168,7 +168,7 @@ macro(spl_create_component)
                 set(DOXYGEN_AWESOME_PATH "${SPHINX_SOURCE_DIR}/doc/doxygen-awesome")
                 configure_file(${SPHINX_SOURCE_DIR}/doc/Doxyfile.in ${_component_doxyfile} @ONLY)
                 file(RELATIVE_PATH _rel_component_doxyfile ${CMAKE_CURRENT_BINARY_DIR} ${_component_doxyfile})
-                file(RELATIVE_PATH _rel_component_doxysphinx_index_rst ${SPHINX_SOURCE_DIR} ${DOXYGEN_OUTPUT_DIRECTORY}/html/index)
+                file(RELATIVE_PATH _rel_component_doxysphinx_index_rst ${SPHINX_SOURCE_DIR} ${DOXYGEN_OUTPUT_DIRECTORY}/html/files)
 
                 file(WRITE ${_reports_config_json} "{
                     \"generated_rst_content\": \".. toctree::\\n    :maxdepth: 2\\n\\n    /${_rel_component_doc_dir}/index\\n    /${_rel_reports_test_results_rst}\\n    ${_rel_component_doxysphinx_index_rst}\",
@@ -192,6 +192,16 @@ macro(spl_create_component)
                 )
 
                 add_dependencies(reports ${component_name}_reports)
+
+                #change the standard generated index.rst file for doxygen documentation
+                set(doxygen_index_rst_path "${DOXYGEN_OUTPUT_DIRECTORY}/html/index.rst")
+                execute_process(
+                    COMMAND python -c "with open('${doxygen_index_rst_path}', 'r+') as f: content = f.read(); f.seek(0); contentFinal = content.replace(':hidden:\\n\\n   Data Structures <annotated_data_structures>', ''); f.write(contentFinal.replace('<files_files>', '<files>')); f.truncate()"
+                )
+                set(doxygen_file_rst_path "${DOXYGEN_OUTPUT_DIRECTORY}/html/files.rst")
+                execute_process(
+                    COMMAND python -c "with open('${doxygen_file_rst_path}', 'r+') as f: content = f.read(); f.seek(0); contentFinal = content.replace('Unit Test Specification: File List', 'Unit Test Specification'); f.write(contentFinal.replace('File List\\n=========','Unit Test Specification\\n========================')); f.truncate()"
+                )
             endif(TEST_SOURCES)
         endif()
 
