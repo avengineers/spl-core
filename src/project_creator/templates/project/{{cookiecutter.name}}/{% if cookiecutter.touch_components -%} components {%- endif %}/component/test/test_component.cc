@@ -10,6 +10,11 @@ extern "C"
 
 #include "mockup_components_component.h"
 
+/*! \mainpage
+ *
+ * TODO: table of tests
+ */
+
 
 /*!
 * @rst
