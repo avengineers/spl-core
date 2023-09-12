@@ -47,19 +47,19 @@ macro(_spl_get_google_test)
     set(CMAKE_CXX_STANDARD 14)
 
     # Make source of googletest configurable
-    if(NOT DEFINED FETCHCONTENT_GTEST_URL)
-        set(FETCHCONTENT_GTEST_URL https://github.com/google/googletest.git)
-    endif(NOT DEFINED FETCHCONTENT_GTEST_URL)
+    if(NOT DEFINED SPL_GTEST_URL)
+        set(SPL_GTEST_URL https://github.com/google/googletest.git)
+    endif(NOT DEFINED SPL_GTEST_URL)
 
-    if(NOT DEFINED FETCHCONTENT_GTEST_TAG)
-        set(FETCHCONTENT_GTEST_TAG v1.13.0)
-    endif(NOT DEFINED FETCHCONTENT_GTEST_TAG)
+    if(NOT DEFINED SPL_GTEST_TAG)
+        set(SPL_GTEST_TAG v1.13.0)
+    endif(NOT DEFINED SPL_GTEST_TAG)
 
     include(FetchContent)
     FetchContent_Declare(
         googletest
-        GIT_REPOSITORY ${FETCHCONTENT_GTEST_URL}
-        GIT_TAG ${FETCHCONTENT_GTEST_TAG}
+        GIT_REPOSITORY ${SPL_GTEST_URL}
+        GIT_TAG ${SPL_GTEST_TAG}
     )
 
     # Prevent overriding the parent project's compiler/linker settings on Windows
@@ -120,6 +120,7 @@ macro(spl_create_component)
             file(RELATIVE_PATH _rel_sphinx_output_dir ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_DIR})
             set(SPHINX_OUTPUT_HTML_DIR ${SPHINX_OUTPUT_DIR}/html)
             set(SPHINX_OUTPUT_INDEX_HTML ${SPHINX_OUTPUT_HTML_DIR}/index.html)
+
             # create the config.json file. This is exported as SPHINX_BUILD_CONFIGURATION_FILE env variable
             set(_docs_config_json ${SPHINX_OUTPUT_DIR}/config.json)
             file(RELATIVE_PATH _rel_component_doc_dir ${SPHINX_SOURCE_DIR} ${_component_doc_dir})
@@ -145,8 +146,10 @@ macro(spl_create_component)
                 file(RELATIVE_PATH _rel_sphinx_output_dir ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_DIR})
                 set(SPHINX_OUTPUT_HTML_DIR ${SPHINX_OUTPUT_DIR}/html)
                 set(SPHINX_OUTPUT_INDEX_HTML ${SPHINX_OUTPUT_HTML_DIR}/index.html)
+
                 # create the config.json file. This is exported as SPHINX_BUILD_CONFIGURATION_FILE env variable
                 set(_reports_config_json ${SPHINX_OUTPUT_DIR}/config.json)
+
                 # create the test_results.rst file
                 set(_reports_test_results_rst ${SPHINX_OUTPUT_DIR}/test_results.rst)
                 file(RELATIVE_PATH _rel_reports_test_results_rst ${SPHINX_SOURCE_DIR} ${_reports_test_results_rst})
@@ -158,10 +161,12 @@ macro(spl_create_component)
     :file: {{ component_test_junit_xml }}
 ")
                 set(_component_doxyfile ${SPHINX_OUTPUT_DIR}/Doxyfile)
+
                 # generate Doxyfile from template
                 set(DOXYGEN_PROJECT_NAME "Doxygen Documentation")
                 set(DOXYGEN_OUTPUT_DIRECTORY ${SPHINX_OUTPUT_DIR}/doxygen)
                 set(DOXYGEN_INPUT "${_component_dir}/src ${_component_dir}/test ${KCONFIG_OUT_DIR}")
+
                 # We need to add the googletest include directory to the doxygen include path
                 # to be able to resolve the TEST() macros in the test files.
                 set(DOXYGEN_INCLUDE_PATH "${SPHINX_SOURCE_DIR}/build/modules/googletest-src/googletest/include ${KCONFIG_OUT_DIR}")
@@ -194,7 +199,6 @@ macro(spl_create_component)
                 add_dependencies(reports ${component_name}_reports)
             endif(TEST_SOURCES)
         endif()
-
     endif()
 endmacro()
 
@@ -317,10 +321,18 @@ macro(spl_run_conan)
             virtualrunenv
         )
 
-        if(DEFINED ENV{SPL_CONAN_CONFIG_URL})
-            conan_config_install(
-                ITEM $ENV{SPL_CONAN_CONFIG_URL}
-            )
+        # This clones a special conan config when required
+        if(DEFINED SPL_CONAN_CONFIG_URL)
+            if(DEFINED SPL_CONAN_CONFIG_VERIFY_SSL)
+                conan_config_install(
+                    ITEM ${SPL_CONAN_CONFIG_URL}
+                    VERIFY_SSL ${SPL_CONAN_CONFIG_VERIFY_SSL}
+                )
+            else()
+                conan_config_install(
+                    ITEM ${SPL_CONAN_CONFIG_URL}
+                )
+            endif()
         endif()
 
         # This replaces the call of command "conan install" on the command line

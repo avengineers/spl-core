@@ -4,16 +4,10 @@ set(SPL_CORE_ROOT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/..)
 set(SPL_CORE_CMAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
 set(SPL_CORE_PYTHON_DIRECTORY ${SPL_CORE_ROOT_DIRECTORY}/src)
 
-# Define the current build directory (variant and build_kit specific)
-set(BUILD_BINARY_DIRECTORY ${CMAKE_BINARY_DIR})
 set(LINK_TARGET_NAME link)
 string(REPLACE "/" "_" BINARY_BASENAME ${VARIANT})
 
 include(${CMAKE_CURRENT_LIST_DIR}/common.cmake)
-
-if(PIP_INSTALL_REQUIREMENTS)
-    run_pip("${PIP_INSTALL_REQUIREMENTS}" $ENV{SPL_PIP_REPOSITORY} $ENV{SPL_PIP_TRUSTED_HOST})
-endif(PIP_INSTALL_REQUIREMENTS)
 
 # set SPL relevant variables as environment variables, can easily be extended in CMakeLists.txt of project before including SPL core (used for KConfig variable expansion).
 list(APPEND ENVVARS FLAVOR SUBSYSTEM VARIANT BUILD_KIT BINARY_BASENAME CMAKE_SOURCE_DIR)
