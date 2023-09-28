@@ -27,7 +27,6 @@ class CMake:
             f" -DBUILD_KIT:STRING={build_kit}"
             f" -DFLAVOR:STRING={variant.flavor}"
             f" -DSUBSYSTEM:STRING={variant.subsystem}"
-            f" -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE"
             f" -DCMAKE_BUILD_TYPE:STRING={variant.to_string('_')}"
         )
         if build_kit == "test":

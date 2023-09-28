@@ -1,15 +1,19 @@
-# Define the SPL Core root directory to be used to refer to files
-# relative to the repository root.
+# Define the SPL Core root directory to be used to refer to files relative to the repository root.
 set(SPL_CORE_ROOT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/..)
 set(SPL_CORE_CMAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
 set(SPL_CORE_PYTHON_DIRECTORY ${SPL_CORE_ROOT_DIRECTORY}/src)
+
+# Always create a compile_commands.json file for C/C++ intellisense / CMake Tools extension
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(LINK_TARGET_NAME link)
 string(REPLACE "/" "_" BINARY_BASENAME ${VARIANT})
 
 include(${CMAKE_CURRENT_LIST_DIR}/common.cmake)
 
-# set SPL relevant variables as environment variables, can easily be extended in CMakeLists.txt of project before including SPL core (used for KConfig variable expansion).
+# Set SPL relevant variables as environment variables.
+# Can easily be extended in CMakeLists.txt of project.
+# Also used for KConfig variable expansion.
 list(APPEND ENVVARS FLAVOR SUBSYSTEM VARIANT BUILD_KIT BINARY_BASENAME CMAKE_SOURCE_DIR)
 
 foreach(ENVVAR IN LISTS ENVVARS)
