@@ -46,6 +46,10 @@ extensions.extend(
 # Enable links to sections
 extensions.append("sphinx.ext.autosectionlabel")
 
+# Resize rtd theme
+extensions.append("sphinx_rtd_size")
+sphinx_rtd_size_width = "90%"
+
 # sphinx_needs
 extensions.append("sphinx_needs")
 
@@ -63,4 +67,4 @@ exclude_patterns = ["build", "Thumbs.db", ".DS_Store"]
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "sphinx_rtd_theme"
-html_static_path = ["_static"]
+#html_static_path = ["_static"]
