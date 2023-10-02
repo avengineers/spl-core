@@ -1,6 +1,25 @@
 CMake Macros
 ************
 
+spl_add_component
+^^^^^^^^^^^^^^^^^
+
+Add a component to a variant.
+
+.. code-block:: cmake
+
+  spl_add_component(<relative path from project root to the component's directory>)
+
+This macro is intended to be used in the variant's parts.cmake file to add a component to the variant.
+
+Example:
+
+.. code-block:: cmake
+
+  spl_add_component(src/led_driver)
+
+
+
 spl_add_source
 ^^^^^^^^^^^^^^
 
@@ -16,3 +35,10 @@ The options are:
 
 ``COMPILE_OPTIONS``
   Define additional compiler options to be added to the default compiler options defined by the toolchain file.
+
+Example:
+
+.. code-block:: cmake
+
+  spl_add_source(src/led_driver_main.c)
+  spl_add_source(src/led_driver_control.c COMPILE_OPTIONS "-w")
