@@ -111,6 +111,7 @@ macro(spl_create_component)
         set(_component_doc_dir ${_component_dir}/doc)
         set(_component_doc_file ${_component_doc_dir}/index.rst)
         set(_component_test_junit_xml ${CMAKE_CURRENT_BINARY_DIR}/junit.xml)
+        set(_component_test_coverage_html ${CMAKE_CURRENT_BINARY_DIR}/coverage/index.html)
         set(_autoconf_json_file ${AUTOCONF_JSON})
 
         if(EXISTS ${_component_doc_file})
@@ -159,6 +160,8 @@ macro(spl_create_component)
 .. test-report:: Unit Test Results
     :id: COMPONENT_REPORT
     :file: {{ component_test_junit_xml }}
+
+`Coverage report <{{ component_test_coverage_html }}>`_
 ")
                 set(_component_doxyfile ${SPHINX_OUTPUT_DIR}/Doxyfile)
 
@@ -179,6 +182,7 @@ macro(spl_create_component)
                     \"generated_rst_content\": \".. toctree::\\n    :maxdepth: 2\\n\\n    /${_rel_component_doc_dir}/index\\n    /${_rel_reports_test_results_rst}\\n    ${_rel_component_doxysphinx_index_rst}\",
                     \"component_doc_dir\": \"${_rel_component_doc_dir}\", 
                     \"component_test_junit_xml\": \"${_component_test_junit_xml}\",
+                    \"component_test_coverage_html\": \"${_component_test_coverage_html}\",
                     \"include_patterns\": [\"${_rel_component_doc_dir}/**\",\"${_rel_sphinx_output_dir}/**\"]
                 }")
 
@@ -193,7 +197,7 @@ macro(spl_create_component)
                     COMMAND doxysphinx build ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_HTML_DIR} ${_rel_component_doxyfile}
                     COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_reports_config_json} AUTOCONF_JSON_FILE=${_autoconf_json_file} -- sphinx-build -b html ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_HTML_DIR}
                     BYPRODUCTS ${SPHINX_OUTPUT_INDEX_HTML}
-                    DEPENDS ${_component_test_junit_xml}
+                    DEPENDS ${_component_test_junit_xml} ${component_name}_coverage
                 )
 
                 add_dependencies(reports ${component_name}_reports)
