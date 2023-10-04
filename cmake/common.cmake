@@ -191,13 +191,14 @@ macro(spl_create_component)
 
                 add_custom_target(
                     ${component_name}_reports
+                    ALL
                     COMMAND ${CMAKE_COMMAND} -E make_directory ${SPHINX_OUTPUT_DIR}
                     COMMAND ${CMAKE_COMMAND} -E make_directory ${SPHINX_OUTPUT_DIR}/doxygen
                     COMMAND doxygen ${_rel_component_doxyfile}
                     COMMAND doxysphinx build ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_HTML_DIR} ${_rel_component_doxyfile}
                     COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_reports_config_json} AUTOCONF_JSON_FILE=${_autoconf_json_file} -- sphinx-build -b html ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_HTML_DIR}
                     BYPRODUCTS ${SPHINX_OUTPUT_INDEX_HTML}
-                    DEPENDS ${_component_test_junit_xml} ${component_name}_coverage
+                    DEPENDS ${TEST_OUT_JUNIT} ${COV_OUT_HTML}
                 )
 
                 add_dependencies(reports ${component_name}_reports)
@@ -218,7 +219,10 @@ function(_spl_coverage_create_overall_report)
             COMMAND gcovr --root ${CMAKE_SOURCE_DIR} --add-tracefile \"${CMAKE_CURRENT_BINARY_DIR}/**/coverage.json\" --html --html-details --output ${COV_OUT_VARIANT_HTML}
             DEPENDS coverage
         )
-        add_custom_target(unittests DEPENDS coverage ${COV_OUT_VARIANT_HTML})
+        add_custom_target(
+            unittests 
+            DEPENDS coverage ${COV_OUT_VARIANT_HTML}
+        )
     else(_SPL_COVERAGE_CREATE_OVERALL_REPORT_IS_NECESSARY)
         add_custom_target(unittests)
     endif(_SPL_COVERAGE_CREATE_OVERALL_REPORT_IS_NECESSARY)
@@ -283,8 +287,15 @@ macro(_spl_add_test_suite PROD_SRC TEST_SOURCES)
         DEPENDS ${COV_OUT_JSON}
     )
 
-    add_custom_target(${component_name}_coverage DEPENDS ${COV_OUT_HTML})
-    add_custom_target(${component_name}_unittests DEPENDS ${component_name}_coverage)
+    add_custom_target(
+        ${component_name}_coverage
+        DEPENDS ${COV_OUT_HTML}
+    )
+    add_custom_target(
+        ${component_name}_unittests
+        ALL
+        DEPENDS ${component_name}_coverage
+    )
     add_dependencies(coverage ${component_name}_coverage)
 
     target_link_libraries(${exe_name}
