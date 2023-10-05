@@ -52,7 +52,7 @@ macro(_spl_get_google_test)
     endif(NOT DEFINED SPL_GTEST_URL)
 
     if(NOT DEFINED SPL_GTEST_TAG)
-        set(SPL_GTEST_TAG v1.13.0)
+        set(SPL_GTEST_TAG v1.14.0)
     endif(NOT DEFINED SPL_GTEST_TAG)
 
     include(FetchContent)
