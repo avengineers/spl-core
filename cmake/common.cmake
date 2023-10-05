@@ -189,6 +189,8 @@ macro(spl_create_component)
                 # add the generated files as dependency to cmake configure step
                 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_reports_config_json} ${_reports_test_results_rst} ${_component_doxyfile})
 
+                # No OUTPUT is defined to force execution of this target every time
+                # TODO: list of dependencies is not complete
                 add_custom_target(
                     ${component_name}_reports
                     ALL
