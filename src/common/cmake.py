@@ -28,6 +28,7 @@ class CMake:
             f" -DFLAVOR:STRING={variant.flavor}"
             f" -DSUBSYSTEM:STRING={variant.subsystem}"
             f" -DCMAKE_BUILD_TYPE:STRING={variant.to_string('_')}"
+            f" --log-level=DEBUG"
         )
         if build_kit == "test":
             toolchain = self.workspace_artifacts.root_dir.joinpath("tools\\toolchains\\gcc\\toolchain.cmake")

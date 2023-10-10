@@ -33,7 +33,11 @@ macro(spl_add_source fileName)
 endmacro()
 
 macro(spl_add_file_properties pattern compile_options)
+    message(DEBUG "spl_add_file_properties: pattern=${pattern}")
+    message(DEBUG "spl_add_file_properties: compile_options=${compile_options}")
+
     file(GLOB_RECURSE files ${CMAKE_CURRENT_LIST_DIR}/${pattern})
+    message(DEBUG "spl_add_file_properties: files=${files}")
 
     if(files)
         foreach(file ${files})

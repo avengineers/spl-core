@@ -231,6 +231,48 @@ class TestIntegration:
         assert executable.exists()
         my_main_result = subprocess.run([executable])
         assert 10 == my_main_result.returncode
+        
+        "Modify compile options of a single file using spl_add_file_properties"
+        self.workspace.get_component_file("component", "parts.cmake").write_text(
+            textwrap.dedent(
+                """
+                spl_add_file_properties("src/*.c" "-DTHE_ANSWER=7")
+                spl_add_test_source(test/test_component.cc)
+                """
+            )
+        )
+
+        "Call IUT"
+        with ExecutionTime("CMake Configure and Build (build_kit: prod, target: all)"):
+            assert 0 == self.workspace.run_cmake_configure(build_kit="prod").returncode
+            assert 0 == self.workspace.run_cmake_build(build_kit="prod", target="all").returncode
+
+        "Expected build results shall exist"
+        executable = build_dir_prod.joinpath("my_main.exe")
+        assert executable.exists()
+        my_main_result = subprocess.run([executable])
+        assert 7 == my_main_result.returncode
+        
+        "Modify compile options of a single file using spl_add_file_properties"
+        self.workspace.get_component_file("component", "parts.cmake").write_text(
+            textwrap.dedent(
+                """
+                spl_add_file_properties("src/component.c" "-DTHE_ANSWER=65 -DTHE_OFFSET=3")
+                spl_add_test_source(test/test_component.cc)
+                """
+            )
+        )
+
+        "Call IUT"
+        with ExecutionTime("CMake Configure and Build (build_kit: prod, target: all)"):
+            assert 0 == self.workspace.run_cmake_configure(build_kit="prod").returncode
+            assert 0 == self.workspace.run_cmake_build(build_kit="prod", target="all").returncode
+
+        "Expected build results shall exist"
+        executable = build_dir_prod.joinpath("my_main.exe")
+        assert executable.exists()
+        my_main_result = subprocess.run([executable])
+        assert 68 == my_main_result.returncode
 
         # create build output directory for build_kit "test"
         build_dir_test = self.workspace.workspace_artifacts.get_build_dir("Flv1/Sys1", "test")
