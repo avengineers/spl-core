@@ -32,6 +32,16 @@ macro(spl_add_source fileName)
     endif()
 endmacro()
 
+macro(spl_add_file_properties pattern compile_options)
+    file(GLOB_RECURSE files ${CMAKE_CURRENT_LIST_DIR}/${pattern})
+
+    if(files)
+        foreach(file ${files})
+            set_source_files_properties(${file} PROPERTIES COMPILE_OPTIONS "${compile_options}")
+        endforeach()
+    endif()
+endmacro()
+
 macro(spl_add_include includeDirectory)
     _spl_get_absolute_path(to_be_appended ${includeDirectory})
     list(APPEND INCLUDES ${to_be_appended})

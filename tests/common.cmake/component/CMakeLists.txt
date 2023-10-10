@@ -1,4 +1,5 @@
 spl_add_source(${some_file})
+spl_add_file_properties(${some_file} COMPILE_OPTIONS "-w")
 spl_add_source(${some_other_file} COMPILE_OPTIONS "-DTHE_ANSWER=42" "-DSOME_VALUE=7")
 spl_create_component()
 
