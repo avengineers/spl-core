@@ -151,10 +151,25 @@ macro(spl_create_component)
                 # create the config.json file. This is exported as SPHINX_BUILD_CONFIGURATION_FILE env variable
                 set(_reports_config_json ${SPHINX_OUTPUT_DIR}/config.json)
 
-                # create the test_results.rst file
-                set(_reports_test_results_rst ${SPHINX_OUTPUT_DIR}/test_results.rst)
-                file(RELATIVE_PATH _rel_reports_test_results_rst ${SPHINX_SOURCE_DIR} ${_reports_test_results_rst})
-                file(WRITE ${_reports_test_results_rst} "Unit Test Results
+                # create the test_spec.rst file
+                set(_unit_test_spec_rst ${SPHINX_OUTPUT_DIR}/unit_test_spec.rst)
+                file(RELATIVE_PATH _rel_unit_test_spec_rst ${SPHINX_SOURCE_DIR} ${_unit_test_spec_rst})
+                file(WRITE ${_unit_test_spec_rst} "
+Unit Test Specification
+=======================
+
+.. needtable::
+   :filter: type == 'test'
+   :columns: id, title, tests, results
+   :style: table
+
+")
+
+                # create the unit_test_results.rst file
+                set(_unit_test_results_rst ${SPHINX_OUTPUT_DIR}/unit_test_results.rst)
+                file(RELATIVE_PATH _rel_unit_test_results_rst ${SPHINX_SOURCE_DIR} ${_unit_test_results_rst})
+                file(WRITE ${_unit_test_results_rst} "
+Unit Test Results
 =================
 
 .. test-report:: Unit Test Results
@@ -179,7 +194,7 @@ macro(spl_create_component)
                 file(RELATIVE_PATH _rel_component_doxysphinx_index_rst ${SPHINX_SOURCE_DIR} ${DOXYGEN_OUTPUT_DIRECTORY}/html/index)
 
                 file(WRITE ${_reports_config_json} "{
-                    \"generated_rst_content\": \".. toctree::\\n    :maxdepth: 2\\n\\n    /${_rel_component_doc_dir}/index\\n    /${_rel_reports_test_results_rst}\\n    ${_rel_component_doxysphinx_index_rst}\",
+                    \"generated_rst_content\": \".. toctree::\\n    :maxdepth: 2\\n\\n    /${_rel_component_doc_dir}/index\\n    /${_rel_unit_test_spec_rst}\\n    /${_rel_unit_test_results_rst}\\n    ${_rel_component_doxysphinx_index_rst}\",
                     \"component_doc_dir\": \"${_rel_component_doc_dir}\", 
                     \"component_test_junit_xml\": \"${_component_test_junit_xml}\",
                     \"component_test_coverage_html\": \"${_component_test_coverage_html}\",
@@ -187,7 +202,7 @@ macro(spl_create_component)
                 }")
 
                 # add the generated files as dependency to cmake configure step
-                set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_reports_config_json} ${_reports_test_results_rst} ${_component_doxyfile})
+                set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_reports_config_json} ${_unit_test_spec_rst} ${_unit_test_results_rst} ${_component_doxyfile})
 
                 # No OUTPUT is defined to force execution of this target every time
                 # TODO: list of dependencies is not complete
