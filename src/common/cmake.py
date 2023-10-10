@@ -21,6 +21,7 @@ class CMake:
 
     def configure(self, variant: Variant, build_kit: str = "prod"):
         arguments = (
+            f" --log-level=DEBUG"
             f" -S{self.workspace_artifacts.root_dir}"
             f" -B{self.workspace_artifacts.get_build_dir(variant, build_kit)}"
             f" -G Ninja "
@@ -28,7 +29,6 @@ class CMake:
             f" -DFLAVOR:STRING={variant.flavor}"
             f" -DSUBSYSTEM:STRING={variant.subsystem}"
             f" -DCMAKE_BUILD_TYPE:STRING={variant.to_string('_')}"
-            f" --log-level=DEBUG"
         )
         if build_kit == "test":
             toolchain = self.workspace_artifacts.root_dir.joinpath("tools\\toolchains\\gcc\\toolchain.cmake")

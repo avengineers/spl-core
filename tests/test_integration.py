@@ -232,11 +232,12 @@ class TestIntegration:
         my_main_result = subprocess.run([executable])
         assert 10 == my_main_result.returncode
         
-        "Modify compile options of a single file using spl_add_file_properties"
+        "Modify compile options of a single file using spl_add_compile_options"
         self.workspace.get_component_file("component", "parts.cmake").write_text(
             textwrap.dedent(
                 """
-                spl_add_file_properties("src/*.c" "-DTHE_ANSWER=7")
+                spl_add_source(src/component.c)
+                spl_add_compile_options("src/*.c" COMPILE_OPTIONS "-DTHE_ANSWER=8")
                 spl_add_test_source(test/test_component.cc)
                 """
             )
@@ -251,13 +252,14 @@ class TestIntegration:
         executable = build_dir_prod.joinpath("my_main.exe")
         assert executable.exists()
         my_main_result = subprocess.run([executable])
-        assert 7 == my_main_result.returncode
+        assert 8 == my_main_result.returncode
         
-        "Modify compile options of a single file using spl_add_file_properties"
+        "Modify compile options of a single file using spl_add_compile_options"
         self.workspace.get_component_file("component", "parts.cmake").write_text(
             textwrap.dedent(
                 """
-                spl_add_file_properties("src/component.c" "-DTHE_ANSWER=65 -DTHE_OFFSET=3")
+                spl_add_source(src/component.c)
+                spl_add_compile_options("src/component.c" COMPILE_OPTIONS "-DTHE_ANSWER=65" "-DTHE_OFFSET=3")
                 spl_add_test_source(test/test_component.cc)
                 """
             )
