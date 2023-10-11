@@ -32,6 +32,21 @@ macro(spl_add_source fileName)
     endif()
 endmacro()
 
+macro(spl_add_compile_options pattern)
+    message(DEBUG "spl_add_compile_options: pattern=${pattern}")
+    cmake_parse_arguments(ADD_SOURCE_ARGS "" "" "COMPILE_OPTIONS" ${ARGN})
+    message(DEBUG "spl_add_source: ADD_SOURCE_ARGS_COMPILE_OPTIONS=${ADD_SOURCE_ARGS_COMPILE_OPTIONS}")
+
+    file(GLOB_RECURSE files ${CMAKE_CURRENT_LIST_DIR}/${pattern})
+    message(DEBUG "spl_add_compile_options: files=${files}")
+
+    if(files)
+        foreach(file ${files})
+            set_source_files_properties(${file} PROPERTIES COMPILE_OPTIONS "${ADD_SOURCE_ARGS_COMPILE_OPTIONS}")
+        endforeach()
+    endif()
+endmacro()
+
 macro(spl_add_include includeDirectory)
     _spl_get_absolute_path(to_be_appended ${includeDirectory})
     list(APPEND INCLUDES ${to_be_appended})
