@@ -225,6 +225,8 @@ Unit Test Results
                     ${component_name}_reports
                     ALL
                     COMMAND ${CMAKE_COMMAND} -E make_directory ${SPHINX_OUTPUT_DIR}
+                    COMMAND ${CMAKE_COMMAND} -E remove_directory ${SPHINX_OUTPUT_DIR}/html
+                    COMMAND ${CMAKE_COMMAND} -E remove_directory ${SPHINX_OUTPUT_DIR}/doxygen
                     COMMAND ${CMAKE_COMMAND} -E make_directory ${SPHINX_OUTPUT_DIR}/doxygen
                     COMMAND doxygen ${_rel_component_doxyfile}
                     COMMAND doxysphinx build ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_HTML_DIR} ${_rel_component_doxyfile}
