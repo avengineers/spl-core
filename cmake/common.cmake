@@ -188,7 +188,7 @@ Unit Test Results
 =================
 
 .. test-report:: Unit Test Results
-    :id: COMPONENT_REPORT
+    :id: TEST_RESULT
     :file: {{ component_test_junit_xml }}
 
 `Coverage report <{{ component_test_coverage_html }}>`_
