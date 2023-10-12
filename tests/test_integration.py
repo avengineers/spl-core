@@ -82,6 +82,7 @@ class TestIntegration:
             assert 0 == self.workspace.run_cmake_build(build_kit="test", target="unittests").returncode
 
         "Expected test results for kit test shall exist"
+        assert build_dir_test.joinpath("components/component/reports/coverage/index.html").exists()
         junitxml = build_dir_test.joinpath("components/component/junit.xml")
         assert junitxml.exists()
         testsuite = ET.parse(junitxml).getroot()
