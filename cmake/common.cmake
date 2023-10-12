@@ -121,14 +121,14 @@ macro(spl_create_component)
             _spl_add_test_suite("${SOURCES}" ${TEST_SOURCES})
         endif()
 
-        # Create component docs target if there is an index.rst file in the component doc directory
         set(_component_dir ${CMAKE_CURRENT_LIST_DIR})
         set(_component_doc_dir ${_component_dir}/doc)
         set(_component_doc_file ${_component_doc_dir}/index.rst)
         set(_component_test_junit_xml ${CMAKE_CURRENT_BINARY_DIR}/junit.xml)
-        set(_component_test_coverage_html ${CMAKE_CURRENT_BINARY_DIR}/coverage/index.html)
+        set(_component_reports_dir ${CMAKE_CURRENT_BINARY_DIR}/reports)
         set(_autoconf_json_file ${AUTOCONF_JSON})
 
+        # Create component docs target if there is an index.rst file in the component's doc directory
         if(EXISTS ${_component_doc_file})
             # The Sphinx source directory is always the project root
             set(SPHINX_SOURCE_DIR ${PROJECT_SOURCE_DIR})
@@ -158,7 +158,7 @@ macro(spl_create_component)
             add_dependencies(docs ${component_name}_docs)
 
             if(TEST_SOURCES)
-                set(SPHINX_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/reports)
+                set(SPHINX_OUTPUT_DIR ${_component_reports_dir})
                 file(RELATIVE_PATH _rel_sphinx_output_dir ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_DIR})
                 set(SPHINX_OUTPUT_HTML_DIR ${SPHINX_OUTPUT_DIR}/html)
                 set(SPHINX_OUTPUT_INDEX_HTML ${SPHINX_OUTPUT_HTML_DIR}/index.html)
@@ -191,7 +191,6 @@ Unit Test Results
     :id: TEST_RESULT
     :file: {{ component_test_junit_xml }}
 
-`Coverage report <{{ component_test_coverage_html }}>`_
 ")
                 set(_component_doxyfile ${SPHINX_OUTPUT_DIR}/Doxyfile)
 
@@ -209,10 +208,9 @@ Unit Test Results
                 file(RELATIVE_PATH _rel_component_doxysphinx_index_rst ${SPHINX_SOURCE_DIR} ${DOXYGEN_OUTPUT_DIRECTORY}/html/index)
 
                 file(WRITE ${_reports_config_json} "{
-                    \"generated_rst_content\": \".. toctree::\\n    :maxdepth: 2\\n\\n    /${_rel_component_doc_dir}/index\\n    /${_rel_unit_test_spec_rst}\\n    /${_rel_unit_test_results_rst}\\n    ${_rel_component_doxysphinx_index_rst}\",
+                    \"generated_rst_content\": \".. toctree::\\n    :maxdepth: 2\\n\\n    /${_rel_component_doc_dir}/index\\n    /${_rel_unit_test_spec_rst}\\n    /${_rel_unit_test_results_rst}\\n    /${_rel_component_doxysphinx_index_rst}\",
                     \"component_doc_dir\": \"${_rel_component_doc_dir}\", 
                     \"component_test_junit_xml\": \"${_component_test_junit_xml}\",
-                    \"component_test_coverage_html\": \"${_component_test_coverage_html}\",
                     \"include_patterns\": [\"${_rel_component_doc_dir}/**\",\"${_rel_sphinx_output_dir}/**\"]
                 }")
 
@@ -247,7 +245,7 @@ endmacro(_spl_set_coverage_create_overall_report_is_necessary)
 
 function(_spl_coverage_create_overall_report)
     if(_SPL_COVERAGE_CREATE_OVERALL_REPORT_IS_NECESSARY)
-        set(COV_OUT_VARIANT_HTML coverage/index.html)
+        set(COV_OUT_VARIANT_HTML reports/coverage/index.html)
         add_custom_command(
             OUTPUT ${COV_OUT_VARIANT_HTML}
             COMMAND gcovr --root ${CMAKE_SOURCE_DIR} --add-tracefile \"${CMAKE_CURRENT_BINARY_DIR}/**/coverage.json\" --html --html-details --output ${COV_OUT_VARIANT_HTML}
@@ -314,7 +312,7 @@ macro(_spl_add_test_suite PROD_SRC TEST_SOURCES)
         DEPENDS ${TEST_OUT_JUNIT}
     )
 
-    set(COV_OUT_HTML coverage/index.html)
+    set(COV_OUT_HTML reports/coverage/index.html)
     add_custom_command(
         OUTPUT ${COV_OUT_HTML}
         COMMAND gcovr --root ${CMAKE_SOURCE_DIR} --add-tracefile ${COV_OUT_JSON} --html --html-details --output ${COV_OUT_HTML} ${GCOVR_ADDITIONAL_OPTIONS}
