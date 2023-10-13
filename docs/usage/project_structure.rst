@@ -1,4 +1,0 @@
-SPL Project Structure
-#####################
-
-TODO

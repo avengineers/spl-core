@@ -1,6 +1,6 @@
 
-Welcome to SPL Core documentation
-#################################
+Software Product Line (SPL) Core documentation
+##############################################
 
 
 .. toctree::
@@ -8,4 +8,3 @@ Welcome to SPL Core documentation
 
     usage/index
     design/index
-    readme

@@ -1,6 +1,7 @@
 CMake Macros
 ************
 
+
 spl_add_component
 ^^^^^^^^^^^^^^^^^
 
@@ -8,15 +9,52 @@ Add a component to a variant.
 
 .. code-block:: cmake
 
-  spl_add_component(<relative path from project root to the component's directory>)
+ spl_add_component(<component_path>)
 
 This macro is intended to be used in the variant's parts.cmake file to add a component to the variant.
 
+The arguments are:
+
+``<component_path>``
+ The relative path from project root to the component's directory.
+
 Example:
+
+Adding a component to the variant in its parts.cmake:
 
 .. code-block:: cmake
 
-  spl_add_component(src/led_driver)
+ spl_add_component(src/led_driver)
+
+This example adds a component located in the "src/led_driver" directory to the variant.
+
+
+
+spl_add_include
+^^^^^^^^^^^^^^^
+
+Add an include directory to the project's list of include directories.
+
+.. code-block:: cmake
+
+ spl_add_include(<include_directory>)
+
+This macro is intended to be used in the variant's parts.cmake file to add include directories to the build's list of include directories, making header files in these directories accessible to the compiler.
+
+The arguments are:
+
+``<include_directory>``
+ The relative path to the include directory you want to add to the build's list of include directories.
+
+Example:
+
+Adding an include directory to the project:
+
+.. code-block:: cmake
+
+ spl_add_include(include/my_library)
+
+This example adds the "include/my_library" directory to the project's list of include directories, making header files within this directory accessible to the project's source code.
 
 
 
@@ -27,21 +65,35 @@ Add a source file of a component to the list of sources to be compiled.
 
 .. code-block:: cmake
 
-  spl_add_source(<relative path to component source> [COMPILE_OPTIONS "<option 1>" "<option 2> ..."])
+ spl_add_source(<file_name> [COMPILE_OPTIONS "<option 1>" "<option 2>" ...])
 
 This macro is intended to be used in a component's CMakeLists.txt (or included .cmake file) to add a source file to the list of files to be compiled for the current component.
 
-The options are:
+The arguments are:
+
+``<file_name>``
+ The relative path to the component's source file.
 
 ``COMPILE_OPTIONS``
-  Define additional compiler options to be added to the default compiler options defined by the toolchain file.
+ Additional compiler options specific to this source file to be added to the default compiler options defined by the toolchain file.
 
 Example:
 
+Adding a source file to the component:
+
 .. code-block:: cmake
 
-  spl_add_source(src/led_driver_main.c)
-  spl_add_source(src/led_driver_control.c COMPILE_OPTIONS "-w")
+ spl_add_source(src/led_driver_main.c)
+
+This example adds the "led_driver_main.c" source file located in the "src" directory to the component.
+
+Applying compile options:
+
+.. code-block:: cmake
+
+ spl_add_source(src/led_driver_control.c COMPILE_OPTIONS "-w")
+
+This example adds the "led_driver_control.c" source file and applies the compile options "-w" to it.
 
 
 
@@ -56,7 +108,7 @@ Add compile options to a set of source files matching a specified pattern.
 
 This macro is intended to be used in a CMakeLists.txt file to add compile options to a set of source files that match a specified pattern within the current directory and its subdirectories.
 
-The argurments are:
+The arguments are:
 
 ``<pattern>``
   A relative path to the files you want to apply compile options to. This pattern can include wildcards such as ``*`` and ``?`` to match multiple files.
@@ -72,7 +124,7 @@ Adding compile options to all source files matching a pattern:
 
   spl_add_compile_options(src/*.c COMPILE_OPTIONS "-w")
 
-  This example applies the compile options ``-w`` to all the C source files in the "src" directory and its subdirectories.
+This example applies the compile options ``-w`` to all the C source files in the "src" directory and its subdirectories.
 
 Adding compile options to specific files:
 
@@ -80,4 +132,58 @@ Adding compile options to specific files:
 
   spl_add_compile_options(src/led_driver_main.c COMPILE_OPTIONS "-opt")
   
-  This example applies the compile option ``-opt`` specifically to the "led_driver_main.c" file in the "src" directory.
+This example applies the compile option ``-opt`` specifically to the "led_driver_main.c" file in the "src" directory.
+
+
+
+spl_add_test_source
+^^^^^^^^^^^^^^^^^^^
+
+Add a test source file to the list of test source files for the component.
+
+.. code-block:: cmake
+
+ spl_add_test_source(<file_name>)
+
+This macro is designed to add test source files to the build of a unit test.
+
+The arguments are:
+
+``<file_name>``
+ The relative path to the component's test source file.
+
+Example:
+
+Adding a test source file to the component:
+
+.. code-block:: cmake
+
+ spl_add_test_source(test/test_led_driver.cc)
+
+This example adds the "test_led_driver.cc" source file located in the "test" directory to the component.
+
+
+
+spl_create_component
+^^^^^^^^^^^^^^^^^^^^
+
+Create a component as an object library, manage compile options, and configure documentation for it.
+
+.. code-block:: cmake
+
+  spl_create_component()
+
+This macro is intended to create a component as an object library, manage compile options, and configure documentation generation for the component.
+It must be called after adding all source and test source files to the component.
+
+Example:
+
+Creating a component using the `spl_create_component` macro:
+
+.. code-block:: cmake
+
+  spl_add_source(src/led_driver_main.c)
+  spl_add_test_source(test/test_led_driver.cc)
+  spl_create_component() 
+
+Please note that this macro performs various tasks related to the component's setup, including documentation and testing, depending on the build configuration (buildKit).
