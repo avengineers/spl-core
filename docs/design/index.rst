@@ -53,7 +53,7 @@ Build kit *test*
 .. req:: Support Creation of a Component Report
    :status: open
 
-   Build kit 'test' shall provide a build target '<component>_reports', that creates a report of a SW component containing
+   Build kit 'test' shall provide a build target '<component>_report', that creates a report of a SW component containing
    the documentation, test specification and all test results.
    Precondition of this build target is the existence of a conf.py and index.rst inside the root folder of a component.
 

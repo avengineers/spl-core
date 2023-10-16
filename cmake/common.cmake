@@ -220,7 +220,7 @@ Unit Test Results
                 # No OUTPUT is defined to force execution of this target every time
                 # TODO: list of dependencies is not complete
                 add_custom_target(
-                    ${component_name}_reports
+                    ${component_name}_report
                     ALL
                     COMMAND ${CMAKE_COMMAND} -E make_directory ${SPHINX_OUTPUT_DIR}
                     COMMAND ${CMAKE_COMMAND} -E remove_directory ${SPHINX_OUTPUT_DIR}/html
@@ -233,7 +233,7 @@ Unit Test Results
                     DEPENDS ${TEST_OUT_JUNIT} ${COV_OUT_HTML}
                 )
 
-                add_dependencies(reports ${component_name}_reports)
+                add_dependencies(reports ${component_name}_report)
             endif(TEST_SOURCES)
         endif()
     endif()
@@ -252,7 +252,7 @@ function(_spl_coverage_create_overall_report)
             DEPENDS coverage
         )
         add_custom_target(
-            unittests 
+            unittests
             DEPENDS coverage ${COV_OUT_VARIANT_HTML}
         )
     else(_SPL_COVERAGE_CREATE_OVERALL_REPORT_IS_NECESSARY)
