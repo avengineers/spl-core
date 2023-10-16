@@ -1,6 +1,39 @@
 Design
 ######
 
+
+SPL Project Structure
+*********************
+
+.. mermaid::
+
+   classDiagram
+      class SPL {
+         +variants: Variant[]
+         +components: Component[]
+      }
+      class Variant {
+         +name: string
+         +configuration: Configuration
+      }
+      class Component {
+         +name: string
+         +sources: Source[]
+         +test_sources: TestSource[]
+         +prod_sources: ProductiveSource[]
+      }
+      class Source {
+         +path: string
+      }
+      SPL "1" o-- "1..*" Variant
+      SPL "1" o-- "1..*" Component
+      Variant --> Component: configures
+      Component "1" *-- "1..*" TestSource
+      Component "1" *-- "1..*" ProductiveSource
+      TestSource <|-- Source
+      ProductiveSource <|-- Source
+
+
 Supported Build Targets
 ***********************
 
