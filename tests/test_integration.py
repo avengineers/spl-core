@@ -170,12 +170,14 @@ class TestIntegration:
         makedirs(build_dir_prod, exist_ok=True)
 
         "Modify compile options of a single file"
-        self.workspace.get_component_file("component", "parts.cmake").write_text(
+        self.workspace.get_component_file("component", "CMakeLists.txt").write_text(
             textwrap.dedent(
                 """
                 spl_add_source(src/component.c COMPILE_OPTIONS "-DTHE_ANSWER=42")
 
                 spl_add_test_source(test/test_component.cc)
+                
+                spl_create_component()
                 """
             )
         )
@@ -192,12 +194,14 @@ class TestIntegration:
         assert 42 == my_main_result.returncode
 
         "Modify compile options again"
-        self.workspace.get_component_file("component", "parts.cmake").write_text(
+        self.workspace.get_component_file("component", "CMakeLists.txt").write_text(
             textwrap.dedent(
                 """
                 spl_add_source(src/component.c COMPILE_OPTIONS "-DTHE_ANSWER=42" "-DTHE_OFFSET=3")
 
                 spl_add_test_source(test/test_component.cc)
+                
+                spl_create_component()
                 """
             )
         )
@@ -213,12 +217,14 @@ class TestIntegration:
         assert 45 == my_main_result.returncode
 
         "Modify compile options again"
-        self.workspace.get_component_file("component", "parts.cmake").write_text(
+        self.workspace.get_component_file("component", "CMakeLists.txt").write_text(
             textwrap.dedent(
                 """
                 spl_add_source(src/component.c COMPILE_OPTIONS "-DTHE_OFFSET=3")
 
                 spl_add_test_source(test/test_component.cc)
+                
+                spl_create_component()
                 """
             )
         )
@@ -234,12 +240,13 @@ class TestIntegration:
         assert 10 == my_main_result.returncode
         
         "Modify compile options of a single file using spl_add_compile_options"
-        self.workspace.get_component_file("component", "parts.cmake").write_text(
+        self.workspace.get_component_file("component", "CMakeLists.txt").write_text(
             textwrap.dedent(
                 """
                 spl_add_source(src/component.c)
                 spl_add_compile_options("src/*.c" COMPILE_OPTIONS "-DTHE_ANSWER=8")
                 spl_add_test_source(test/test_component.cc)
+                spl_create_component()
                 """
             )
         )
@@ -256,12 +263,13 @@ class TestIntegration:
         assert 8 == my_main_result.returncode
         
         "Modify compile options of a single file using spl_add_compile_options"
-        self.workspace.get_component_file("component", "parts.cmake").write_text(
+        self.workspace.get_component_file("component", "CMakeLists.txt").write_text(
             textwrap.dedent(
                 """
                 spl_add_source(src/component.c)
                 spl_add_compile_options("src/component.c" COMPILE_OPTIONS "-DTHE_ANSWER=65" "-DTHE_OFFSET=3")
                 spl_add_test_source(test/test_component.cc)
+                spl_create_component()
                 """
             )
         )
