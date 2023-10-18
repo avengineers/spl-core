@@ -301,7 +301,7 @@ macro(_spl_add_test_suite PROD_SRC TEST_SOURCES)
     set(TEST_OUT_JUNIT junit.xml)
     add_custom_command(
         OUTPUT ${TEST_OUT_JUNIT}
-        COMMAND ${CMAKE_CTEST_COMMAND} ${CMAKE_CTEST_ARGUMENTS} --output-junit ${TEST_OUT_JUNIT} || TRUE
+        COMMAND ${CMAKE_CTEST_COMMAND} ${CMAKE_CTEST_ARGUMENTS} --output-junit ${TEST_OUT_JUNIT} || ${CMAKE_COMMAND} -E true
         DEPENDS ${exe_name}
     )
 

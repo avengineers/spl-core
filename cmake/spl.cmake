@@ -17,6 +17,7 @@ string(REPLACE "/" "_" BINARY_BASENAME ${VARIANT})
 # Can easily be extended in CMakeLists.txt of project.
 # Also used for KConfig variable expansion.
 list(APPEND ENVVARS FLAVOR SUBSYSTEM VARIANT BUILD_KIT BINARY_BASENAME CMAKE_SOURCE_DIR)
+
 foreach(ENVVAR IN LISTS ENVVARS)
     set(ENV{${ENVVAR}} "${${ENVVAR}}")
 endforeach()
@@ -58,7 +59,7 @@ if(BUILD_KIT STREQUAL prod)
 
             add_custom_target(
                 linker_byproducts ALL
-                COMMAND CMAKE -E true
+                COMMAND ${CMAKE_COMMAND} -E true
                 DEPENDS ${LINKER_OUTPUT_FILE}
                 BYPRODUCTS ${LINKER_BYPRODUCTS}
             )
