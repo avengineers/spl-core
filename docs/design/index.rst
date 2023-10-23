@@ -1,7 +1,3 @@
-Design
-######
-
-
 SPL Project Structure
 *********************
 
@@ -137,35 +133,37 @@ are real targets generating exactly one document including all components.
 Folder structure for report creation
 ************************************
 
-<project root>
-  build/
-    <Variant>/
-      test/
-        src/
-          <Component>/
-            doc/
-              html/
-                index.html (<Component>_DetailedDesign)
-            test/
-              html/
-                index.html (<Component>_UnitTestResults-UnitTestSpecification)
-            report/
-              html/
-                index.html (SWE.4-Report for <Component>, contains DD + Test Results + Test Spec)
-            junit.xml
-  src/
-    App/
-      <Component>/
-        doc/
-          conf.py
-          index.rst
-        src/
-          <Component>.c  
-        test/
-          <Component>_test.cc
-          index.rst
-        conf.py
-        index.rst
+::
+
+   <project root>
+   build/
+      <Variant>/
+         test/
+         src/
+            <Component>/
+               doc/
+               html/
+                  index.html (<Component>_DetailedDesign)
+               test/
+               html/
+                  index.html (<Component>_UnitTestResults-UnitTestSpecification)
+               report/
+               html/
+                  index.html (SWE.4-Report for <Component>, contains DD + Test Results + Test Spec)
+               junit.xml
+   src/
+      App/
+         <Component>/
+         doc/
+            conf.py
+            index.rst
+         src/
+            <Component>.c  
+         test/
+            <Component>_test.cc
+            index.rst
+         conf.py
+         index.rst
 
 
 Sphinx Build Configuration
