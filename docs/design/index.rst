@@ -103,7 +103,7 @@ Build kit *test*
 
    The project's index.rst shall be static but changable and configurable.
 
-Dependencies of build targets
+Dependencies of Build Targets
 *****************************
 
 The build targets
@@ -130,7 +130,7 @@ are real targets generating exactly one document including all components.
        report
 
 
-Folder structure for report creation
+Folder Structure for Report Creation
 ************************************
 
 ::
