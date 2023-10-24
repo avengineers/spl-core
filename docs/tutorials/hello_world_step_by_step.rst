@@ -1,5 +1,3 @@
-.. sectnum::
-
 "Hello World" with SPL-Core
 ***************************
 
