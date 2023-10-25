@@ -95,11 +95,11 @@ The following is a flowchart describing the script's operation:
         Python-->GitConfig(Git-Config)
     end
 
-    GitConfig --> End
+    GitConfig --> CI
     Install -->|No| Clean
 
-    subgraph " "
-        Clean -->|Yes| CleanAction[Remove Build Artifacts]
+    subgraph "CLEAN"
+        Clean -->|Yes| CleanAction[Remove All Build Artifacts]
     end
 
     subgraph "CMAKE BUILD"
@@ -122,5 +122,31 @@ The following is a flowchart describing the script's operation:
     CI -->|Yes| End
     CI -->|No| PressKey
     PressKey --> End
-
   
+
+Python Dependencies
++++++++++++++++++++
+
+There are some SPL-Core features which require additional Python packages (the list is not exhaustive): 
+
+* ``kconfiglib`` : used to generate the configuration header file (``autoconf.h``) from the Kconfig files.
+* ``hammoking`` : used to generate the mockups for the unit tests.
+* ``sphinx`` : used to generate the documentation.  
+
+These Python dependencies are defined in the ``Pipfile`` and will be automatically installed when running the ``build.ps1`` script with the ``-install`` parameter.
+There will be a Python virtual environment created in the ``.venv`` directory.
+
+
+Build Tools Dependencies
+++++++++++++++++++++++++
+
+The build tools dependencies (like CMake, Ninja, Compiler etc.) are defined in the ``scoopfile.json`` file and will be automatically installed when running the ``build.ps1`` script with the ``-install`` parameter.
+The tools are installed in the user directory under ``scoop``.
+
+..
+    
+        C:/Users/my_user/scoop/apps
+
+.. note::
+
+    For more information about ``scoop`` and how to import dependencies from a ``scoopfile.json`` file, please refer to the `scoop documentation <https://github.com/ScoopInstaller/Scoop>`_.
