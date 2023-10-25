@@ -1,3 +1,5 @@
+.. _use-project-creator:
+
 Generate SPL Example Project
 ****************************
 
