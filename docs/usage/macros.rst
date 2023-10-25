@@ -163,7 +163,6 @@ Adding a test source file to the component:
 This example adds the "test_led_driver.cc" source file located in the "test" directory to the component.
 
 
-
 spl_create_component
 ^^^^^^^^^^^^^^^^^^^^
 

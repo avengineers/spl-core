@@ -10,6 +10,7 @@ Software Product Line (SPL) Core documentation
 
     usage/index
     tutorials/index
+    concepts
 
 .. toctree::
     :caption: 💡 Design
