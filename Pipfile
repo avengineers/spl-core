@@ -9,6 +9,7 @@ cookiecutter = {version="==2.1.1"}
 gcovr = "*"
 hammocking = "*"
 kconfiglib = "*"
+sphinx-copybutton = "*"
 
 [dev-packages]
 pytest = "*"
@@ -20,7 +21,6 @@ m2r = "*"
 sphinxcontrib-mermaid = "*"
 sphinx-needs = "*"
 sphinx-test-reports = "*"
-
 sphinxcontrib-plantuml = "*"
 doxysphinx = "*"
 flake8 = "*"

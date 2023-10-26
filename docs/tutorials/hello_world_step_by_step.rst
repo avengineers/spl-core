@@ -80,8 +80,8 @@ With the build files generated, you can now build the project using CMake:
 After building, you should see an executable named ``helloworld.exe`` in the build directory. You can run it to see the "Hello, World!" output.
 
 
-"Hello World" with SPL-Core
-===========================
+"Hello World" as SPL Variant
+============================
 
 Let us now build the same "Hello World" program using SPL-Core.
 
@@ -101,7 +101,7 @@ Let us create a directory for the new component and move the ``main.c`` to it.
    mkdir src/main
    mv main.c src/main/main.c
 
-Add a ``CMakeLists.txt`` file to create the ``main`` component:
+Add a ``src/main/CMakeLists.txt`` file to create the ``main`` component:
 
 .. code-block:: cmake
 
@@ -118,7 +118,7 @@ Create a directory for the variant:
 
    mkdir variants/lang/en
 
-Add a ``parts.cmake`` to define the variant relevant components:
+Add a ``variants/lang/en/parts.cmake`` file to define the variant relevant components:
 
 .. code-block:: cmake
 
@@ -128,7 +128,7 @@ Add a ``parts.cmake`` to define the variant relevant components:
 Include SPL-Core
 ----------------
 
-Update the ``CMakeLists.txt`` in the root directory to include SPL-Core:
+Replace the ``CMakeLists.txt`` in the root directory to include SPL-Core:
 
 .. code-block:: cmake
 
@@ -164,13 +164,13 @@ Update the ``CMakeLists.txt`` in the root directory to include SPL-Core:
 Build the Project Using SPL-Core
 --------------------------------
 
-To generate the build files for our variant run:
+To generate the build files for our variant execute:
 
 .. code-block:: bash
 
    cmake -B build/lang/en -G "Ninja" -DFLAVOR=lang -DSUBSYSTEM=en
 
-To build the project run:
+To build the project execute:
 
 .. code-block:: bash
 
@@ -235,7 +235,7 @@ Create SPL-Core Project with Multiple Variants
 
 The main reason to use SPL-Core is to build a project with multiple variants. Let us now create a project with two variants: ``lang/en`` and ``lang/de``.
 
-We define a new variant ``lang/de`` by creating a new directory ``variants/lang/de`` and adding a ``parts.cmake`` file:
+We define a new variant ``lang/de`` by creating a new directory ``variants/lang/de`` and adding a ``parts.cmake`` file to it:
 
 .. code-block:: cmake
 
@@ -246,7 +246,7 @@ We need now to make the ``main`` component configurable and define a different c
 Make the ``main`` Component Configurable
 ----------------------------------------
 
-To make the ``main`` component configurable, we need to add a ``KConfig`` file to the ``main`` component directory:
+To make the ``main`` component configurable, we need to create ``src/main/KConfig`` configuration file:
 
 .. code-block:: KConfig
 
@@ -276,14 +276,20 @@ We now need to define a project ``KConfig`` file in the root directory to includ
 SPL-Core will automatically read the project ``KConfig`` file and generate a header file from it.
 
 The ``kconfiglib`` Python package is used to parse the ``KConfig`` files.
-For this we need to install Python and then install the ``kconfiglib`` package using ``pip``:
+
+If you do not have Python already install, execute:
 
 .. code-block:: bash
 
-   scool install python
+   scoop install python
+
+Install the ``kconfiglib`` package using ``pip``:
+
+.. code-block:: bash
+
    pip install kconfiglib
 
-Now one can open the graphical user interface of ``kconfiglib`` by running:
+Now one can open the graphical user interface of ``kconfiglib`` by executing:
 
 .. code-block:: bash
 
@@ -338,3 +344,10 @@ We can make now the ``main.c`` file configurable by including the ``autoconf.h``
 .. note::
 
    The directory ``build/<variant>/kconfig`` is added to the include path by SPL-Core such that one can just include ``autoconf.h`` without specifying the full path.
+
+Run the ``build.ps1`` script to build the ``lang/de`` variant and execute the ``build/lang/de/main.exe`` in the terminal.
+The message shall now be printed in german:
+
+.. code-block:: console
+
+   Hallo Welt!
