@@ -95,12 +95,15 @@ endmacro(_spl_get_google_test)
 macro(spl_create_component)
     file(RELATIVE_PATH component_path ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_LIST_DIR})
     _spl_slash_to_underscore(component_name ${component_path})
-    add_library(${component_name} OBJECT ${SOURCES})
-
+    
     # Add debug options based on build configuration (kit)
     if(BUILD_KIT STREQUAL test)
+        # Exclude all components from the ALL target.
+        # Components which have no tests shall not be automatically compiled when ALL target is executed.
+        add_library(${component_name} EXCLUDE_FROM_ALL OBJECT ${SOURCES})
         target_compile_options(${component_name} PRIVATE ${VARIANT_ADDITIONAL_COMPILE_C_FLAGS} -ggdb --coverage)
     else()
+        add_library(${component_name} OBJECT ${SOURCES})
         target_compile_options(${component_name} PRIVATE ${VARIANT_ADDITIONAL_COMPILE_C_FLAGS})
     endif()
 
