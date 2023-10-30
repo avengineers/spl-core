@@ -1,5 +1,8 @@
+📚 Internals
+************
+
 SPL Project Structure
-*********************
+---------------------
 
 .. mermaid::
 
@@ -31,9 +34,9 @@ SPL Project Structure
 
 
 Supported Build Targets
-***********************
+-----------------------
 
-SPL Core reuses the concept of build kits from the VS Code extension *CMake Tools*. Currently two build kits
+SPL Core reuses the concept of build kits from the VS Code extension *CMake Tools*. Currently, two build kits
 are defined and supported:
 
 * *prod*: compilation and linking of an executable for a specific target device.
@@ -90,7 +93,7 @@ Build kit *test*
    :status: open
 
    Call of sphinx-build takes care of the dependencies and makes incremental builds.
-   spl-core shall always start the docs target for generating the documentation and let sphinx-build handle the dependencies.
+   SPL Core shall always start the docs target for generating the documentation and let sphinx-build handle the dependencies.
 
 .. req:: Configurable Sphinx Output
    :status: open
@@ -101,10 +104,10 @@ Build kit *test*
 .. req:: Project Documentation
    :status: open
 
-   The project's index.rst shall be static but changable and configurable.
+   The project's index.rst file shall be static but changeable and configurable.
 
 Dependencies of Build Targets
-*****************************
+-----------------------------
 
 The build targets
 
@@ -131,7 +134,7 @@ are real targets generating exactly one document including all components.
 
 
 Folder Structure for Report Creation
-************************************
+------------------------------------
 
 ::
 
@@ -167,49 +170,49 @@ Folder Structure for Report Creation
 
 
 Sphinx Build Configuration
-**************************
+--------------------------
 
-Sphnix build required configurtaion file(conf.py) and main rst(index.rst) file are located in same folder.
+Sphnix build required configuration file(conf.py) and main rst(index.rst) file are located in same folder.
 Because of this:
 
-  * we need conf.py and index.rst in root directory
-  * index.rst file dynamically includes the target index.rst
-  * conf.py needs to read a configuration file(config.json) to be able to find all the relevant files for the current CMake docs target 
+  * we need conf.py and index.rst files in the root directory
+  * the index.rst file dynamically includes the target index.rst
+  * the conf.py file needs to read a configuration file (config.json) to be able to find all the relevant files for the current CMake docs target 
 
 
 conf.py
 ^^^^^^^
 
-  * conf.py is a static file and we don't know the path of config.json file, we need to get the path to it as an environment variable.
+  * conf.py is a static file and we do not know the path of config.json file, we need to get the path to it as an environment variable
   * we should check, if environment variable(SPHINX_BUILD_CONFIGURATION_FILE) exists just load the content and store into the html_context(https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-html_context)
   
 index.rst
 ^^^^^^^^^
 
-This file just includes the target index.rst depends on docs CMake target.
+This file just includes the target index.rst depending on the ``docs`` CMake target.
 
 
 Component Docs CMake Target
-***************************
+---------------------------
 
 A component docs target ``<component>_docs`` will be created automatically if there is an index.rst file in the component ``doc`` directory.
-Only the files included in the ``doc`` folder are part of the report, so there will be no traceability to IDs from ``src`` or ``test``.
+Only the files included in the ``doc`` folder are part of the report. Therefore, there will be no traceability to IDs from ``src`` or ``test``.
 
 Execution steps: 
 
 * we need to create config.json
-* we need to create an index.rst which includes
+* we need to create an index.rst file which includes
     * component detailed design rst file
 * we need to call sphinx-build "pipenv run sphinx-build -b html . build/<Variant>/test/src/<Component>/docs/html"
     * source directory is always a projet root directory and output directory is build/<Variant>/test/src/<Component>/docs/
 
 
 Component Reports CMake Target
-******************************
+------------------------------
 
-* this target depends on unittests target
-* we need to create config.json
-* we need to create an index.rst which includes
+* this target depends on ``unittests`` target
+* we need to create config.json file
+* we need to create an index.rst file, which includes
     * component detailed design rst file
     * component test results rst file
     * component doxygen rst file

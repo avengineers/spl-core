@@ -9,22 +9,23 @@ cookiecutter = {version="==2.1.1"}
 gcovr = "*"
 hammocking = "*"
 kconfiglib = "*"
-sphinx-copybutton = "*"
 
 [dev-packages]
 pytest = "*"
 pytest-cov = "*"
 pipenv = "*"
+m2r = "*"
+flake8 = "*"
 sphinx = "*"
 sphinx-rtd-theme = "*"
-m2r = "*"
 sphinxcontrib-mermaid = "*"
 sphinx-needs = "*"
 sphinx-test-reports = "*"
 sphinxcontrib-plantuml = "*"
 doxysphinx = "*"
-flake8 = "*"
 sphinx-rtd-size = "*"
+sphinx-copybutton = "*"
+sphinx-new-tab-link = "*"
 
 [requires]
 python_version = "3.11"

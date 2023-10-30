@@ -38,6 +38,18 @@
       }
     },
     {
+      "label": "clean build docs",
+      "command": "pipenv run sphinx-build -a docs out/docs/html",
+      "type": "shell",
+      "presentation": {
+        "reveal": "always"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
       "label": "open docs index.html",
       "command": "out/docs/html/index.html",
       "type": "shell",

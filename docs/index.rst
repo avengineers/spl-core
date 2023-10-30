@@ -1,20 +1,9 @@
-
-Software Product Line (SPL) Core documentation
+Software Product Line (SPL) Core Documentation
 ##############################################
 
-
 .. toctree::
-    :caption: 🚀 Getting Started
     :maxdepth: 2
-    :hidden:
 
-    usage/index
-    tutorials/index
-    concepts
-
-.. toctree::
-    :caption: 💡 Design
-    :maxdepth: 2
-    :hidden:
-
-    design/index
+    getting_started/index
+    reference/index
+    internals/index
