@@ -40,6 +40,7 @@ extensions.extend(
         "sphinx.ext.autosummary",
         "sphinx.ext.napoleon",
         "sphinx.ext.viewcode",
+        "sphinx_new_tab_link",
     ]
 )
 

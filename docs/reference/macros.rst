@@ -1,9 +1,11 @@
+.. _cmake-macro-reference-label:
+
 CMake Macros
-************
+============
 
 
 spl_add_component
-^^^^^^^^^^^^^^^^^
+-----------------
 
 Add a component to a variant.
 
@@ -31,7 +33,7 @@ This example adds a component located in the "src/led_driver" directory to the v
 
 
 spl_add_include
-^^^^^^^^^^^^^^^
+---------------
 
 Add an include directory to the project's list of include directories.
 
@@ -59,7 +61,7 @@ This example adds the "include/my_library" directory to the project's list of in
 
 
 spl_add_source
-^^^^^^^^^^^^^^
+--------------
 
 Add a source file of a component to the list of sources to be compiled.
 
@@ -98,7 +100,7 @@ This example adds the "led_driver_control.c" source file and applies the compile
 
 
 spl_add_compile_options
-^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------
 
 Add compile options to a set of source files matching a specified pattern.
 
@@ -137,7 +139,7 @@ This example applies the compile option ``-opt`` specifically to the "led_driver
 
 
 spl_add_test_source
-^^^^^^^^^^^^^^^^^^^
+-------------------
 
 Add a test source file to the list of test source files for the component.
 
@@ -164,7 +166,7 @@ This example adds the "test_led_driver.cc" source file located in the "test" dir
 
 
 spl_create_component
-^^^^^^^^^^^^^^^^^^^^
+--------------------
 
 Create a component as an object library, manage compile options, and configure documentation for it.
 

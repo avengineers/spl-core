@@ -1,12 +1,12 @@
 .. _use-project-creator:
 
 Generate SPL Example Project
-****************************
+============================
 
 Run Project creator
 -------------------
 
-Clone the SPL-Core repository:
+Clone the SPL Core repository:
 
 .. code-block:: powershell
 
@@ -26,7 +26,7 @@ Activate the python virtual environment and use the project creator to generate 
 .. code-block:: powershell
 
     .venv\Scripts\activate
-    pipenv run python src/project_creator/creator.py workspace --name MyProject --variant FLV1/SYS1 --out_dir C:\tmp
+    pipenv run python src/project_creator/creator.py workspace --name MyProject --variant VARIANT --out_dir C:\tmp
 
 This will create a new project in the directory ``MyProject``.
 
@@ -43,20 +43,20 @@ Now you can build the project:
 
     .\build.ps1
 
-The created executable can be found in the directory ``.\build\FLV1\SYS1\prod\my_main.exe``.
+The created executable can be found in the directory ``.\build\VARIANT\prod\my_main.exe``.
 
 Generated Project
 -----------------
 
 
 PowerShell Build Script
-+++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``build.ps1`` PowerShell script acts as a centralized tool to streamline several tasks related to the project, such as installing dependencies, running, and testing the project. It can be viewed as a build automation script that ensures consistency in development and deployment activities.
 
 You can provide several parameters to customize the script's behavior:
 
-* ``-clean`` : Clean build, wipes out all build artifacts.
+* ``-clean`` : Clean build wipes out all build artifacts.
 * ``-install`` : Install mandatory packages.
 * ``-target`` : Specifies the target to be built (default is "all").
 * ``-variants`` : Specifies the variants (projects) to be built.
@@ -127,12 +127,12 @@ The following is a flowchart describing the script's operation:
   
 
 Python Dependencies
-+++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^
 
-There are some SPL-Core features which require additional Python packages (the list is not exhaustive): 
+There are some SPL Core features which require additional Python packages (the list is not exhaustive): 
 
 * ``kconfiglib`` : used to generate the configuration header file (``autoconf.h``) from the Kconfig files.
-* ``hammoking`` : used to generate the mockups for the unit tests.
+* ``hammocking`` : used to generate the mockups for the unit tests.
 * ``sphinx`` : used to generate the documentation.  
 
 These Python dependencies are defined in the ``Pipfile`` and will be automatically installed when running the ``build.ps1`` script with the ``-install`` parameter.
@@ -140,7 +140,7 @@ There will be a Python virtual environment created in the ``.venv`` directory.
 
 
 Build Tools Dependencies
-++++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 The build tools dependencies (like CMake, Ninja, Compiler etc.) are defined in the ``scoopfile.json`` file and will be automatically installed when running the ``build.ps1`` script with the ``-install`` parameter.
 The tools are installed in the user directory under ``scoop``.

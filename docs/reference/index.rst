@@ -1,5 +1,5 @@
-Usage
-#####
+🔧 Reference
+************
 
 .. toctree::
     :maxdepth: 2
