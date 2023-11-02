@@ -20,8 +20,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          submodules: true
-      - name: install tools and run selftests
+          fetch-depth: 0
+      - name: install tools, build and test
         run: |
           .\build.ps1 -install
           .\build.ps1
@@ -32,3 +32,14 @@ jobs:
         with:
           files: |
             out/test-report.xml
+
+  # Make sure commit messages follow the conventional commits convention:
+  # https://www.conventionalcommits.org
+  commitlint:
+    name: Lint Commit Messages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: wagoid/commitlint-github-action@v5
