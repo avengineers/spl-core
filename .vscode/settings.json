@@ -28,6 +28,5 @@
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter"
     },
-    "esbonio.sphinx.confDir": "",
-    "cmake.configureOnOpen": false
+    "esbonio.sphinx.confDir": ""
 }

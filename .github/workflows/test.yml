@@ -64,6 +64,12 @@ jobs:
           fetch-depth: 0
           # Checkout of branch instead of detached head
           ref: ${{ github.head_ref }}
+          # To bypass Github branch protection rules, we use a deploy key
+          # as workaround: https://stackoverflow.com/questions/69263843/how-to-push-to-protected-main-branches-in-a-github-action
+          # This seems to be a huge discussion: https://github.com/orgs/community/discussions/13836
+          # GitHub Enterprise offers custom roles.
+          ssh-key: ${{secrets.SEMVER_TOKEN}}
+          persist-credentials: false
       - name: Release
         uses: python-semantic-release/python-semantic-release@master
         if: github.ref_name == 'develop'

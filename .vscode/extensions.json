@@ -3,13 +3,21 @@
       "ms-python.flake8",
       "ms-python.black-formatter",
       "ms-python.python",
+      "ms-python.vscode-pylance",
+      "mhutchie.git-graph",
       "kevinrose.vsc-python-indent",
       "njpwerner.autodocstring",
       "wholroyd.jinja",
-      "visualstudioexptteam.vscodeintellicode",
       "josetr.cmake-language-support-vscode",
       "ms-vscode.cmake-tools",
       "twxs.cmake",
-      "cheshirekow.cmake-format"
+      "ms-vscode.cpptools",
+      "ms-vscode.cpptools-themes",
+      "cheshirekow.cmake-format",
+      "visualstudioexptteam.intellicode-api-usage-examples",
+      "visualstudioexptteam.vscodeintellicode",
+      "haugerbr.project-tasks",
+      "donjayamanne.python-environment-manager",
+      "felipecaputo.git-project-manager"
    ]
 }
