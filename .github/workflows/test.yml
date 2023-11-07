@@ -16,6 +16,8 @@ jobs:
   test:
     name: CI Gate
     runs-on: windows-latest
+    needs: 
+      - commitlint
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -43,3 +45,28 @@ jobs:
         with:
           fetch-depth: 0
       - uses: wagoid/commitlint-github-action@v5
+
+  release:
+    runs-on: ubuntu-latest
+    concurrency: release
+    needs:
+      - test
+      - commitlint
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Release
+        uses: python-semantic-release/python-semantic-release@master
+        if: github.ref_name == 'develop'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Test release
+        uses: python-semantic-release/python-semantic-release@master
+        if: github.ref_name != 'develop'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          root_options: --vv --noop
