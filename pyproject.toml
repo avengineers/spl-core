@@ -1,0 +1,2 @@
+[tool.semantic_release.branches.main]
+match = "(develop|feature/.+|hotfix/.+|release/.+)"
