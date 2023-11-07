@@ -8,20 +8,22 @@ on:
 
   workflow_dispatch:
 
-env:
-  # Workaround to avoid usage of system wide installations
-  USER_PATH_FIRST: true
-
 jobs:
+  # Run all tests on Windows
   test:
     name: CI Gate
     runs-on: windows-latest
+    needs: 
+      - commitlint
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: install tools, build and test
+        env:
+          # Workaround to force usage of scoop apps installed in USERPROFILE.
+          USER_PATH_FIRST: 1
         run: |
           .\build.ps1 -install
           .\build.ps1
@@ -39,7 +41,37 @@ jobs:
     name: Lint Commit Messages
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: wagoid/commitlint-github-action@v5
+
+  # Create a release with semantic versioning (https://semver.org/)
+  # using Python Semantic Release (https://python-semantic-release.readthedocs.io/en/latest/)
+  release:
+    runs-on: ubuntu-latest
+    # Ensures that this action does run only once in parallel
+    concurrency: release
+    needs:
+      - test
+      - commitlint
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # Checkout of branch instead of detached head
+          ref: ${{ github.head_ref }}
+      - name: Release
+        uses: python-semantic-release/python-semantic-release@master
+        if: github.ref_name == 'develop'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Test release
+        uses: python-semantic-release/python-semantic-release@master
+        if: github.ref_name != 'develop'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          root_options: --noop
