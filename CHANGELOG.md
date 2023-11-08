@@ -2,6 +2,27 @@
 
 
 
+## v3.11.0 (2023-11-08)
+
+### Chore
+
+* chore: improve SPL description ([`a222cc8`](https://github.com/avengineers/spl-core/commit/a222cc8d13714a6ae18542f004dcdb83e442f6db))
+
+* chore: add linting of commit messages ([`fa02d0b`](https://github.com/avengineers/spl-core/commit/fa02d0be6fd69bd9e99721344fc4d2eff976c3c1))
+
+### Feature
+
+* feat: add release workflow step and semver config ([`4c35494`](https://github.com/avengineers/spl-core/commit/4c3549458edb997f34463da8b7f72c7b6c801b31))
+
+### Unknown
+
+* Merge pull request #99 from avengineers/feature/what-is-spl
+
+Improve SPL description ([`26c9a34`](https://github.com/avengineers/spl-core/commit/26c9a343ee97dfcf53e982f5b14d557a866e52f0))
+
+* revise documentation ([`5e34ff5`](https://github.com/avengineers/spl-core/commit/5e34ff5828d1b71919b871b5735f519d9a7c08c8))
+
+
 ## v3.10.1 (2023-10-27)
 
 ### Documentation
@@ -79,14 +100,9 @@
 
 CMake macro to set compile options for files and directories
 
-
-
 ---------
 
-
-
 Co-authored-by: Kobagapu, Akshit (RDS-RM) &lt;Akshit.Kobagapu@marquardt.com&gt;
-
 Co-authored-by: Karsten A. M. Guenther &lt;xxthunder@users.noreply.github.com&gt; ([`078d0cb`](https://github.com/avengineers/spl-core/commit/078d0cb9fe6db867063fe4c0605bcddd2854ab20))
 
 * Add a table of test cases as unit test specification ([`76879be`](https://github.com/avengineers/spl-core/commit/76879be2d048cd19ac88876c463db6380cab7ce9))
@@ -291,23 +307,13 @@ Co-authored-by: Kobagapu, Akshit (RDS-RM) &lt;Akshit.Kobagapu@marquardt.com&gt; 
 
 * Get rid of spl.ps1
 
-
-
 * Adapt ProjectCreator to support spl-core as CMake Module
-
-
 
 * cleanup
 
-
-
 * Some more meaningful unit tests
 
-
-
 * Update CI workflow, publish test results
-
-
 
 * Update README ([`3ed97c5`](https://github.com/avengineers/spl-core/commit/3ed97c50986bc09a7ec2ac52e7c8f27352a1e95c))
 
@@ -320,15 +326,9 @@ Co-authored-by: Kobagapu, Akshit (RDS-RM) &lt;Akshit.Kobagapu@marquardt.com&gt; 
 
 * add custom target for add executable
 
-
-
 * modified changes based on review suggestion
 
-
-
 ---------
-
-
 
 Co-authored-by: Kobagapu, Akshit (RDS-RM) &lt;Akshit.Kobagapu@marquardt.com&gt; ([`c9ba241`](https://github.com/avengineers/spl-core/commit/c9ba24156f05e2048ba7f242ef6894b17fd9cf7f))
 
