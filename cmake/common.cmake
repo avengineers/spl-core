@@ -311,7 +311,7 @@ macro(_spl_add_test_suite PROD_SRC TEST_SOURCES)
     set(COV_OUT_JSON coverage.json)
     add_custom_command(
         OUTPUT ${COV_OUT_JSON}
-        COMMAND gcovr --root ${CMAKE_SOURCE_DIR} --filter ${CMAKE_CURRENT_LIST_DIR}/src --json --output ${COV_OUT_JSON} ${GCOVR_ADDITIONAL_OPTIONS} ${CMAKE_CURRENT_BINARY_DIR}
+        COMMAND gcovr --root ${CMAKE_SOURCE_DIR} --json --output ${COV_OUT_JSON} ${GCOVR_ADDITIONAL_OPTIONS} ${CMAKE_CURRENT_BINARY_DIR}
         DEPENDS ${TEST_OUT_JUNIT}
     )
 
