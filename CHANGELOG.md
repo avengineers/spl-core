@@ -2,6 +2,13 @@
 
 
 
+## v3.11.1 (2023-11-16)
+
+### Fix
+
+* fix: coverage report is empty ([`fb44eae`](https://github.com/avengineers/spl-core/commit/fb44eae1d8427259c455ac3fbd86f01c1cb1b856))
+
+
 ## v3.11.0 (2023-11-08)
 
 ### Chore
