@@ -2,6 +2,13 @@
 
 
 
+## v3.11.2 (2023-11-22)
+
+### Fix
+
+* fix: handling of obsolete coverage data and notes files ([`8b3f510`](https://github.com/avengineers/spl-core/commit/8b3f510a19ca02418991a56a1b3f732a1e1b25c0))
+
+
 ## v3.11.1 (2023-11-16)
 
 ### Fix
