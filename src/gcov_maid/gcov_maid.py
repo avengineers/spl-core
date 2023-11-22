@@ -7,15 +7,15 @@ def main():
     parser.add_argument(
         "--working-dir", help="Working directory", required=True
     )  # Make the option mandatory
-    parser.add_argument("--wipe-gcda", action="store_true", help="Wipe gcda files")
-    parser.add_argument("--wipe-gcno", action="store_true", help="Wipe gcno files")
+    parser.add_argument("--wipe-all-gcda", action="store_true", help="Wipe all gcda files recursively")
+    parser.add_argument("--wipe-orphaned-gcno", action="store_true", help="Wipe orphaned gcno files recursively")
 
     args = parser.parse_args()
 
     # Access the command line options
     working_dir = Path(args.working_dir)  # Convert the string to a Path object
-    wipe_gcda = bool(args.wipe_gcda)  # Convert the switch value to boolean
-    wipe_gcno = bool(args.wipe_gcno)  # Convert the switch value to boolean
+    wipe_gcda = bool(args.wipe_all_gcda)  # Convert the switch value to boolean
+    wipe_gcno = bool(args.wipe_orphaned_gcno)  # Convert the switch value to boolean
 
     if wipe_gcda:
         wipe_gcda_files(working_dir)
