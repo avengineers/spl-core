@@ -301,17 +301,25 @@ macro(_spl_add_test_suite PROD_SRC TEST_SOURCES)
         ${PROD_PARTIAL_LINK}
     )
 
+    # Create JUnit report
     set(TEST_OUT_JUNIT junit.xml)
     add_custom_command(
         OUTPUT ${TEST_OUT_JUNIT}
+        # Wipe obsolete gcda files before running the test executable
+        COMMAND python ${SPL_CORE_PYTHON_DIRECTORY}/gcov_maid/gcov_maid.py --working-dir . --wipe-gcda
+        # Run the test executable, generate JUnit report and return 0 independent of the test result
         COMMAND ${CMAKE_CTEST_COMMAND} ${CMAKE_CTEST_ARGUMENTS} --output-junit ${TEST_OUT_JUNIT} || ${CMAKE_COMMAND} -E true
         DEPENDS ${exe_name}
     )
 
+    # Create coverage report
     set(COV_OUT_JSON coverage.json)
     add_custom_command(
         OUTPUT ${COV_OUT_JSON}
-        COMMAND gcovr --root ${CMAKE_SOURCE_DIR} --json --output ${COV_OUT_JSON} ${GCOVR_ADDITIONAL_OPTIONS} ${CMAKE_CURRENT_BINARY_DIR}
+        # Wipe obsolete gcno files before running gcovr
+        COMMAND python ${SPL_CORE_PYTHON_DIRECTORY}/gcov_maid/gcov_maid.py --working-dir . --wipe-gcno
+        # Run gcovr to generate coverage json for the component
+        COMMAND gcovr --root ${CMAKE_SOURCE_DIR} --json --output ${COV_OUT_JSON} ${GCOVR_ADDITIONAL_OPTIONS}
         DEPENDS ${TEST_OUT_JUNIT}
     )
 
