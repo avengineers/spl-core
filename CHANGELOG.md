@@ -2,6 +2,13 @@
 
 
 
+## v3.11.3 (2023-11-22)
+
+### Fix
+
+* fix: gcovr needs binary dir as last parameter ([`7166438`](https://github.com/avengineers/spl-core/commit/71664388bafcf1c16b4976b6cf7ac03fafd8bf5e))
+
+
 ## v3.11.2 (2023-11-22)
 
 ### Fix
