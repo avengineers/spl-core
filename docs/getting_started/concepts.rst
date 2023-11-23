@@ -4,7 +4,7 @@ Basic Concepts and Naming Conventions
 What is a Software Product Line (SPL)?
 --------------------------------------
 
-An SPL is a software project that contains shared and configurable source code elements known as `components <https://engweb.marquardt.de/sple/spl-core/develop/getting_started/concepts.html#what-is-a-component>`_, which are used to develop several versions of a computer program, also known as variants.
+An SPL is a software project that contains shared and configurable source code elements known as `components <https://engweb.marquardt.de/sple/spl-core/develop/getting_started/concepts.html#what-is-a-component>`_, which are used to develop several versions of a computer program, also known as `variants <https://engweb.marquardt.de/sple/spl-core/develop/getting_started/concepts.html#what-is-a-variant>`_.
 
 Think of an SPL like an automotive factory that makes different types of cars.
 Each car is special - some are race cars, some are trucks, and others might be convertibles.
