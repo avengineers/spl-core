@@ -7,3 +7,4 @@
    concepts
    hello_world
    generate_example_project
+   start_new_component
