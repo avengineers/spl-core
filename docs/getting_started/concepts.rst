@@ -53,6 +53,7 @@ Here is an example of the variants directory with two variants (``my/var1`` and 
 * ``parts.cmake`` - contains the list of `components <https://engweb.marquardt.de/sple/spl-core/develop/getting_started/concepts.html#what-is-a-component>`_ that are part of the variant.
 * ``config.txt`` - this is the `feature <https://engweb.marquardt.de/sple/spl-core/develop/getting_started/concepts.html#what-is-a-feature-model>`_ selection of the variant. It is a KConfig file that contains the selected `features <https://engweb.marquardt.de/sple/spl-core/develop/getting_started/concepts.html#what-is-a-feature-model>`_ of the variant.
 
+.. _what_is_a_component:
 
 What is a Component?
 --------------------
