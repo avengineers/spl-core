@@ -2,6 +2,31 @@
 
 
 
+## v3.12.0 (2023-11-30)
+
+### Chore
+
+* chore: link keywords like component, variant ([`66226fa`](https://github.com/avengineers/spl-core/commit/66226faf21bef5db659b470741a48a6e8750d90d))
+
+### Documentation
+
+* docs: how to create a new component ([`616c802`](https://github.com/avengineers/spl-core/commit/616c8026c25bcd8b9ad9e9d500a139b31f563aee))
+
+### Feature
+
+* feat: from legacy to configurable component ([`478d4b3`](https://github.com/avengineers/spl-core/commit/478d4b32e6ae6a045717c440950e3c476e8e613c))
+
+### Unknown
+
+* Merge pull request #105 from avengineers/feature/EPES-1424-refer-to-sple-platform-in-all-references
+
+cjore: add link to components and variants  within SPL Core Docu ([`45325df`](https://github.com/avengineers/spl-core/commit/45325df26b2806b6c6f5e3841300b0ab2248cc35))
+
+* add link to variant within SPL Core Docu ([`c0c8a1d`](https://github.com/avengineers/spl-core/commit/c0c8a1d95f31c81cd89ebea26720816475bd3a3b))
+
+* add link to components within SPL Core Docu ([`3407707`](https://github.com/avengineers/spl-core/commit/3407707e19680e22ebdd2c1489aa9dd2abf364f7))
+
+
 ## v3.11.3 (2023-11-22)
 
 ### Fix
