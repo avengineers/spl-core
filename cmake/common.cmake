@@ -258,6 +258,11 @@ function(_spl_coverage_create_overall_report)
             unittests
             DEPENDS coverage ${COV_OUT_VARIANT_HTML}
         )
+        add_custom_target(
+            coverage_overall_report
+            ALL
+            DEPENDS coverage ${COV_OUT_VARIANT_HTML}
+        )
     else(_SPL_COVERAGE_CREATE_OVERALL_REPORT_IS_NECESSARY)
         add_custom_target(unittests)
     endif(_SPL_COVERAGE_CREATE_OVERALL_REPORT_IS_NECESSARY)
