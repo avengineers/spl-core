@@ -2,6 +2,13 @@
 
 
 
+## v3.13.0 (2023-12-01)
+
+### Feature
+
+* feat: add explicit target for the coverage report ([`f917706`](https://github.com/avengineers/spl-core/commit/f9177061d518ad53b087af29111c8fcfa3d77643))
+
+
 ## v3.12.0 (2023-11-30)
 
 ### Chore
