@@ -246,13 +246,15 @@ macro(_spl_set_coverage_create_overall_report_is_necessary)
     set(_SPL_COVERAGE_CREATE_OVERALL_REPORT_IS_NECESSARY TRUE PARENT_SCOPE)
 endmacro(_spl_set_coverage_create_overall_report_is_necessary)
 
+set(COV_OUT_JSON coverage.json)
 function(_spl_coverage_create_overall_report)
     if(_SPL_COVERAGE_CREATE_OVERALL_REPORT_IS_NECESSARY)
         set(COV_OUT_VARIANT_HTML reports/coverage/index.html)
         add_custom_command(
             OUTPUT ${COV_OUT_VARIANT_HTML}
-            COMMAND gcovr --root ${CMAKE_SOURCE_DIR} --add-tracefile \"${CMAKE_CURRENT_BINARY_DIR}/**/coverage.json\" --html --html-details --output ${COV_OUT_VARIANT_HTML}
-            DEPENDS coverage
+            COMMAND gcovr --root ${CMAKE_SOURCE_DIR} --add-tracefile \"${CMAKE_CURRENT_BINARY_DIR}/**/${COV_OUT_JSON}\" --html --html-details --output ${COV_OUT_VARIANT_HTML}
+            DEPENDS ${GLOBAL_COMPONENTS_COVERAGE_JSON_LIST}
+            COMMENT "Generating overall code coverage report ${COV_OUT_VARIANT_HTML} ..."
         )
         add_custom_target(
             unittests
@@ -261,7 +263,7 @@ function(_spl_coverage_create_overall_report)
         add_custom_target(
             coverage_overall_report
             ALL
-            DEPENDS coverage ${COV_OUT_VARIANT_HTML}
+            DEPENDS ${COV_OUT_VARIANT_HTML}
         )
     else(_SPL_COVERAGE_CREATE_OVERALL_REPORT_IS_NECESSARY)
         add_custom_target(unittests)
@@ -317,8 +319,9 @@ macro(_spl_add_test_suite PROD_SRC TEST_SOURCES)
         DEPENDS ${exe_name}
     )
 
+    set(GLOBAL_COMPONENTS_COVERAGE_JSON_LIST "${GLOBAL_COMPONENTS_COVERAGE_JSON_LIST};${CMAKE_CURRENT_BINARY_DIR}/${COV_OUT_JSON}" CACHE INTERNAL "List of all ${COV_OUT_JSON} files")
+    
     # Create coverage report
-    set(COV_OUT_JSON coverage.json)
     add_custom_command(
         OUTPUT ${COV_OUT_JSON}
         # Wipe orphaned gcno files before gcovr searches for them
@@ -326,6 +329,7 @@ macro(_spl_add_test_suite PROD_SRC TEST_SOURCES)
         # Run gcovr to generate coverage json for the component
         COMMAND gcovr --root ${CMAKE_SOURCE_DIR} --json --output ${COV_OUT_JSON} ${GCOVR_ADDITIONAL_OPTIONS} ${CMAKE_CURRENT_BINARY_DIR}
         DEPENDS ${TEST_OUT_JUNIT}
+        COMMENT "Generating component ${component_name} code coverage json report ${COV_OUT_JSON} ..."
     )
 
     set(COV_OUT_HTML reports/coverage/index.html)
@@ -333,6 +337,7 @@ macro(_spl_add_test_suite PROD_SRC TEST_SOURCES)
         OUTPUT ${COV_OUT_HTML}
         COMMAND gcovr --root ${CMAKE_SOURCE_DIR} --add-tracefile ${COV_OUT_JSON} --html --html-details --output ${COV_OUT_HTML} ${GCOVR_ADDITIONAL_OPTIONS}
         DEPENDS ${COV_OUT_JSON}
+        COMMENT "Generating component ${component_name} code coverage html report ${COV_OUT_HTML} ..."
     )
 
     add_custom_target(
