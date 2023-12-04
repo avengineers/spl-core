@@ -2,6 +2,13 @@
 
 
 
+## v3.13.1 (2023-12-04)
+
+### Fix
+
+* fix: wrong overall coverage report dependencies ([`399f166`](https://github.com/avengineers/spl-core/commit/399f166df83cd3d08df88d885e88ac3845b902d7))
+
+
 ## v3.13.0 (2023-12-01)
 
 ### Feature
