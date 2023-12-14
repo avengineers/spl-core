@@ -1,6 +1,4 @@
-# CHANGELOG
-
-
+# 📝 Changelog
 
 ## v3.13.1 (2023-12-04)
 

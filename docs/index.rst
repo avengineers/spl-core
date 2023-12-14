@@ -7,3 +7,4 @@ Software Product Line (SPL) Core Documentation
     getting_started/index
     reference/index
     internals/index
+    changelog/index
