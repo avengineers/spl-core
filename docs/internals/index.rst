@@ -71,19 +71,19 @@ Build kit *test*
    Build kit 'test' shall provide a build target 'unittests', that executes all tests of all SW components.
 
 .. req:: Support Creation of Documentation
-   :status: open
+   :status: done
 
    Build kit 'test' shall provide a build target '<component>_docs', that creates documentation of a SW component.
    Precondition of this build target is the existence of a doc folder inside the component's folder containing at
    least a conf.py.
 
 .. req:: Support Documentation
-   :status: open
+   :status: done
 
    Build kit 'test' shall provide a build target 'docs', that creates the documentation of all SW components.
 
 .. req:: Support Creation of a Component Report
-   :status: open
+   :status: done
 
    Build kit 'test' shall provide a build target '<component>_report', that creates a report of a SW component containing
    the documentation, test specification and all test results.
@@ -96,13 +96,13 @@ Build kit *test*
    SPL Core shall always start the docs target for generating the documentation and let sphinx-build handle the dependencies.
 
 .. req:: Configurable Sphinx Output
-   :status: open
+   :status: done
 
    The documentation shall be configurable. One should be able to generate the variant specific documentation, i.e.,
    only the variant specific components and their features shall be part of the documentation.
 
 .. req:: Project Documentation
-   :status: open
+   :status: done
 
    The project's index.rst file shall be static but changeable and configurable.
 
@@ -220,3 +220,20 @@ Component Reports CMake Target
 * we need to copy Doxyfile from the docs folder and then we have to update the paths where Doxyfile should find the sources
 * we need to call sphinx-build "pipenv run sphinx-build -b html . build/<Variant>/test/src/<Component>/reports/html"
     * source directory is always a projet root directory and output directory is build/<Variant>/test/src/<Component>/reports/
+
+
+Overall docs CMake Target
+-------------------------
+
+Overall docs will be created automatically by the target ``docs`` if there is an index.rst file in the root of the project ``doc`` directory.
+The files included in the ``doc`` folder and inside each component's ``doc`` folder are part of the overall documentation. Therefore, there will be no traceability to IDs from ``src`` or ``test``.
+
+Execution steps: 
+
+* we need to create an index.rst file which includes
+    * software requirements rst file
+    * software architecture rst file
+* we need to call sphinx-build "pipenv run sphinx-build -b html . build/<Variant>/test/doc/html"
+    * source directory is always a projet root directory and output directory is build/<Variant>/test/doc/
+
+

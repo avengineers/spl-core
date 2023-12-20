@@ -95,7 +95,7 @@ endmacro(_spl_get_google_test)
 macro(spl_create_component)
     file(RELATIVE_PATH component_path ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_LIST_DIR})
     _spl_slash_to_underscore(component_name ${component_path})
-    
+
     # Add debug options based on build configuration (kit)
     if(BUILD_KIT STREQUAL test)
         # Exclude all components from the ALL target.
@@ -135,7 +135,6 @@ macro(spl_create_component)
         set(_component_doc_file ${_component_doc_dir}/index.rst)
         set(_component_test_junit_xml ${CMAKE_CURRENT_BINARY_DIR}/junit.xml)
         set(_component_reports_dir ${CMAKE_CURRENT_BINARY_DIR}/reports)
-        set(_autoconf_json_file ${AUTOCONF_JSON})
 
         # Create component docs target if there is an index.rst file in the component's doc directory
         if(EXISTS ${_component_doc_file})
@@ -150,7 +149,6 @@ macro(spl_create_component)
             set(_docs_config_json ${SPHINX_OUTPUT_DIR}/config.json)
             file(RELATIVE_PATH _rel_component_doc_dir ${SPHINX_SOURCE_DIR} ${_component_doc_dir})
             file(WRITE ${_docs_config_json} "{
-                \"generated_rst_content\": \".. toctree::\\n    :maxdepth: 2\\n\\n    /${_rel_component_doc_dir}/index\",
                 \"component_doc_dir\": \"${_rel_component_doc_dir}\",
                 \"include_patterns\": [\"${_rel_component_doc_dir}/**\",\"${_rel_sphinx_output_dir}/**\"]
             }")
@@ -160,11 +158,10 @@ macro(spl_create_component)
             add_custom_target(
                 ${component_name}_docs
                 COMMAND ${CMAKE_COMMAND} -E make_directory ${SPHINX_OUTPUT_DIR}
-                COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_docs_config_json} AUTOCONF_JSON_FILE=${_autoconf_json_file} VARIANT=${VARIANT} -- sphinx-build -b html ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_HTML_DIR}
+                COMMAND ${CMAKE_COMMAND} -E remove_directory ${SPHINX_OUTPUT_DIR}/html
+                COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_docs_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -b html ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_HTML_DIR}
                 BYPRODUCTS ${SPHINX_OUTPUT_INDEX_HTML}
             )
-
-            add_dependencies(docs ${component_name}_docs)
 
             if(TEST_SOURCES)
                 set(SPHINX_OUTPUT_DIR ${_component_reports_dir})
@@ -175,35 +172,8 @@ macro(spl_create_component)
                 # create the config.json file. This is exported as SPHINX_BUILD_CONFIGURATION_FILE env variable
                 set(_reports_config_json ${SPHINX_OUTPUT_DIR}/config.json)
 
-                # create the test_spec.rst file
-                set(_unit_test_spec_rst ${SPHINX_OUTPUT_DIR}/unit_test_spec.rst)
-                file(RELATIVE_PATH _rel_unit_test_spec_rst ${SPHINX_SOURCE_DIR} ${_unit_test_spec_rst})
-                file(WRITE ${_unit_test_spec_rst} "
-Unit Test Specification
-=======================
-
-.. needtable::
-   :filter: type == 'test'
-   :columns: id, title, tests, results
-   :style: table
-
-")
-
-                # create the unit_test_results.rst file
-                set(_unit_test_results_rst ${SPHINX_OUTPUT_DIR}/unit_test_results.rst)
-                file(RELATIVE_PATH _rel_unit_test_results_rst ${SPHINX_SOURCE_DIR} ${_unit_test_results_rst})
-                file(WRITE ${_unit_test_results_rst} "
-Unit Test Results
-=================
-
-.. test-report:: Unit Test Results
-    :id: TEST_RESULT
-    :file: {{ component_test_junit_xml }}
-
-")
-                set(_component_doxyfile ${SPHINX_OUTPUT_DIR}/Doxyfile)
-
                 # generate Doxyfile from template
+                set(_component_doxyfile ${SPHINX_OUTPUT_DIR}/Doxyfile)
                 set(DOXYGEN_PROJECT_NAME "Doxygen Documentation")
                 set(DOXYGEN_OUTPUT_DIRECTORY ${SPHINX_OUTPUT_DIR}/doxygen)
                 set(DOXYGEN_INPUT "${_component_dir}/src ${_component_dir}/test ${KCONFIG_OUT_DIR}")
@@ -217,8 +187,8 @@ Unit Test Results
                 file(RELATIVE_PATH _rel_component_doxysphinx_index_rst ${SPHINX_SOURCE_DIR} ${DOXYGEN_OUTPUT_DIRECTORY}/html/index)
 
                 file(WRITE ${_reports_config_json} "{
-                    \"generated_rst_content\": \".. toctree::\\n    :maxdepth: 2\\n\\n    /${_rel_component_doc_dir}/index\\n    /${_rel_unit_test_spec_rst}\\n    /${_rel_unit_test_results_rst}\\n    /${_rel_component_doxysphinx_index_rst}\",
-                    \"component_doc_dir\": \"${_rel_component_doc_dir}\", 
+                    \"component_doc_dir\": \"${_rel_component_doc_dir}\",
+                    \"component_reports_dir\": \"${SPHINX_OUTPUT_DIR}\",
                     \"component_test_junit_xml\": \"${_component_test_junit_xml}\",
                     \"include_patterns\": [\"${_rel_component_doc_dir}/**\",\"${_rel_sphinx_output_dir}/**\"]
                 }")
@@ -237,7 +207,7 @@ Unit Test Results
                     COMMAND ${CMAKE_COMMAND} -E make_directory ${SPHINX_OUTPUT_DIR}/doxygen
                     COMMAND doxygen ${_rel_component_doxyfile}
                     COMMAND doxysphinx build ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_HTML_DIR} ${_rel_component_doxyfile}
-                    COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_reports_config_json} AUTOCONF_JSON_FILE=${_autoconf_json_file} VARIANT=${VARIANT} -- sphinx-build -b html ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_HTML_DIR}
+                    COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_reports_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -b html ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_HTML_DIR}
                     BYPRODUCTS ${SPHINX_OUTPUT_INDEX_HTML}
                     DEPENDS ${TEST_OUT_JUNIT} ${COV_OUT_HTML}
                 )
@@ -248,11 +218,37 @@ Unit Test Results
     endif()
 endmacro()
 
+macro(_spl_create_docs_target)
+    # The Sphinx source directory is always the project root
+    set(SPHINX_SOURCE_DIR ${PROJECT_SOURCE_DIR})
+    set(SPHINX_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/docs)
+    set(SPHINX_OUTPUT_HTML_DIR ${SPHINX_OUTPUT_DIR}/html)
+    set(SPHINX_OUTPUT_INDEX_HTML ${SPHINX_OUTPUT_HTML_DIR}/index.html)
+
+    # create the config.json file. This is exported as SPHINX_BUILD_CONFIGURATION_FILE env variable
+    set(_docs_config_json ${SPHINX_OUTPUT_DIR}/config.json)
+    file(RELATIVE_PATH _rel_sphinx_output_dir ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_DIR})
+    file(WRITE ${_docs_config_json} "{
+            \"include_patterns\": [\"${_rel_sphinx_output_dir}/**\"]
+        }")
+
+    # add the generated files as dependency to cmake configure step
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_docs_config_json})
+    add_custom_target(
+        docs
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${SPHINX_OUTPUT_DIR}
+        COMMAND ${CMAKE_COMMAND} -E remove_directory ${SPHINX_OUTPUT_DIR}/html
+        COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_docs_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -b html ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_HTML_DIR}
+        BYPRODUCTS ${SPHINX_OUTPUT_INDEX_HTML}
+    )
+endmacro()
+
 macro(_spl_set_coverage_create_overall_report_is_necessary)
     set(_SPL_COVERAGE_CREATE_OVERALL_REPORT_IS_NECESSARY TRUE PARENT_SCOPE)
 endmacro(_spl_set_coverage_create_overall_report_is_necessary)
 
 set(COV_OUT_JSON coverage.json)
+
 function(_spl_coverage_create_overall_report)
     if(_SPL_COVERAGE_CREATE_OVERALL_REPORT_IS_NECESSARY)
         set(COV_OUT_VARIANT_HTML reports/coverage/index.html)
@@ -318,20 +314,24 @@ macro(_spl_add_test_suite PROD_SRC TEST_SOURCES)
     set(TEST_OUT_JUNIT junit.xml)
     add_custom_command(
         OUTPUT ${TEST_OUT_JUNIT}
+
         # Wipe all gcda files before the test executable recreates them
         COMMAND python ${SPL_CORE_PYTHON_DIRECTORY}/gcov_maid/gcov_maid.py --working-dir . --wipe-all-gcda
+
         # Run the test executable, generate JUnit report and return 0 independent of the test result
         COMMAND ${CMAKE_CTEST_COMMAND} ${CMAKE_CTEST_ARGUMENTS} --output-junit ${TEST_OUT_JUNIT} || ${CMAKE_COMMAND} -E true
         DEPENDS ${exe_name}
     )
 
     set(GLOBAL_COMPONENTS_COVERAGE_JSON_LIST "${GLOBAL_COMPONENTS_COVERAGE_JSON_LIST};${CMAKE_CURRENT_BINARY_DIR}/${COV_OUT_JSON}" CACHE INTERNAL "List of all ${COV_OUT_JSON} files")
-    
+
     # Create coverage report
     add_custom_command(
         OUTPUT ${COV_OUT_JSON}
+
         # Wipe orphaned gcno files before gcovr searches for them
         COMMAND python ${SPL_CORE_PYTHON_DIRECTORY}/gcov_maid/gcov_maid.py --working-dir . --wipe-orphaned-gcno
+
         # Run gcovr to generate coverage json for the component
         COMMAND gcovr --root ${CMAKE_SOURCE_DIR} --json --output ${COV_OUT_JSON} ${GCOVR_ADDITIONAL_OPTIONS} ${CMAKE_CURRENT_BINARY_DIR}
         DEPENDS ${TEST_OUT_JUNIT}
