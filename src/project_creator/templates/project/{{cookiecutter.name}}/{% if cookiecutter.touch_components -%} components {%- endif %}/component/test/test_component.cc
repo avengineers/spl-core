@@ -21,7 +21,7 @@ extern "C"
 *
 * .. test:: component.test_someInterfaceOfComponent
 *    :id: T_001
-*    :specified: S_001, S_002
+*    :tests: S_001, S_002
 *    :results: [[tr_link('title', 'case')]]
 *
 *    Some test specification
@@ -43,7 +43,7 @@ TEST(component, test_someInterfaceOfComponent)
 *
 * .. test:: component.test_someInterfaceOfComponent2
 *    :id: T_002
-*    :specified: S_001
+*    :tests: S_001
 *    :results: [[tr_link('title', 'case')]]
 *
 *    Some test specification 2
