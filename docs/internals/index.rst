@@ -220,3 +220,88 @@ Component Reports CMake Target
 * we need to copy Doxyfile from the docs folder and then we have to update the paths where Doxyfile should find the sources
 * we need to call sphinx-build "pipenv run sphinx-build -b html . build/<Variant>/test/src/<Component>/reports/html"
     * source directory is always a projet root directory and output directory is build/<Variant>/test/src/<Component>/reports/
+
+
+Documentation for a Component Report
+------------------------------------
+
+Since we are using Sphinx to build the documentation, the documentation must be in `reStructured text <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_.
+
+For a comprehensive example on how to document a component for a component report, refer to the `SPLed repository <https://github.com/avengineers/SPLed/blob/develop/src/light_controller>`_.
+
+
+Software Detailed Design Documentation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Inside the ``doc`` folder of a component you can write the component's ``software detailed design`` in the ``index.rst`` file.
+
+To document the software detailed design for a component, follow these steps:
+
+1. Begin with a title for the document and a table of contents title. Specify the depth to determine how many subchapters will be expanded in the table of contents.
+
+2. Align to the left column of the document and use the ``.. spec:: <title for the specification>`` directive.
+
+3. Break a line and align to the ``spec`` directive the line containing the representative id for the component using the structure ``:id: SWDD_<Component name or acronym>-<an id, e.g., 001>``.
+
+4. For other attributes, break a new line and maintain alignment to the ``spec`` directive. For instance, you can add an attribute to present the integrity level of the component using the following directive ``:integrity: <A, B, C, or D>``.
+
+5. Add the specification text in a new line aligned to the ``spec`` directive. Be creative in presenting the detailed design. If necessary, use tools like `mermaid diagrams <https://sphinxcontrib-mermaid-demo.readthedocs.io/en/latest/index.html>`_, `tables <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#tables>`_, or `images <https://sublime-and-sphinx-guide.readthedocs.io/en/latest/images.html>`_.
+
+6. Make the documentation configurable where you judge necessary. For this, add: ``{% if config.CONFIGURATION_NAME %}`` in the beginning of a specific part of the software detailed design specification and ``{% endif %}`` at the end of the corresponding part that might be configurable.
+
+
+Source Code Traceability
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+To establish traceability between source code and software detailed design, add Sphinx-needs (impl, id, implements) to the ``.c`` file of the component.
+
+In order to do that, go to a function you want to make the traceability. Add on the top of this function a comment starting and ending with the ``rst`` tag. For example:
+
+.. code-block:: c
+
+   /*!
+   * @rst
+   *
+   * .. impl:: functionName
+   *    :id: IMPL_ComponentName-001
+   *    :implements: SWDD_ComponentName-<an id, e.g., 001>, SWDD_ComponentName-<an id, e.g., 002>
+   *
+   *    Some function documentation
+   *    ...
+   *
+   * @endrst
+   */
+   void functionName(void) {
+      implementation...
+   }
+
+
+Test Code Traceability
+^^^^^^^^^^^^^^^^^^^^^^
+
+To establish traceability between source code, software detailed design, and test code, add Sphinx-needs (test, id, tests) to the test cases in the ``.cc`` test file of the component. For example:
+
+.. code-block:: c
+
+   /*!
+   * @rst
+   *
+   * .. test:: ComponentName.TestCaseName
+   *    :id: TS_ComponentName-001
+   *    :tests: SWDD_ComponentName-<an id, e.g., 001>, SWDD_ ComponentName-<an id, e.g., 002>
+   *
+   * @endrst
+   */
+   TEST(ComponentName, TestCaseName)
+   {
+      implementation...
+   }
+
+
+Generating a Component Report
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Build and generate a component report by selecting the build kit ``test`` and the build target corresponding to your component, e.g., ``src_componentName_report``. 
+To build for all components of your variant, use the build target ``reports``.
+
+The component report is available in <project>/build/<variant>/test/src/<component>/reports/html. Open the ``index.html`` file in a web browser.
