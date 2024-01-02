@@ -107,6 +107,12 @@ macro(spl_create_component)
         target_compile_options(${component_name} PRIVATE ${VARIANT_ADDITIONAL_COMPILE_C_FLAGS})
     endif()
 
+    # Collect all productive sources for later usage (e.g., in an extension)
+    list(APPEND PROD_SOURCES ${SOURCES})
+    set(PROD_SOURCES ${PROD_SOURCES} PARENT_SCOPE)
+    message(DEBUG "Productive sources: ${PROD_SOURCES}")
+
+    # Collect all component names for later usage (e.g., in an extension)
     list(APPEND COMPONENT_NAMES ${component_name})
     set(COMPONENT_NAMES ${COMPONENT_NAMES} PARENT_SCOPE)
 
