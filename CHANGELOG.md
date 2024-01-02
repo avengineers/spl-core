@@ -1,4 +1,19 @@
-# 📝 Changelog
+# CHANGELOG
+
+
+
+## v3.14.0 (2024-01-02)
+
+### Documentation
+
+* docs: add changelog to documentation ([`13431d5`](https://github.com/avengineers/spl-core/commit/13431d569965c02ca8354c44c1cff79a79b7d314))
+
+### Feature
+
+* feat: provide list of productive sources (#112)
+
+Co-authored-by: Kobagapu, Akshit (RDS-RM) &lt;Akshit.Kobagapu@marquardt.com&gt; ([`ef4c6eb`](https://github.com/avengineers/spl-core/commit/ef4c6ebd654c23bc174bfb75cc064144ee115949))
+
 
 ## v3.13.1 (2023-12-04)
 
