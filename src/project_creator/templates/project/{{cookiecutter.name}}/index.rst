@@ -10,10 +10,10 @@ Software Component Report
 
     {{ build_config.component_doc_dir }}/index
 {% if build_config.component_reports_dir %}
-    /doc/unit_test_spec
-    /doc/unit_test_results
+    {{ build_config.component_reports_dir }}/unit_test_spec
+    {{ build_config.component_reports_dir }}/unit_test_results
     {{ build_config.component_reports_dir }}/doxygen/html/index
-    coverage
+    {{ build_config.component_reports_dir }}/coverage
 {% endif %}
 
 {% else %}

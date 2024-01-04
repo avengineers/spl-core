@@ -72,7 +72,6 @@ elseif(BUILD_KIT STREQUAL test)
 
     add_custom_target(coverage)
     add_custom_target(reports)
-    _spl_create_docs_target()
 else()
     message(FATAL_ERROR "Invalid BUILD_KIT selected!")
 endif(BUILD_KIT STREQUAL prod)
@@ -81,10 +80,10 @@ endif(BUILD_KIT STREQUAL prod)
 cmake_language(DEFER DIRECTORY ${CMAKE_SOURCE_DIR} CALL _spl_hook_end_of_configure())
 
 function(_spl_hook_end_of_configure)
-    _spl_coverage_create_overall_report()
-
-    if(CONAN__REQUIRES OR CONAN__BUILD_REQUIRES)
-    endif() # CONAN__REQUIRES
+    if(BUILD_KIT STREQUAL test)
+        _spl_coverage_create_overall_report()
+        _spl_create_docs_target()
+    endif(BUILD_KIT STREQUAL test)
 endfunction(_spl_hook_end_of_configure)
 
 # # This is one possibility to open guiconfig of kconfiglib. VSCode task is the preferred solution
