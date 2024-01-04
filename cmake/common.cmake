@@ -93,6 +93,7 @@ macro(_spl_get_google_test)
 endmacro(_spl_get_google_test)
 
 macro(spl_create_component)
+    cmake_parse_arguments(CREATE_COMPONENT "" "LONG_NAME" "" ${ARGN})
     file(RELATIVE_PATH component_path ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_LIST_DIR})
     _spl_slash_to_underscore(component_name ${component_path})
 
@@ -115,6 +116,16 @@ macro(spl_create_component)
     # Collect all component names for later usage (e.g., in an extension)
     list(APPEND COMPONENT_NAMES ${component_name})
     set(COMPONENT_NAMES ${COMPONENT_NAMES} PARENT_SCOPE)
+    
+    set(_component_info "{
+\"long_name\": \"${CREATE_COMPONENT_LONG_NAME}\",
+\"path\": \"${component_path}\"
+}")
+
+    
+    # Collect all component infor for later usage (e.g., in an extension)
+    list(APPEND COMPONENTS_INFO ${_component_info})
+    set(COMPONENTS_INFO ${COMPONENTS_INFO} PARENT_SCOPE)
 
     list(APPEND target_include_directories__INCLUDES ${CMAKE_CURRENT_LIST_DIR}/src)
     list(APPEND target_include_directories__INCLUDES ${CMAKE_CURRENT_BINARY_DIR})
@@ -149,7 +160,7 @@ macro(spl_create_component)
             set(_docs_config_json ${SPHINX_OUTPUT_DIR}/config.json)
             file(RELATIVE_PATH _rel_component_doc_dir ${SPHINX_SOURCE_DIR} ${_component_doc_dir})
             file(WRITE ${_docs_config_json} "{
-                \"component_doc_dir\": \"${_rel_component_doc_dir}\",
+                \"component_info\": ${_component_info},
                 \"include_patterns\": [\"${_rel_component_doc_dir}/**\",\"${_rel_sphinx_output_dir}/**\"]
             }")
 
@@ -172,6 +183,41 @@ macro(spl_create_component)
                 # create the config.json file. This is exported as SPHINX_BUILD_CONFIGURATION_FILE env variable
                 set(_reports_config_json ${SPHINX_OUTPUT_DIR}/config.json)
 
+                # create the test specification rst file
+                set(_unit_test_spec_rst ${SPHINX_OUTPUT_DIR}/unit_test_spec.rst)
+                file(WRITE ${_unit_test_spec_rst} "
+Unit Test Specification
+=======================
+
+.. needtable::
+   :filter: type == 'test'
+   :columns: id, title, tests, results
+   :style: table
+
+")
+
+                # create the test results rst file
+                set(_unit_test_results_rst ${SPHINX_OUTPUT_DIR}/unit_test_results.rst)
+                file(WRITE ${_unit_test_results_rst} "
+Unit Test Results
+=================
+
+.. test-report:: Unit Test Results
+    :id: TEST_RESULT
+    :file: ${_component_test_junit_xml}
+
+")
+
+                # create the code coverage rst file
+                set(_coverage_rst ${SPHINX_OUTPUT_DIR}/coverage.rst)
+                file(WRITE ${_coverage_rst} "
+Code Coverage
+=============
+
+`Report <coverage/index.html>`_
+
+")
+
                 # generate Doxyfile from template
                 set(_component_doxyfile ${SPHINX_OUTPUT_DIR}/Doxyfile)
                 set(DOXYGEN_PROJECT_NAME "Doxygen Documentation")
@@ -187,11 +233,10 @@ macro(spl_create_component)
                 file(RELATIVE_PATH _rel_component_doxysphinx_index_rst ${SPHINX_SOURCE_DIR} ${DOXYGEN_OUTPUT_DIRECTORY}/html/index)
 
                 file(WRITE ${_reports_config_json} "{
-                    \"component_doc_dir\": \"${_rel_component_doc_dir}\",
-                    \"component_reports_dir\": \"${SPHINX_OUTPUT_DIR}\",
-                    \"component_test_junit_xml\": \"${_component_test_junit_xml}\",
-                    \"include_patterns\": [\"${_rel_component_doc_dir}/**\",\"${_rel_sphinx_output_dir}/**\"]
-                }")
+    \"component_doc_dir\": \"${_rel_component_doc_dir}\",
+    \"component_reports_dir\": \"${_rel_sphinx_output_dir}\",
+    \"include_patterns\": [\"${_rel_component_doc_dir}/**\",\"${_rel_sphinx_output_dir}/**\"]
+}")
 
                 # add the generated files as dependency to cmake configure step
                 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_reports_config_json} ${_unit_test_spec_rst} ${_unit_test_results_rst} ${_component_doxyfile})
@@ -205,6 +250,10 @@ macro(spl_create_component)
                     COMMAND ${CMAKE_COMMAND} -E remove_directory ${SPHINX_OUTPUT_DIR}/html
                     COMMAND ${CMAKE_COMMAND} -E remove_directory ${SPHINX_OUTPUT_DIR}/doxygen
                     COMMAND ${CMAKE_COMMAND} -E make_directory ${SPHINX_OUTPUT_DIR}/doxygen
+
+                    # now comes the tricky part: we need to copy the coverage html output directory
+                    # to the sub directory inside html output directory where the coverage.html file is located.
+                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${SPHINX_OUTPUT_DIR}/coverage ${SPHINX_OUTPUT_DIR}/html/${_rel_sphinx_output_dir}/coverage
                     COMMAND doxygen ${_rel_component_doxyfile}
                     COMMAND doxysphinx build ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_HTML_DIR} ${_rel_component_doxyfile}
                     COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_reports_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -b html ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_HTML_DIR}
@@ -227,10 +276,13 @@ macro(_spl_create_docs_target)
 
     # create the config.json file. This is exported as SPHINX_BUILD_CONFIGURATION_FILE env variable
     set(_docs_config_json ${SPHINX_OUTPUT_DIR}/config.json)
+    list(JOIN COMPONENTS_INFO "," _components_info_json)
+    set(_components_info_json "[${_components_info_json}]")
     file(RELATIVE_PATH _rel_sphinx_output_dir ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_DIR})
     file(WRITE ${_docs_config_json} "{
-            \"include_patterns\": [\"${_rel_sphinx_output_dir}/**\"]
-        }")
+    \"include_patterns\": [\"${_rel_sphinx_output_dir}/**\", \"src/**\"],
+    \"components_info\": ${_components_info_json}
+}")
 
     # add the generated files as dependency to cmake configure step
     set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_docs_config_json})
