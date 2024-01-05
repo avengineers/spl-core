@@ -1,9 +1,8 @@
-Welcome to Component documentation
-##################################
+Software Detailed Design
+========================
 
-.. toctree::
-   :maxdepth: 1
-   :caption: Contents:
+.. contents:: Table of Contents
+    :depth: 2
 
    design
    /doc/common/index

@@ -117,12 +117,14 @@ macro(spl_create_component)
     list(APPEND COMPONENT_NAMES ${component_name})
     set(COMPONENT_NAMES ${COMPONENT_NAMES} PARENT_SCOPE)
     
+    # Collect all component information for sphinx documentation
     set(_component_info "{
 \"long_name\": \"${CREATE_COMPONENT_LONG_NAME}\",
 \"path\": \"${component_path}\",
-\"output_dir\": \"\",
 \"has_docs\": \"\",
-\"has_tests\": \"\"
+\"docs_output_dir\": \"\",
+\"has_reports\": \"\",
+\"reports_output_dir\": \"\"
 }")
 
     list(APPEND target_include_directories__INCLUDES ${CMAKE_CURRENT_LIST_DIR}/src)
@@ -143,50 +145,48 @@ macro(spl_create_component)
         set(_component_doc_dir ${_component_dir}/doc)
         set(_component_doc_file ${_component_doc_dir}/index.rst)
         set(_component_test_junit_xml ${CMAKE_CURRENT_BINARY_DIR}/junit.xml)
-        set(_component_reports_dir ${CMAKE_CURRENT_BINARY_DIR}/reports)
+        set(_component_docs_out_dir ${CMAKE_CURRENT_BINARY_DIR}/docs)
+        set(_component_reports_out_dir ${CMAKE_CURRENT_BINARY_DIR}/reports)
+        # The Sphinx source directory is ALWAYS the project root
+        set(_sphinx_source_dir ${PROJECT_SOURCE_DIR})
+
 
         # Create component docs target if there is an index.rst file in the component's doc directory
         if(EXISTS ${_component_doc_file})
-            # The Sphinx source directory is always the project root
-            set(SPHINX_SOURCE_DIR ${PROJECT_SOURCE_DIR})
-            set(SPHINX_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/docs)
-            file(RELATIVE_PATH _rel_sphinx_output_dir ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_DIR})
-            string(JSON _component_info SET "${_component_info}" output_dir "\"${_rel_sphinx_output_dir}\"")
+            file(RELATIVE_PATH _rel_component_docs_out_dir ${_sphinx_source_dir} ${_component_docs_out_dir})
+            string(JSON _component_info SET "${_component_info}" docs_output_dir "\"${_rel_component_docs_out_dir}\"")
             string(JSON _component_info SET "${_component_info}" has_docs "\"True\"")
-            set(SPHINX_OUTPUT_HTML_DIR ${SPHINX_OUTPUT_DIR}/html)
-            set(SPHINX_OUTPUT_INDEX_HTML ${SPHINX_OUTPUT_HTML_DIR}/index.html)
+            set(_component_docs_html_out_dir ${_component_docs_out_dir}/html)
 
             # create the config.json file. This is exported as SPHINX_BUILD_CONFIGURATION_FILE env variable
-            set(_docs_config_json ${SPHINX_OUTPUT_DIR}/config.json)
-            file(RELATIVE_PATH _rel_component_doc_dir ${SPHINX_SOURCE_DIR} ${_component_doc_dir})
+            set(_docs_config_json ${_component_docs_out_dir}/config.json)
+            file(RELATIVE_PATH _rel_component_doc_dir ${_sphinx_source_dir} ${_component_doc_dir})
             file(WRITE ${_docs_config_json} "{
                 \"component_info\": ${_component_info},
-                \"include_patterns\": [\"${_rel_component_doc_dir}/**\",\"${_rel_sphinx_output_dir}/**\"]
+                \"include_patterns\": [\"${_rel_component_doc_dir}/**\",\"${_rel_component_docs_out_dir}/**\"]
             }")
 
             # add the generated files as dependency to cmake configure step
             set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_docs_config_json})
             add_custom_target(
                 ${component_name}_docs
-                COMMAND ${CMAKE_COMMAND} -E make_directory ${SPHINX_OUTPUT_DIR}
-                COMMAND ${CMAKE_COMMAND} -E remove_directory ${SPHINX_OUTPUT_DIR}/html
-                COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_docs_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -b html ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_HTML_DIR}
-                BYPRODUCTS ${SPHINX_OUTPUT_INDEX_HTML}
+                COMMAND ${CMAKE_COMMAND} -E make_directory ${_component_docs_out_dir}
+                COMMAND ${CMAKE_COMMAND} -E remove_directory ${_component_docs_out_dir}/html
+                COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_docs_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -b html ${_sphinx_source_dir} ${_component_docs_html_out_dir}
+                BYPRODUCTS ${_component_docs_html_out_dir}/index.html
             )
 
             if(TEST_SOURCES)
-                set(SPHINX_OUTPUT_DIR ${_component_reports_dir})
-                file(RELATIVE_PATH _rel_sphinx_output_dir ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_DIR})
-                string(JSON _component_info SET "${_component_info}" output_dir "\"${_rel_sphinx_output_dir}\"")
-                string(JSON _component_info SET "${_component_info}" has_tests "\"True\"")
-                set(SPHINX_OUTPUT_HTML_DIR ${SPHINX_OUTPUT_DIR}/html)
-                set(SPHINX_OUTPUT_INDEX_HTML ${SPHINX_OUTPUT_HTML_DIR}/index.html)
+                file(RELATIVE_PATH _rel_component_reports_out_dir ${_sphinx_source_dir} ${_component_reports_out_dir})
+                string(JSON _component_info SET "${_component_info}" reports_output_dir "\"${_rel_component_reports_out_dir}\"")
+                string(JSON _component_info SET "${_component_info}" has_reports "\"True\"")
+                set(_component_reports_html_out_dir ${_component_reports_out_dir}/html)
 
                 # create the config.json file. This is exported as SPHINX_BUILD_CONFIGURATION_FILE env variable
-                set(_reports_config_json ${SPHINX_OUTPUT_DIR}/config.json)
+                set(_reports_config_json ${_component_reports_out_dir}/config.json)
 
                 # create the test specification rst file
-                set(_unit_test_spec_rst ${SPHINX_OUTPUT_DIR}/unit_test_spec.rst)
+                set(_unit_test_spec_rst ${_component_reports_out_dir}/unit_test_spec.rst)
                 file(WRITE ${_unit_test_spec_rst} "
 Unit Test Specification
 =======================
@@ -199,7 +199,7 @@ Unit Test Specification
 ")
 
                 # create the test results rst file
-                set(_unit_test_results_rst ${SPHINX_OUTPUT_DIR}/unit_test_results.rst)
+                set(_unit_test_results_rst ${_component_reports_out_dir}/unit_test_results.rst)
                 file(WRITE ${_unit_test_results_rst} "
 Unit Test Results
 =================
@@ -211,7 +211,7 @@ Unit Test Results
 ")
 
                 # create the code coverage rst file
-                set(_coverage_rst ${SPHINX_OUTPUT_DIR}/coverage.rst)
+                set(_coverage_rst ${_component_reports_out_dir}/coverage.rst)
                 file(WRITE ${_coverage_rst} "
 Code Coverage
 =============
@@ -221,22 +221,22 @@ Code Coverage
 ")
 
                 # generate Doxyfile from template
-                set(_component_doxyfile ${SPHINX_OUTPUT_DIR}/Doxyfile)
-                set(DOXYGEN_PROJECT_NAME "Doxygen Documentation")
-                set(DOXYGEN_OUTPUT_DIRECTORY ${SPHINX_OUTPUT_DIR}/doxygen)
+                set(_component_doxyfile ${_component_reports_out_dir}/Doxyfile)
+                set(DOXYGEN_PROJECT_NAME "${CREATE_COMPONENT_LONG_NAME} Documentation")
+                set(DOXYGEN_OUTPUT_DIRECTORY ${_component_reports_out_dir}/doxygen)
                 set(DOXYGEN_INPUT "${_component_dir}/src ${_component_dir}/test ${KCONFIG_OUT_DIR}")
 
                 # We need to add the googletest include directory to the doxygen include path
                 # to be able to resolve the TEST() macros in the test files.
-                set(DOXYGEN_INCLUDE_PATH "${SPHINX_SOURCE_DIR}/build/modules/googletest-src/googletest/include ${KCONFIG_OUT_DIR}")
-                set(DOXYGEN_AWESOME_PATH "${SPHINX_SOURCE_DIR}/doc/doxygen-awesome")
-                configure_file(${SPHINX_SOURCE_DIR}/doc/Doxyfile.in ${_component_doxyfile} @ONLY)
+                set(DOXYGEN_INCLUDE_PATH "${_sphinx_source_dir}/build/modules/googletest-src/googletest/include ${KCONFIG_OUT_DIR}")
+                set(DOXYGEN_AWESOME_PATH "${_sphinx_source_dir}/doc/doxygen-awesome")
+                configure_file(${_sphinx_source_dir}/doc/Doxyfile.in ${_component_doxyfile} @ONLY)
                 file(RELATIVE_PATH _rel_component_doxyfile ${CMAKE_CURRENT_BINARY_DIR} ${_component_doxyfile})
-                file(RELATIVE_PATH _rel_component_doxysphinx_index_rst ${SPHINX_SOURCE_DIR} ${DOXYGEN_OUTPUT_DIRECTORY}/html/index)
+                file(RELATIVE_PATH _rel_component_doxysphinx_index_rst ${_sphinx_source_dir} ${DOXYGEN_OUTPUT_DIRECTORY}/html/index)
 
                 file(WRITE ${_reports_config_json} "{
     \"component_info\": ${_component_info},
-    \"include_patterns\": [\"${_rel_component_doc_dir}/**\",\"${_rel_sphinx_output_dir}/**\"]
+    \"include_patterns\": [\"${_rel_component_doc_dir}/**\",\"${_rel_component_reports_out_dir}/**\"]
 }")
 
                 # add the generated files as dependency to cmake configure step
@@ -246,25 +246,25 @@ Code Coverage
                 # TODO: list of dependencies is not complete
                 add_custom_target(
                     ${component_name}_report
-                    COMMAND ${CMAKE_COMMAND} -E make_directory ${SPHINX_OUTPUT_DIR}
-                    COMMAND ${CMAKE_COMMAND} -E remove_directory ${SPHINX_OUTPUT_DIR}/html
-                    COMMAND ${CMAKE_COMMAND} -E remove_directory ${SPHINX_OUTPUT_DIR}/doxygen
-                    COMMAND ${CMAKE_COMMAND} -E make_directory ${SPHINX_OUTPUT_DIR}/doxygen
+                    COMMAND ${CMAKE_COMMAND} -E make_directory ${_component_reports_out_dir}
+                    COMMAND ${CMAKE_COMMAND} -E remove_directory ${_component_reports_html_out_dir}
+                    COMMAND ${CMAKE_COMMAND} -E remove_directory ${DOXYGEN_OUTPUT_DIRECTORY}
+                    COMMAND ${CMAKE_COMMAND} -E make_directory ${DOXYGEN_OUTPUT_DIRECTORY}
 
                     # now comes the tricky part: we need to copy the coverage html output directory
                     # to the sub directory inside html output directory where the coverage.html file is located.
-                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${SPHINX_OUTPUT_DIR}/coverage ${SPHINX_OUTPUT_DIR}/html/${_rel_sphinx_output_dir}/coverage
+                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${_component_reports_out_dir}/coverage ${_component_reports_html_out_dir}/${_rel_component_reports_out_dir}/coverage
                     COMMAND doxygen ${_rel_component_doxyfile}
-                    COMMAND doxysphinx build ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_HTML_DIR} ${_rel_component_doxyfile}
-                    COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_reports_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -b html ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_HTML_DIR}
-                    BYPRODUCTS ${SPHINX_OUTPUT_INDEX_HTML}
+                    COMMAND doxysphinx build ${_sphinx_source_dir} ${_component_reports_html_out_dir} ${_rel_component_doxyfile}
+                    COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_reports_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -b html ${_sphinx_source_dir} ${_component_reports_html_out_dir}
+                    BYPRODUCTS ${_component_reports_html_out_dir}/index.html
                     DEPENDS ${TEST_OUT_JUNIT} ${COV_OUT_HTML}
                 )
 
-                add_dependencies(_all_component_reports ${component_name}_report)
+                add_dependencies(_component_reports ${component_name}_report)
             endif(TEST_SOURCES)
             # Collect all component sphinx include pattern to be used in the variant targets (docs, reports)
-            list(APPEND COMPONENTS_SPHINX_INCLUDE_PATTERNS "${_rel_component_doc_dir}/**" "${_rel_sphinx_output_dir}/**")
+            list(APPEND COMPONENTS_SPHINX_INCLUDE_PATTERNS "${_rel_component_doc_dir}/**" "${_rel_component_docs_out_dir}/**" "${_rel_component_reports_out_dir}/**")
             set(COMPONENTS_SPHINX_INCLUDE_PATTERNS ${COMPONENTS_SPHINX_INCLUDE_PATTERNS} PARENT_SCOPE)
         endif(EXISTS ${_component_doc_file})
     endif(BUILD_KIT STREQUAL test)
@@ -274,19 +274,17 @@ Code Coverage
 endmacro()
 
 macro(_spl_create_docs_target)
-    # The Sphinx source directory is always the project root
-    set(SPHINX_SOURCE_DIR ${PROJECT_SOURCE_DIR})
-    set(SPHINX_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/docs)
-    set(SPHINX_OUTPUT_HTML_DIR ${SPHINX_OUTPUT_DIR}/html)
-    set(SPHINX_OUTPUT_INDEX_HTML ${SPHINX_OUTPUT_HTML_DIR}/index.html)
-
+    set(_docs_out_dir ${CMAKE_CURRENT_BINARY_DIR}/docs)
+    set(_docs_html_out_dir ${_docs_out_dir}/html)
+    set(_docs_config_json ${_docs_out_dir}/config.json)
+    
     # create the config.json file. This is exported as SPHINX_BUILD_CONFIGURATION_FILE env variable
-    set(_docs_config_json ${SPHINX_OUTPUT_DIR}/config.json)
     list(JOIN COMPONENTS_INFO "," _components_info_json)
     set(_components_info_json "[${_components_info_json}]")
     list(JOIN COMPONENTS_SPHINX_INCLUDE_PATTERNS "\",\"" _components_sphinx_include_patterns_json)
     set(_components_sphinx_include_patterns_json "[\"${_components_sphinx_include_patterns_json}\"]")
     file(WRITE ${_docs_config_json} "{
+    \"target\": \"docs\",
     \"include_patterns\": ${_components_sphinx_include_patterns_json},
     \"components_info\": ${_components_info_json}
 }")
@@ -295,40 +293,40 @@ macro(_spl_create_docs_target)
     set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_docs_config_json})
     add_custom_target(
         docs
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${SPHINX_OUTPUT_DIR}
-        COMMAND ${CMAKE_COMMAND} -E remove_directory ${SPHINX_OUTPUT_DIR}/html
-        COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_docs_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -b html ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_HTML_DIR}
-        BYPRODUCTS ${SPHINX_OUTPUT_INDEX_HTML}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${_docs_out_dir}
+        COMMAND ${CMAKE_COMMAND} -E remove_directory ${_docs_html_out_dir}
+        COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_docs_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -b html ${PROJECT_SOURCE_DIR} ${_docs_html_out_dir}
+        BYPRODUCTS ${_docs_html_out_dir}/index.html
     )
 endmacro()
 
 macro(_spl_create_reports_target)
-    # The Sphinx source directory is always the project root
-    set(SPHINX_SOURCE_DIR ${PROJECT_SOURCE_DIR})
-    set(SPHINX_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/reports)
-    set(SPHINX_OUTPUT_HTML_DIR ${SPHINX_OUTPUT_DIR}/html)
-    set(SPHINX_OUTPUT_INDEX_HTML ${SPHINX_OUTPUT_HTML_DIR}/index.html)
+    set(_reports_output_dir ${CMAKE_CURRENT_BINARY_DIR}/reports)
+    set(_reports_html_output_dir ${_reports_output_dir}/html)
 
     # create the config.json file. This is exported as SPHINX_BUILD_CONFIGURATION_FILE env variable
-    set(_docs_config_json ${SPHINX_OUTPUT_DIR}/config.json)
+    set(_reports_config_json ${_reports_output_dir}/config.json)
     list(JOIN COMPONENTS_INFO "," _components_info_json)
     set(_components_info_json "[${_components_info_json}]")
     list(JOIN COMPONENTS_SPHINX_INCLUDE_PATTERNS "\",\"" _components_sphinx_include_patterns_json)
     set(_components_sphinx_include_patterns_json "[\"${_components_sphinx_include_patterns_json}\"]")
-    file(WRITE ${_docs_config_json} "{
+    file(WRITE ${_reports_config_json} "{
+    \"target\": \"reports\",
     \"include_patterns\": ${_components_sphinx_include_patterns_json},
     \"components_info\": ${_components_info_json}
 }")
 
     # add the generated files as dependency to cmake configure step
-    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_docs_config_json})
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_reports_config_json})
     add_custom_target(
         reports
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${SPHINX_OUTPUT_DIR}
-        COMMAND ${CMAKE_COMMAND} -E remove_directory ${SPHINX_OUTPUT_DIR}/html
-        COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_docs_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -b html ${SPHINX_SOURCE_DIR} ${SPHINX_OUTPUT_HTML_DIR}
-        BYPRODUCTS ${SPHINX_OUTPUT_INDEX_HTML}
-        DEPENDS _all_component_reports
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${_reports_output_dir}
+        COMMAND ${CMAKE_COMMAND} -E remove_directory ${_reports_html_output_dir}
+        COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_reports_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -b html ${PROJECT_SOURCE_DIR} ${_reports_html_output_dir}
+        BYPRODUCTS ${_reports_html_output_dir}/index.html
+        # TODO: Fix dependencies! Currently the reports target requires all component reports to be built.
+        # This is not necessary, the reports target only needs the doxysphinx and unit tests to be built.
+        DEPENDS _component_reports
     )
 endmacro()
 
