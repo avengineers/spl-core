@@ -71,7 +71,9 @@ elseif(BUILD_KIT STREQUAL test)
     list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 
     add_custom_target(coverage)
-    add_custom_target(reports)
+    # TODO: currently the reports target requires all component targets to be built.
+    #       This is not optimal. The reporst target only needs the doxysphinx and unit tests to be built.
+    add_custom_target(_all_component_reports)
 else()
     message(FATAL_ERROR "Invalid BUILD_KIT selected!")
 endif(BUILD_KIT STREQUAL prod)
@@ -83,6 +85,7 @@ function(_spl_hook_end_of_configure)
     if(BUILD_KIT STREQUAL test)
         _spl_coverage_create_overall_report()
         _spl_create_docs_target()
+        _spl_create_reports_target()
     endif(BUILD_KIT STREQUAL test)
 endfunction(_spl_hook_end_of_configure)
 
