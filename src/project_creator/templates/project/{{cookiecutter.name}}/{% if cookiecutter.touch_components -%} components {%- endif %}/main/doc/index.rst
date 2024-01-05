@@ -1,5 +1,11 @@
-Welcome to Main documentation
-#############################
+Software Detailed Design
+========================
+
+.. contents:: Table of Contents
+    :depth: 2
+
+Introduction
+------------
 
 This is the documentation for the ``Main`` component.
 
