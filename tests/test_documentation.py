@@ -6,10 +6,12 @@ class TestDocumentation:
     def setup_class(cls):
         # create a new test workspace
         cls.workspace: TestWorkspace = TestWorkspace("test_documentation")
+        cls.variant_name = "Flv1/Sys1"
+        cls.component_paths = ["components/main", "components/component"]
 
     def test_build_docs(self):
         build_dir_test = self.workspace.workspace_artifacts.get_build_dir(
-            "Flv1/Sys1", "test"
+            self.variant_name, "test"
         )
 
         "Call IUT"
@@ -38,7 +40,7 @@ class TestDocumentation:
 
     def test_build_reports(self):
         build_dir_test = self.workspace.workspace_artifacts.get_build_dir(
-            "Flv1/Sys1", "test"
+            self.variant_name, "test"
         )
 
         "Call IUT"
@@ -58,12 +60,21 @@ class TestDocumentation:
             )
 
         assert build_dir_test.joinpath("reports/html/index.html").exists()
-        assert build_dir_test.joinpath(
-            "reports/html/components/main/doc/index.html"
-        ).exists()
-        assert build_dir_test.joinpath(
-            "reports/html/components/component/doc/index.html"
-        ).exists()
-        assert build_dir_test.joinpath(
-            "reports/html/build/Flv1/Sys1/test/components/component/reports/unit_test_results.html"
-        ).exists()
+
+        project_root_dir = self.workspace.workspace_artifacts.root_dir
+        rel_build_dir = build_dir_test.relative_to(project_root_dir)
+        for component_path in self.component_paths:
+            assert build_dir_test.joinpath(
+                f"reports/html/{component_path}/doc/index.html"
+            ).exists(), "Component documenation expected but not found"
+            # if there are any files in the component test dir
+            if len(list(project_root_dir.joinpath(component_path).glob("test/*"))):
+                for file in [
+                    "unit_test_spec.html",
+                    "unit_test_results.html",
+                    "coverage.html",
+                    "coverage/index.html",
+                ]:
+                    assert build_dir_test.joinpath(
+                        f"reports/html/{rel_build_dir}/{component_path}/reports/{file}"
+                    ).exists(), f"Component test {file} expected but not found"

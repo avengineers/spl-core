@@ -119,6 +119,7 @@ macro(spl_create_component)
     
     # Collect all component information for sphinx documentation
     set(_component_info "{
+\"name\": \"${component_name}\",
 \"long_name\": \"${CREATE_COMPONENT_LONG_NAME}\",
 \"path\": \"${component_path}\",
 \"has_docs\": \"\",
@@ -145,6 +146,7 @@ macro(spl_create_component)
         set(_component_doc_dir ${_component_dir}/doc)
         set(_component_doc_file ${_component_doc_dir}/index.rst)
         set(_component_test_junit_xml ${CMAKE_CURRENT_BINARY_DIR}/junit.xml)
+        set(_component_coverage_json ${CMAKE_CURRENT_BINARY_DIR}/coverage.json)
         set(_component_docs_out_dir ${CMAKE_CURRENT_BINARY_DIR}/docs)
         set(_component_reports_out_dir ${CMAKE_CURRENT_BINARY_DIR}/reports)
         # The Sphinx source directory is ALWAYS the project root
@@ -171,8 +173,7 @@ macro(spl_create_component)
             add_custom_target(
                 ${component_name}_docs
                 COMMAND ${CMAKE_COMMAND} -E make_directory ${_component_docs_out_dir}
-                COMMAND ${CMAKE_COMMAND} -E remove_directory ${_component_docs_out_dir}/html
-                COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_docs_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -b html ${_sphinx_source_dir} ${_component_docs_html_out_dir}
+                COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_docs_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -E -b html ${_sphinx_source_dir} ${_component_docs_html_out_dir}
                 BYPRODUCTS ${_component_docs_html_out_dir}/index.html
             )
 
@@ -192,7 +193,7 @@ Unit Test Specification
 =======================
 
 .. needtable::
-   :filter: '{id}' in tags and type == 'test'
+   :filter: type == 'test'
    :columns: id, title, tests, results
    :style: table
 
@@ -242,23 +243,32 @@ Code Coverage
                 # add the generated files as dependency to cmake configure step
                 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_reports_config_json} ${_unit_test_spec_rst} ${_unit_test_results_rst} ${_component_doxyfile})
 
+                set(_cov_out_html reports/html/${_rel_component_reports_out_dir}/coverage/index.html)
+                file(RELATIVE_PATH _cov_out_json ${CMAKE_CURRENT_BINARY_DIR} ${_component_coverage_json})
+                add_custom_command(
+                    OUTPUT ${_cov_out_html}
+                    COMMAND gcovr --root ${PROJECT_SOURCE_DIR} --add-tracefile ${_cov_out_json} --html --html-details --output ${_cov_out_html} ${GCOVR_ADDITIONAL_OPTIONS}
+                    DEPENDS ${_cov_out_json}
+                    COMMENT "Generating component coverage html report ${_cov_out_html} ..."
+                )
+
+                # No OUTPUT is defined to force execution of this target every time
+                add_custom_target(
+                    ${component_name}_doxygen
+                    COMMAND ${CMAKE_COMMAND} -E make_directory ${_component_reports_out_dir}
+                    COMMAND ${CMAKE_COMMAND} -E remove_directory ${DOXYGEN_OUTPUT_DIRECTORY}
+                    COMMAND ${CMAKE_COMMAND} -E make_directory ${DOXYGEN_OUTPUT_DIRECTORY}
+                    COMMAND doxygen ${_rel_component_doxyfile}
+                )
                 # No OUTPUT is defined to force execution of this target every time
                 # TODO: list of dependencies is not complete
                 add_custom_target(
                     ${component_name}_report
                     COMMAND ${CMAKE_COMMAND} -E make_directory ${_component_reports_out_dir}
-                    COMMAND ${CMAKE_COMMAND} -E remove_directory ${_component_reports_html_out_dir}
-                    COMMAND ${CMAKE_COMMAND} -E remove_directory ${DOXYGEN_OUTPUT_DIRECTORY}
-                    COMMAND ${CMAKE_COMMAND} -E make_directory ${DOXYGEN_OUTPUT_DIRECTORY}
-
-                    # now comes the tricky part: we need to copy the coverage html output directory
-                    # to the sub directory inside html output directory where the coverage.html file is located.
-                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${_component_reports_out_dir}/coverage ${_component_reports_html_out_dir}/${_rel_component_reports_out_dir}/coverage
-                    COMMAND doxygen ${_rel_component_doxyfile}
                     COMMAND doxysphinx build ${_sphinx_source_dir} ${_component_reports_html_out_dir} ${_rel_component_doxyfile}
-                    COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_reports_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -b html ${_sphinx_source_dir} ${_component_reports_html_out_dir}
+                    COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_reports_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -E -b html ${_sphinx_source_dir} ${_component_reports_html_out_dir}
                     BYPRODUCTS ${_component_reports_html_out_dir}/index.html
-                    DEPENDS ${TEST_OUT_JUNIT} ${COV_OUT_HTML}
+                    DEPENDS ${TEST_OUT_JUNIT} ${component_name}_doxygen ${_cov_out_html}
                 )
 
                 add_dependencies(_component_reports ${component_name}_report)
@@ -294,39 +304,92 @@ macro(_spl_create_docs_target)
     add_custom_target(
         docs
         COMMAND ${CMAKE_COMMAND} -E make_directory ${_docs_out_dir}
-        COMMAND ${CMAKE_COMMAND} -E remove_directory ${_docs_html_out_dir}
-        COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_docs_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -b html ${PROJECT_SOURCE_DIR} ${_docs_html_out_dir}
+        COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_docs_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -E -b html ${PROJECT_SOURCE_DIR} ${_docs_html_out_dir}
         BYPRODUCTS ${_docs_html_out_dir}/index.html
     )
 endmacro()
 
 macro(_spl_create_reports_target)
     set(_reports_output_dir ${CMAKE_CURRENT_BINARY_DIR}/reports)
+    file(RELATIVE_PATH _rel_reports_output_dir ${PROJECT_SOURCE_DIR} ${_reports_output_dir})
     set(_reports_html_output_dir ${_reports_output_dir}/html)
 
     # create the config.json file. This is exported as SPHINX_BUILD_CONFIGURATION_FILE env variable
     set(_reports_config_json ${_reports_output_dir}/config.json)
     list(JOIN COMPONENTS_INFO "," _components_info_json)
     set(_components_info_json "[${_components_info_json}]")
+    # Add the variant specific rst files (e.g, coverage.rst) to the include patterns
+    list(APPEND COMPONENTS_SPHINX_INCLUDE_PATTERNS "${_rel_reports_output_dir}/**")
     list(JOIN COMPONENTS_SPHINX_INCLUDE_PATTERNS "\",\"" _components_sphinx_include_patterns_json)
     set(_components_sphinx_include_patterns_json "[\"${_components_sphinx_include_patterns_json}\"]")
     file(WRITE ${_reports_config_json} "{
     \"target\": \"reports\",
     \"include_patterns\": ${_components_sphinx_include_patterns_json},
+    \"reports_output_dir\": \"${_rel_reports_output_dir}\",
     \"components_info\": ${_components_info_json}
 }")
 
+    # create the variant code coverage rst file
+    set(_coverage_rst ${_reports_output_dir}/coverage.rst)
+    file(WRITE ${_coverage_rst} "
+Code Coverage
+=============
+
+`Report <coverage/index.html>`_
+
+")
+
+    # Iterate over all components and create coverage and doxysphinx variant specific targets
+    foreach(component_info ${COMPONENTS_INFO})
+        string(JSON component_name GET ${component_info} name)
+        string(JSON component_path GET ${component_info} path)
+        string(JSON component_reports_output_dir GET ${component_info} reports_output_dir)
+        if (component_reports_output_dir)
+            set(_variant_component_reports_out_dir reports/html/${component_reports_output_dir})
+            set(_cov_out_html ${_variant_component_reports_out_dir}/coverage/index.html)
+            set(_cov_out_json ${component_path}/coverage.json)
+            add_custom_command(
+                OUTPUT ${_cov_out_html}
+                COMMAND gcovr --root ${PROJECT_SOURCE_DIR} --add-tracefile ${_cov_out_json} --html --html-details --output ${_cov_out_html} ${GCOVR_ADDITIONAL_OPTIONS}
+                DEPENDS ${_cov_out_json}
+                COMMENT "Generating variant component coverage html report ${_cov_out_html} ..."
+            )
+            list(APPEND _components_coverage_html ${_cov_out_html})
+
+            set(_rel_component_doxyfile ${component_path}/reports/Doxyfile)
+            add_custom_target(
+                ${component_name}_doxysphinx
+                COMMAND ${CMAKE_COMMAND} -E make_directory ${_variant_component_reports_out_dir}
+                COMMAND doxysphinx build ${PROJECT_SOURCE_DIR} ${_reports_html_output_dir} ${_rel_component_doxyfile}
+                DEPENDS ${component_name}_doxygen
+                COMMENT "Generating variant component doxysphinx report ${component_name}_doxysphinx ..."
+            )
+            list(APPEND _components_variant_doxysphinx_targets ${component_name}_doxysphinx)
+        endif()
+    endforeach()
+
+    set(_cov_out_variant_html reports/html/${_rel_reports_output_dir}/coverage/index.html)
+    add_custom_command(
+        OUTPUT ${_cov_out_variant_html}
+        COMMAND gcovr --root ${CMAKE_SOURCE_DIR} --add-tracefile \"${CMAKE_CURRENT_BINARY_DIR}/**/${COV_OUT_JSON}\" --html --html-details --output ${_cov_out_variant_html}
+        DEPENDS ${GLOBAL_COMPONENTS_COVERAGE_JSON_LIST}
+        COMMENT "Generating overall code coverage report ${_cov_out_variant_html} ..."
+    )
+
+    add_custom_target(
+        _components_variant_coverage_html_target
+        DEPENDS ${_components_coverage_html} ${_cov_out_variant_html}
+    )
     # add the generated files as dependency to cmake configure step
     set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_reports_config_json})
     add_custom_target(
         reports
+        ALL
         COMMAND ${CMAKE_COMMAND} -E make_directory ${_reports_output_dir}
-        COMMAND ${CMAKE_COMMAND} -E remove_directory ${_reports_html_output_dir}
-        COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_reports_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -b html ${PROJECT_SOURCE_DIR} ${_reports_html_output_dir}
+        # We need to call sphinx-build with -E to make sure all files are regenerated.
+        COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_reports_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -E -b html ${PROJECT_SOURCE_DIR} ${_reports_html_output_dir}
         BYPRODUCTS ${_reports_html_output_dir}/index.html
-        # TODO: Fix dependencies! Currently the reports target requires all component reports to be built.
-        # This is not necessary, the reports target only needs the doxysphinx and unit tests to be built.
-        DEPENDS _component_reports
+        DEPENDS _components_variant_coverage_html_target ${_components_variant_doxysphinx_targets}
     )
 endmacro()
 
@@ -351,7 +414,6 @@ function(_spl_coverage_create_overall_report)
         )
         add_custom_target(
             coverage_overall_report
-            ALL
             DEPENDS ${COV_OUT_VARIANT_HTML}
         )
     else(_SPL_COVERAGE_CREATE_OVERALL_REPORT_IS_NECESSARY)
@@ -439,7 +501,6 @@ macro(_spl_add_test_suite PROD_SRC TEST_SOURCES)
     )
     add_custom_target(
         ${component_name}_unittests
-        ALL
         DEPENDS ${component_name}_coverage
     )
     add_dependencies(coverage ${component_name}_coverage)
