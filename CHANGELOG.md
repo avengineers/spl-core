@@ -2,6 +2,33 @@
 
 
 
+## v3.15.0 (2024-01-09)
+
+### Chore
+
+* chore: fix all review findings ([`c4b3b0a`](https://github.com/avengineers/spl-core/commit/c4b3b0a01e75e040df619be93290e6f66c8e7dbc))
+
+* chore: update spl project template ([`211f57c`](https://github.com/avengineers/spl-core/commit/211f57c669fc1c3b2681bc65d558353fdd13971e))
+
+* chore: review and refactor variant reports target ([`d7c8566`](https://github.com/avengineers/spl-core/commit/d7c85665a05cd9c64ac845581ffe2c1ebc3f5ed1))
+
+### Documentation
+
+* docs: describe spl features and cmake targets ([`83c2956`](https://github.com/avengineers/spl-core/commit/83c2956f17a151b61cf0e3fdf1c3e91786bd2235))
+
+### Feature
+
+* feat: add coverage and doxygen to variant report ([`f5806d4`](https://github.com/avengineers/spl-core/commit/f5806d4d9445741e182bc695e49da151fba63300))
+
+* feat: add variant reports target ([`91ce7c7`](https://github.com/avengineers/spl-core/commit/91ce7c7c3c45520a7446397b2df1bb8fa483d7fc))
+
+* feat: we need generated rst files for every component ([`b00d65f`](https://github.com/avengineers/spl-core/commit/b00d65f7ed12c0c99e0836dbbc714193c54995f3))
+
+* feat: add creation of variant docs
+
+backup ([`3e9415e`](https://github.com/avengineers/spl-core/commit/3e9415e804949d1099d2b45036310d8df98593bb))
+
+
 ## v3.14.0 (2024-01-02)
 
 ### Documentation
