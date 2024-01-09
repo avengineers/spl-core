@@ -1,1 +1,4 @@
+📄 About
+********
+
 .. mdinclude:: ../../CHANGELOG.md

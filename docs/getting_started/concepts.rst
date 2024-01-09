@@ -4,25 +4,27 @@ Basic Concepts and Naming Conventions
 What is a Software Product Line (SPL)?
 --------------------------------------
 
-An SPL is a software project that contains shared and configurable source code elements known as `components <https://engweb.marquardt.de/sple/spl-core/develop/getting_started/concepts.html#what-is-a-component>`_, which are used to develop several versions of a computer program, also known as `variants <https://engweb.marquardt.de/sple/spl-core/develop/getting_started/concepts.html#what-is-a-variant>`_.
+An SPL is a software project that contains shared and configurable source code elements known as :ref:`components <what_is_a_component>`, which are used to develop several versions of a computer program, also known as :ref:`variants <what_is_a_variant>`.
 
 Think of an SPL like an automotive factory that makes different types of cars.
 Each car is special - some are race cars, some are trucks, and others might be convertibles.
-But they all start from some common `components <https://engweb.marquardt.de/sple/spl-core/develop/getting_started/concepts.html#what-is-a-component>`_ like wheels and engines with different configurations like size and horsepowers.
-Thinking this way, making a new program is like building a new car but faster and easier because we already have the `components <https://engweb.marquardt.de/sple/spl-core/develop/getting_started/concepts.html#what-is-a-component>`_ we need.
+But they all start from some common :ref:`components <what_is_a_component>` like wheels and engines with different configurations like size and horsepowers.
+Thinking this way, making a new program is like building a new car but faster and easier because we already have the :ref:`components <what_is_a_component>` we need.
 
 What is SPL Core?
 -----------------
 
 SPL Core is a tool chain that uses modern `CMake <https://cmake.org/>`_.
-SPL Core supports the concepts and requirements of an SPL to build various software `variants <https://engweb.marquardt.de/sple/spl-core/develop/getting_started/concepts.html#what-is-a-variant>`_ from a common codebase.
+SPL Core supports the concepts and requirements of an SPL to build various software :ref:`variants <what_is_a_variant>` from a common codebase.
+
+.. _what_is_a_variant:
 
 What is a Variant?
 ------------------
 
-A variant is a specific version of the software, consisting of a set of `features <https://engweb.marquardt.de/sple/spl-core/develop/getting_started/concepts.html#what-is-a-feature-model>`_ that meet specific customer requirements.
+A variant is a specific version of the software, consisting of a set of :ref:`features <what_is_a_feature_model>` that meet specific customer requirements.
 
-Think of a variant like choosing different `features <https://engweb.marquardt.de/sple/spl-core/develop/getting_started/concepts.html#what-is-a-feature-model>`_ for your car.
+Think of a variant like choosing different :ref:`features <what_is_a_feature_model>` for your car.
 One car might be red with racing stripes and another might be a blue truck.
 In computer programs, a variant is a version of the program that has something different or special about it, but it's still based on the same basic design.
 It's like customizing your car or program to make it just the way you want it.
@@ -50,8 +52,8 @@ Here is an example of the variants directory with two variants (``my/var1`` and 
 
 
 * ``config.cmake`` - variant specific CMake configuration, like the target architecture and toolchain.
-* ``parts.cmake`` - contains the list of `components <https://engweb.marquardt.de/sple/spl-core/develop/getting_started/concepts.html#what-is-a-component>`_ that are part of the variant.
-* ``config.txt`` - this is the `feature <https://engweb.marquardt.de/sple/spl-core/develop/getting_started/concepts.html#what-is-a-feature-model>`_ selection of the variant. It is a KConfig file that contains the selected `features <https://engweb.marquardt.de/sple/spl-core/develop/getting_started/concepts.html#what-is-a-feature-model>`_ of the variant.
+* ``parts.cmake`` - contains the list of :ref:`components <what_is_a_component>` that are part of the variant.
+* ``config.txt`` - this is the :ref:`feature <what_is_a_feature_model>` selection of the variant. It is a KConfig file that contains the selected :ref:`features <what_is_a_feature_model>` of the variant.
 
 .. _what_is_a_component:
 
@@ -107,12 +109,13 @@ Here is an example of the source directory with two components (``src/comp1`` an
 * **Component Definition**
     * The component's ``CMakeLists.txt`` makes the component available using :ref:`spl_create_component <spl_create_component>`.
 
+.. _what_is_a_feature_model:
 
 What is a Feature Model?
 ------------------------
 
 A feature model represents the organization of all potential features in an SPL, showing how they relate and depend on each other.
-This model guides the creation of different SPL `variants <https://engweb.marquardt.de/sple/spl-core/develop/getting_started/concepts.html#what-is-a-variant>`_, ensuring that feature combinations are viable and consistent.
+This model guides the creation of different SPL :ref:`variants <what_is_a_variant>`, ensuring that feature combinations are viable and consistent.
 
 Think of a feature model like a big chart showing all the different features you can choose from to customize your car.
 It tells you which pieces fit together and how you can combine them to make different types of cars.
@@ -123,5 +126,5 @@ In computer programs, a feature model helps us understand all the features (like
 
 If a ``KConfig`` file is present in the root directory, SPL Core will automatically parse it and generate the project configuration.
 
-The `variant <https://engweb.marquardt.de/sple/spl-core/develop/getting_started/concepts.html#what-is-a-variant>`_ specific configuration file is expected in the `variant <https://engweb.marquardt.de/sple/spl-core/develop/getting_started/concepts.html#what-is-a-variant>`_ directory.
-If a ``config.txt`` file is present in the `variant <https://engweb.marquardt.de/sple/spl-core/develop/getting_started/concepts.html#what-is-a-variant>`_ directory, SPL Core will automatically use it to override the default configuration values defined in the ``KConfig`` file.
+The :ref:`variant <what_is_a_variant>` specific configuration file is expected in the :ref:`variant <what_is_a_variant>` directory.
+If a ``config.txt`` file is present in the :ref:`variant <what_is_a_variant>` directory, SPL Core will automatically use it to override the default configuration values defined in the ``KConfig`` file.

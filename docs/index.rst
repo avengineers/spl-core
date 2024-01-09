@@ -5,6 +5,7 @@ Software Product Line (SPL) Core Documentation
     :maxdepth: 2
 
     getting_started/index
+    features/index
     reference/index
     internals/index
-    changelog/index
+    about/index
