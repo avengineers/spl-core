@@ -26,8 +26,7 @@ class CMake:
             f" -B{self.workspace_artifacts.get_build_dir(variant, build_kit)}"
             f" -G Ninja "
             f" -DBUILD_KIT:STRING={build_kit}"
-            f" -DFLAVOR:STRING={variant.flavor}"
-            f" -DSUBSYSTEM:STRING={variant.subsystem}"
+            f" -DVARIANT:STRING={variant.to_string()}"
             f" -DCMAKE_BUILD_TYPE:STRING={variant.to_string('_')}"
         )
         if build_kit == "test":
