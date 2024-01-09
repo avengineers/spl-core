@@ -93,6 +93,8 @@ macro(_spl_get_google_test)
 endmacro(_spl_get_google_test)
 
 macro(spl_create_component)
+    # The user may define a human readable name for the component by using the LONG_NAME optional argument.
+    # This name can be used in the documentation. Before the component path was used as component name.
     cmake_parse_arguments(CREATE_COMPONENT "" "LONG_NAME" "" ${ARGN})
     file(RELATIVE_PATH component_path ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_LIST_DIR})
     _spl_slash_to_underscore(component_name ${component_path})
@@ -118,6 +120,10 @@ macro(spl_create_component)
     set(COMPONENT_NAMES ${COMPONENT_NAMES} PARENT_SCOPE)
     
     # Collect all component information for sphinx documentation
+    #  - We need to keep track of all components and their information to be able to generate the variant reports.
+    #    For the variants reports, one need to loop over all components and generate component variant specific targets.
+    #  - We use json strings because the content will be written in a config.json file during configure.
+    #    Also, CMake supports manipulating JSON strings. See the string(JSON ...) documentation.
     set(_component_info "{
 \"name\": \"${component_name}\",
 \"long_name\": \"${CREATE_COMPONENT_LONG_NAME}\",
@@ -173,6 +179,9 @@ macro(spl_create_component)
             add_custom_target(
                 ${component_name}_docs
                 COMMAND ${CMAKE_COMMAND} -E make_directory ${_component_docs_out_dir}
+                # We do not know all dependencies for generating the docs (apart from the rst files).
+                # This might cause incremental builds to not update parts of the documentation.
+                # To avoid this we are using the -E option to make sphinx-build writing all files new.
                 COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_docs_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -E -b html ${_sphinx_source_dir} ${_component_docs_html_out_dir}
                 BYPRODUCTS ${_component_docs_html_out_dir}/index.html
             )
@@ -211,7 +220,7 @@ Unit Test Results
 
 ")
 
-                # create the code coverage rst file
+                # create coverate rst file to be able to automatically link to the coverage/index.html
                 set(_coverage_rst ${_component_reports_out_dir}/coverage.rst)
                 file(WRITE ${_coverage_rst} "
 Code Coverage
@@ -245,6 +254,8 @@ Code Coverage
 
                 set(_cov_out_html reports/html/${_rel_component_reports_out_dir}/coverage/index.html)
                 file(RELATIVE_PATH _cov_out_json ${CMAKE_CURRENT_BINARY_DIR} ${_component_coverage_json})
+                # For the component report, one needs to generate the coverage/index.html inside the component report sphinx output directory.
+                # This will avoid the need to copy the coverage/** directory inside the component report sphinx output directory.
                 add_custom_command(
                     OUTPUT ${_cov_out_html}
                     COMMAND gcovr --root ${PROJECT_SOURCE_DIR} --add-tracefile ${_cov_out_json} --html --html-details --output ${_cov_out_html} ${GCOVR_ADDITIONAL_OPTIONS}
@@ -252,8 +263,10 @@ Code Coverage
                     COMMENT "Generating component coverage html report ${_cov_out_html} ..."
                 )
 
-                # No OUTPUT is defined to force execution of this target every time
+                # We need to have a separate component doxygen generation target because it is required
+                # by both the component and variant reports.
                 add_custom_target(
+                    # No OUTPUT is defined to force execution of this target every time
                     ${component_name}_doxygen
                     COMMAND ${CMAKE_COMMAND} -E make_directory ${_component_reports_out_dir}
                     COMMAND ${CMAKE_COMMAND} -E remove_directory ${DOXYGEN_OUTPUT_DIRECTORY}
@@ -270,8 +283,6 @@ Code Coverage
                     BYPRODUCTS ${_component_reports_html_out_dir}/index.html
                     DEPENDS ${TEST_OUT_JUNIT} ${component_name}_doxygen ${_cov_out_html}
                 )
-
-                add_dependencies(_component_reports ${component_name}_report)
             endif(TEST_SOURCES)
             # Collect all component sphinx include pattern to be used in the variant targets (docs, reports)
             list(APPEND COMPONENTS_SPHINX_INCLUDE_PATTERNS "${_rel_component_doc_dir}/**" "${_rel_component_docs_out_dir}/**" "${_rel_component_reports_out_dir}/**")
@@ -339,7 +350,10 @@ Code Coverage
 
 ")
 
-    # Iterate over all components and create coverage and doxysphinx variant specific targets
+    # For every component we need to create specific coverage and doxysphinx targets to make sure
+    # the output files are generated in the overall variant sphinx output directory.
+    # This will avoid the need to copy all the component coverage and doxygen files from the component
+    # directories to the variant directory.
     foreach(component_info ${COMPONENTS_INFO})
         string(JSON component_name GET ${component_info} name)
         string(JSON component_path GET ${component_info} path)
