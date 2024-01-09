@@ -11,6 +11,8 @@ To support :ref:`component <what_is_a_component>` development, SPL Core provides
 `Sphinx <https://www.sphinx-doc.org/>`_ is used to generate the component report.
 See the project `conf.py` file for the configuration details.
 
+.. _how_to_component_detail_design:
+
 Detailed Design
 ***************
 
@@ -128,6 +130,7 @@ Here is a ``index.rst`` template for getting you started documenting a component
             STATE_Y --> STATE_OFF : Power State == OFF
     {% endif %}
 
+.. _how_to_component_test_cases:
 
 Test Cases
 **********

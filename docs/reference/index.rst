@@ -1,4 +1,4 @@
-🔧 Reference
+🛠️ Reference
 ************
 
 .. toctree::
@@ -6,3 +6,4 @@
 
     macros
     variables
+    targets
