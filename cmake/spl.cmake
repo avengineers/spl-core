@@ -71,7 +71,6 @@ elseif(BUILD_KIT STREQUAL test)
     list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 
     add_custom_target(coverage)
-    add_custom_target(_component_reports)
 else()
     message(FATAL_ERROR "Invalid BUILD_KIT selected!")
 endif(BUILD_KIT STREQUAL prod)

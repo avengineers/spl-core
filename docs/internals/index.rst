@@ -222,18 +222,17 @@ Component Reports CMake Target
     * source directory is always a projet root directory and output directory is build/<Variant>/test/src/<Component>/reports/
 
 
-Overall docs CMake Target
--------------------------
+Variant ``docs`` CMake Target
+-----------------------------
 
-Overall docs will be created automatically by the target ``docs`` if there is an index.rst file in the root of the project ``doc`` directory.
-The files included in the ``doc`` folder and inside each component's ``doc`` folder are part of the overall documentation. Therefore, there will be no traceability to IDs from ``src`` or ``test``.
-
-Execution steps: 
-
-* we need to create an index.rst file which includes
-    * software requirements rst file
-    * software architecture rst file
-* we need to call sphinx-build "pipenv run sphinx-build -b html . build/<Variant>/test/doc/html"
-    * source directory is always a projet root directory and output directory is build/<Variant>/test/doc/
+Variant documentation will be created by the ``docs`` CMake target.
+This runs a sphinx-build using the project root index.rst file as input.
+Only the files included in the ``doc`` folder and inside each component's ``doc`` folder are part of the overall documentation. Therefore, there will be no traceability to IDs from ``src`` or ``test``.
 
 
+Variant ``reports`` CMake Target
+--------------------------------
+
+Variant reports will be created by the ``reports`` CMake target.
+This runs a sphinx-build using the project root index.rst file as input.
+In addition to the variant documentation, the variant report includes the component reports which include not only the docs but also the test results and the test specification.
