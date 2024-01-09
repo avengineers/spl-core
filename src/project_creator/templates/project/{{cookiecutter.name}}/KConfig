@@ -1,4 +1,4 @@
-mainmenu "SPL Nano"
+mainmenu "SPL Example"
 
 menu "Linking"
     config LINKER_OUTPUT_FILE
