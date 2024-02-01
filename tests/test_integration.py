@@ -436,3 +436,35 @@ class TestIntegration:
             "component.test_someInterfaceOfComponent" == first_test_case.attrib["name"]
         )
         assert "fail" == first_test_case.attrib["status"]
+
+    def test_build_component_as_static_library(self):
+        # create build output directory for build_kit "prod"
+        build_dir_prod = self.workspace.workspace_artifacts.get_build_dir(
+            "Flv1/Sys1", "prod"
+        )
+        makedirs(build_dir_prod, exist_ok=True)
+
+        "Modify compile options of a single file"
+        self.workspace.get_component_file("component", "CMakeLists.txt").write_text(
+            textwrap.dedent(
+                """
+                spl_add_source(src/component.c)
+                
+                spl_create_component(LIBRARY_TYPE STATIC)
+                """
+            )
+        )
+
+        "Call IUT"
+        with ExecutionTime("CMake Configure and Build (build_kit: prod, target: all)"):
+            assert 0 == self.workspace.run_cmake_configure(build_kit="prod").returncode
+            assert (
+                0
+                == self.workspace.run_cmake_build(
+                    build_kit="prod", target="all"
+                ).returncode
+            )
+
+        "Expected build results shall exist"
+        executable = build_dir_prod.joinpath("my_main.exe")
+        assert executable.exists()

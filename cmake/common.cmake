@@ -92,10 +92,33 @@ macro(_spl_get_google_test)
     enable_testing()
 endmacro(_spl_get_google_test)
 
+# Macro: spl_create_component
+#
+# This macro is used to create a new component in the build system.
+#
+# Parameters:
+#   LONG_NAME: (Optional) A human-readable name for the component. This name
+#              is used in the documentation, providing a clearer identifier
+#              than the default component path.
+#
+#   LIBRARY_TYPE: (Optional) Specifies the type of library to be created.
+#                 Acceptable values are "OBJECT" or "STATIC". If not specified,
+#                 the default value is "OBJECT". This allows the user to choose
+#                 between creating an object library (which is not archived) or
+#                 a static library.
+#
+# Usage:
+#   spl_create_component([LONG_NAME <name>] [LIBRARY_TYPE <type>])
+#
+# Example:
+#   spl_create_component(LONG_NAME "MyComponent" LIBRARY_TYPE STATIC)
 macro(spl_create_component)
-    # The user may define a human readable name for the component by using the LONG_NAME optional argument.
-    # This name can be used in the documentation. Before the component path was used as component name.
-    cmake_parse_arguments(CREATE_COMPONENT "" "LONG_NAME" "" ${ARGN})
+    cmake_parse_arguments(CREATE_COMPONENT "" "LONG_NAME;LIBRARY_TYPE" "" ${ARGN})
+    # Set the default library type to OBJECT if not provided
+    if(NOT CREATE_COMPONENT_LIBRARY_TYPE)
+        set(CREATE_COMPONENT_LIBRARY_TYPE "OBJECT")
+    endif()
+
     file(RELATIVE_PATH component_path ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_LIST_DIR})
     _spl_slash_to_underscore(component_name ${component_path})
 
@@ -106,7 +129,7 @@ macro(spl_create_component)
         add_library(${component_name} EXCLUDE_FROM_ALL OBJECT ${SOURCES})
         target_compile_options(${component_name} PRIVATE ${VARIANT_ADDITIONAL_COMPILE_C_FLAGS} -ggdb --coverage)
     else()
-        add_library(${component_name} OBJECT ${SOURCES})
+        add_library(${component_name} ${CREATE_COMPONENT_LIBRARY_TYPE} ${SOURCES})
         target_compile_options(${component_name} PRIVATE ${VARIANT_ADDITIONAL_COMPILE_C_FLAGS})
     endif()
 
