@@ -2,6 +2,13 @@
 
 
 
+## v3.16.0 (2024-02-02)
+
+### Feature
+
+* feat: component library type is configurable ([`c3bd911`](https://github.com/avengineers/spl-core/commit/c3bd911b227600489ca0df6a8d4037a0f361021d))
+
+
 ## v3.15.0 (2024-01-09)
 
 ### Chore
