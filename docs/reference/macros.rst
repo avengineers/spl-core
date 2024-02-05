@@ -31,7 +31,6 @@ Adding a component to the variant in its parts.cmake:
 This example adds a component located in the "src/led_driver" directory to the variant.
 
 
-
 spl_add_include
 ---------------
 
@@ -41,7 +40,8 @@ Add an include directory to the project's list of include directories.
 
  spl_add_include(<include_directory>)
 
-This macro is intended to be used in the variant's parts.cmake file to add include directories to the build's list of include directories, making header files in these directories accessible to the compiler.
+This macro is intended to be used in the variant's parts.cmake file to add an include directory to the build's list of include directories,
+making header files in this directory accessible to the compiler.
 
 The arguments are:
 
@@ -57,7 +57,6 @@ Adding an include directory to the project:
  spl_add_include(include/my_library)
 
 This example adds the "include/my_library" directory to the project's list of include directories, making header files within this directory accessible to the project's source code.
-
 
 
 spl_add_source
@@ -98,7 +97,6 @@ Applying compile options:
 This example adds the "led_driver_control.c" source file and applies the compile options "-w" to it.
 
 
-
 spl_add_compile_options
 -----------------------
 
@@ -137,7 +135,6 @@ Adding compile options to specific files:
 This example applies the compile option ``-opt`` specifically to the "led_driver_main.c" file in the "src" directory.
 
 
-
 spl_add_test_source
 -------------------
 
@@ -147,7 +144,8 @@ Add a test source file to the list of test source files for the component.
 
  spl_add_test_source(<file_name>)
 
-This macro is designed to add test source files to the build of a unit test.
+This macro is intended to be used in a component's CMakeLists.txt (or included .cmake file)
+to add a test source file to the list of test source files for the component.
 
 The arguments are:
 
@@ -168,14 +166,27 @@ This example adds the "test_led_driver.cc" source file located in the "test" dir
 spl_create_component
 --------------------
 
-Create a component as an object library, manage compile options, and configure documentation for it.
+This macro is intended to be used in a component's CMakeLists.txt (or included .cmake file)
+to create a component as a library in the build system.
+It must be called after adding all source and test source files to the component.
 
 .. code-block:: cmake
 
-  spl_create_component()
+  spl_create_component([LONG_NAME <name>] [LIBRARY_TYPE <type>])
 
-This macro is intended to create a component as an object library, manage compile options, and configure documentation generation for the component.
-It must be called after adding all source and test source files to the component.
+
+The arguments are:
+
+``LONG_NAME``
+ (Optional) A human-readable name for the component. This name is used in the documentation,
+ providing a clearer identifier than the default component path.
+
+``LIBRARY_TYPE``
+ (Optional) Specifies the type of library to be created.
+ Acceptable values are "OBJECT" or "STATIC". If not specified,
+ the default value is "OBJECT". This allows the user to choose
+ between creating an object library (which is not archived) or
+ a static library.
 
 Example:
 
@@ -185,6 +196,6 @@ Creating a component using the `spl_create_component` macro:
 
   spl_add_source(src/led_driver_main.c)
   spl_add_test_source(test/test_led_driver.cc)
-  spl_create_component() 
+  spl_create_component(LONG_NAME "LED Driver" LIBRARY_TYPE STATIC)
 
 Please note that this macro performs various tasks related to the component's setup, including documentation and testing, depending on the build configuration (buildKit).
