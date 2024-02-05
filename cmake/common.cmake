@@ -92,26 +92,6 @@ macro(_spl_get_google_test)
     enable_testing()
 endmacro(_spl_get_google_test)
 
-# Macro: spl_create_component
-#
-# This macro is used to create a new component in the build system.
-#
-# Parameters:
-#   LONG_NAME: (Optional) A human-readable name for the component. This name
-#              is used in the documentation, providing a clearer identifier
-#              than the default component path.
-#
-#   LIBRARY_TYPE: (Optional) Specifies the type of library to be created.
-#                 Acceptable values are "OBJECT" or "STATIC". If not specified,
-#                 the default value is "OBJECT". This allows the user to choose
-#                 between creating an object library (which is not archived) or
-#                 a static library.
-#
-# Usage:
-#   spl_create_component([LONG_NAME <name>] [LIBRARY_TYPE <type>])
-#
-# Example:
-#   spl_create_component(LONG_NAME "MyComponent" LIBRARY_TYPE STATIC)
 macro(spl_create_component)
     cmake_parse_arguments(CREATE_COMPONENT "" "LONG_NAME;LIBRARY_TYPE" "" ${ARGN})
     # Set the default library type to OBJECT if not provided
