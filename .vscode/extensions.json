@@ -1,15 +1,14 @@
 {
-   "recommendations": [
-      "ms-python.flake8",
-      "ms-python.black-formatter",
-      "ms-python.python",
-      "kevinrose.vsc-python-indent",
-      "njpwerner.autodocstring",
-      "wholroyd.jinja",
-      "visualstudioexptteam.vscodeintellicode",
-      "josetr.cmake-language-support-vscode",
-      "ms-vscode.cmake-tools",
-      "twxs.cmake",
-      "cheshirekow.cmake-format"
-   ]
+    "recommendations": [
+        "ms-python.python",
+        "kevinrose.vsc-python-indent",
+        "njpwerner.autodocstring",
+        "wholroyd.jinja",
+        "visualstudioexptteam.vscodeintellicode",
+        "josetr.cmake-language-support-vscode",
+        "ms-vscode.cmake-tools",
+        "twxs.cmake",
+        "cheshirekow.cmake-format",
+        "charliermarsh.ruff"
+    ]
 }
