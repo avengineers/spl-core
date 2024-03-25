@@ -60,11 +60,11 @@ if ($skipInstall) {
 else {
     . .\powershell\spl-variables.ps1
     . .\powershell\spl-functions.ps1
-    
+
     if ($SPL_PROXY_HOST -and $SPL_PROXY_BYPASS_LIST) {
         Initialize-Proxy -ProxyHost $SPL_PROXY_HOST -NoProxy $SPL_PROXY_BYPASS_LIST
     }
-    
+
     Install-Basic-Toolset
     Install-Toolset -FilePath "scoopfile.json"
 }

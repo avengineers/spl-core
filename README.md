@@ -1,10 +1,10 @@
 # SPL (Software Product Line) Core
 
-*SPL Core* is our CMake module to support multiple projects as variants of one SPL repository.
+_SPL Core_ is our CMake module to support multiple projects as variants of one SPL repository.
 
 ## CI (Continuous Integration)
 
-* [![selftests](https://github.com/avengineers/spl/actions/workflows/test.yml/badge.svg)](https://github.com/avengineers/spl/actions/workflows/test.yml)
+-   [![selftests](https://github.com/avengineers/spl/actions/workflows/test.yml/badge.svg)](https://github.com/avengineers/spl/actions/workflows/test.yml)
 
 ## Installation of Dependencies
 
@@ -14,9 +14,9 @@
 
 ## Building
 
-* Execution of all tests
-* Building documentation
-  
+-   Execution of all tests
+-   Building documentation
+
 ```powershell
 .\build.ps1
 ```

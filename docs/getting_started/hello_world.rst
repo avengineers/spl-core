@@ -79,7 +79,7 @@ You can verify that Scoop is installed in your PC by typing ``scoop`` in the ter
 In case you do not have Scoop installed, you can get it from its `official site <https://scoop.sh>`_.
 
 .. note::
-   
+
    If you face any installation problems, please check your proxy settings.
 
 .. attention::
@@ -150,7 +150,7 @@ Write the following lines in the ``src/main/CMakeLists.txt`` file:
    spl_create_component()
 
 .. note::
-   
+
    Check the SPL :ref:`cmake-macro-reference-label` to understand why it is necessary to add spl_add_source(src/main.c) and spl_create_component().
 
 Create a component's source directory:

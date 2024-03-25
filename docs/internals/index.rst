@@ -161,7 +161,7 @@ Folder Structure for Report Creation
             conf.py
             index.rst
          src/
-            <Component>.c  
+            <Component>.c
          test/
             <Component>_test.cc
             index.rst
@@ -177,7 +177,7 @@ Because of this:
 
   * we need conf.py and index.rst files in the root directory
   * the index.rst file dynamically includes the target index.rst
-  * the conf.py file needs to read a configuration file (config.json) to be able to find all the relevant files for the current CMake docs target 
+  * the conf.py file needs to read a configuration file (config.json) to be able to find all the relevant files for the current CMake docs target
 
 
 conf.py
@@ -185,7 +185,7 @@ conf.py
 
   * conf.py is a static file and we do not know the path of config.json file, we need to get the path to it as an environment variable
   * we should check, if environment variable(SPHINX_BUILD_CONFIGURATION_FILE) exists just load the content and store into the html_context(https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-html_context)
-  
+
 index.rst
 ^^^^^^^^^
 
@@ -198,13 +198,13 @@ Component Docs CMake Target
 A component docs target ``<component>_docs`` will be created automatically if there is an index.rst file in the component ``doc`` directory.
 Only the files included in the ``doc`` folder are part of the report. Therefore, there will be no traceability to IDs from ``src`` or ``test``.
 
-Execution steps: 
+Execution steps:
 
 * we need to create config.json
 * we need to create an index.rst file which includes
     * component detailed design rst file
 * we need to call sphinx-build "pipenv run sphinx-build -b html . build/<Variant>/test/src/<Component>/docs/html"
-    * source directory is always a projet root directory and output directory is build/<Variant>/test/src/<Component>/docs/
+    * source directory is always a project root directory and output directory is build/<Variant>/test/src/<Component>/docs/
 
 
 Component Reports CMake Target
@@ -216,10 +216,10 @@ Component Reports CMake Target
     * component detailed design rst file
     * component test results rst file
     * component doxygen rst file
-* we need to create a test_results.rst file to include the componenet junit test results.
+* we need to create a test_results.rst file to include the component junit test results.
 * we need to copy Doxyfile from the docs folder and then we have to update the paths where Doxyfile should find the sources
 * we need to call sphinx-build "pipenv run sphinx-build -b html . build/<Variant>/test/src/<Component>/reports/html"
-    * source directory is always a projet root directory and output directory is build/<Variant>/test/src/<Component>/reports/
+    * source directory is always a project root directory and output directory is build/<Variant>/test/src/<Component>/reports/
 
 
 Variant ``docs`` CMake Target

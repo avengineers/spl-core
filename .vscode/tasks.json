@@ -1,83 +1,83 @@
 {
-  "version": "2.0.0",
-  "tasks": [
-    {
-      "label": "install dependencies",
-      "command": ".\\build.ps1 -install",
-      "type": "shell",
-      "presentation": {
-        "reveal": "always"
-      },
-      "group": {
-        "kind": "build",
-        "isDefault": false
-      }
-    },
-    {
-      "label": "run tests",
-      "command": ".venv/bin/poetry run pytest --cov",
-      "windows": {
-        "command": ".venv/Scripts/poetry run pytest --cov"
-      },
-      "type": "shell",
-      "presentation": {
-        "reveal": "always"
-      },
-      "group": {
-        "kind": "build",
-        "isDefault": false
-      }
-    },
-    {
-      "label": "build docs",
-      "command": ".venv/bin/poetry run sphinx-build docs out/docs/html",
-      "type": "shell",
-      "presentation": {
-        "reveal": "always"
-      },
-      "group": {
-        "kind": "build",
-        "isDefault": false
-      }
-    },
-    {
-      "label": "clean build docs",
-      "command": ".venv/bin/poetry run sphinx-build -E docs out/docs/html",
-      "type": "shell",
-      "presentation": {
-        "reveal": "always"
-      },
-      "group": {
-        "kind": "build",
-        "isDefault": false
-      }
-    },
-    {
-      "label": "open docs index.html",
-      "command": "out/docs/html/index.html",
-      "type": "shell",
-      "presentation": {
-        "reveal": "always"
-      },
-      "group": {
-        "kind": "build",
-        "isDefault": false
-      }
-    },
-    {
-      "label": "run pre-commit checks",
-      "command": ".venv/bin/poetry run pre-commit run --all-files",
-      "windows": {
-        "command": ".venv/Scripts/poetry run pre-commit run --all-files"
-      },
-      "type": "shell",
-      "presentation": {
-        "reveal": "always"
-      },
-      "group": {
-        "kind": "build",
-        "isDefault": false
-      }
-    }
-  ]
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "install dependencies",
+            "command": ".\\build.ps1 -install",
+            "type": "shell",
+            "presentation": {
+                "reveal": "always"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+        },
+        {
+            "label": "run tests",
+            "command": ".venv/bin/poetry run pytest --cov",
+            "windows": {
+                "command": ".venv/Scripts/poetry run pytest --cov"
+            },
+            "type": "shell",
+            "presentation": {
+                "reveal": "always"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+        },
+        {
+            "label": "build docs",
+            "command": ".venv/bin/poetry run sphinx-build docs out/docs/html",
+            "type": "shell",
+            "presentation": {
+                "reveal": "always"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+        },
+        {
+            "label": "clean build docs",
+            "command": ".venv/bin/poetry run sphinx-build -E docs out/docs/html",
+            "type": "shell",
+            "presentation": {
+                "reveal": "always"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+        },
+        {
+            "label": "open docs index.html",
+            "command": "out/docs/html/index.html",
+            "type": "shell",
+            "presentation": {
+                "reveal": "always"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+        },
+        {
+            "label": "run pre-commit checks",
+            "command": ".venv/bin/poetry run pre-commit run --all-files",
+            "windows": {
+                "command": ".venv/Scripts/poetry run pre-commit run --all-files"
+            },
+            "type": "shell",
+            "presentation": {
+                "reveal": "always"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+        }
+    ]
 }

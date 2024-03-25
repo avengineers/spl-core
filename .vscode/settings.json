@@ -1,10 +1,7 @@
 {
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
-    "python.analysis.extraPaths": [
-        "src",
-        "tests"
-    ],
+    "python.analysis.extraPaths": ["src", "tests"],
     "workbench.colorCustomizations": {
         "activityBar.activeBackground": "#fbed80",
         "activityBar.background": "#fbed80",
@@ -25,5 +22,6 @@
         "titleBar.inactiveForeground": "#15202b99"
     },
     "peacock.color": "#f9e64f",
-    "cmake.configureOnOpen": false
+    "cmake.configureOnOpen": false,
+    "cSpell.words": ["kconfiglib"]
 }

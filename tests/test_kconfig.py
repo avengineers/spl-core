@@ -1,12 +1,20 @@
 import os
-from pathlib import Path
 import textwrap
-from time import sleep
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-
-from kconfig.kconfig import CMakeWriter, ConfigElement, ConfigElementType, ConfigurationData, HeaderWriter, JsonWriter, KConfig, TriState, main
+from kconfig.kconfig import (
+    CMakeWriter,
+    ConfigElement,
+    ConfigElementType,
+    ConfigurationData,
+    HeaderWriter,
+    JsonWriter,
+    KConfig,
+    TriState,
+    main,
+)
 from utils import TestUtils
 
 
@@ -66,7 +74,10 @@ def test_create_configuration_data_with_variables(tmp_path: Path) -> None:
     iut = KConfig(feature_model_file)
     assert iut.config.elements[0].value == "John Smith"
     assert iut.config.elements[1].type == ConfigElementType.STRING
-    assert iut.config.elements[1].value == "Variable: John Smith, environment variable: MY_ENV_VAR_VALUE"
+    assert (
+        iut.config.elements[1].value
+        == "Variable: John Smith, environment variable: MY_ENV_VAR_VALUE"
+    )
 
 
 def test_header_writer(tmp_path: Path, configuration_data: ConfigurationData) -> None:
@@ -87,7 +98,7 @@ def test_header_writer(tmp_path: Path, configuration_data: ConfigurationData) ->
     #define CONFIG_MY_INT 13
     /** MY_HEX */
     #define CONFIG_MY_HEX 0x10
-    
+
     #endif /* __autoconf_h__ */
     """
     )
@@ -122,13 +133,17 @@ def test_header_file_written_when_changed(tmp_path: Path) -> None:
     assert header_file.exists()
     timestamp = header_file.stat().st_mtime
     writer.write(config)
-    assert header_file.stat().st_mtime == timestamp, "the file shall not be written if content is not changed"
+    assert (
+        header_file.stat().st_mtime == timestamp
+    ), "the file shall not be written if content is not changed"
     header_file.write_text("Modified content")
     writer.write(config)
-    assert header_file.read_text() != "Modified content", "the file should have been updated because the content changed"
+    assert (
+        header_file.read_text() != "Modified content"
+    ), "the file should have been updated because the content changed"
 
 
-def test_json_writer(configuration_data: ConfigurationData):
+def test_json_writer(configuration_data: ConfigurationData) -> None:
     writer = JsonWriter(Path("my_file.json"))
     assert writer.generate_content(configuration_data) == textwrap.dedent(
         """\
@@ -144,7 +159,7 @@ def test_json_writer(configuration_data: ConfigurationData):
     )
 
 
-def test_cmake_writer(configuration_data: ConfigurationData):
+def test_cmake_writer(configuration_data: ConfigurationData) -> None:
     writer = CMakeWriter(Path("my_file.cmake"))
     assert writer.generate_content(configuration_data) == textwrap.dedent(
         """\
@@ -187,7 +202,9 @@ def test_boolean_without_description():
     )
 
     iut = KConfig(feature_model_file, user_config)
-    assert iut.config.elements == [ConfigElement(ConfigElementType.STRING, "FIRST_NAME", "Dude")]
+    assert iut.config.elements == [
+        ConfigElement(ConfigElementType.STRING, "FIRST_NAME", "Dude")
+    ]
 
 
 def test_boolean_with_description():
@@ -218,7 +235,10 @@ def test_boolean_with_description():
     )
 
     iut = KConfig(feature_model_file, user_config)
-    assert iut.config.elements == [ConfigElement(ConfigElementType.BOOL, "FIRST_BOOL", TriState.Y), ConfigElement(ConfigElementType.STRING, "FIRST_NAME", "Dude")]
+    assert iut.config.elements == [
+        ConfigElement(ConfigElementType.BOOL, "FIRST_BOOL", TriState.Y),
+        ConfigElement(ConfigElementType.STRING, "FIRST_NAME", "Dude"),
+    ]
 
 
 def test_hex():
@@ -282,7 +302,10 @@ def test_define_boolean_choices():
     )
 
     iut = KConfig(feature_model_file, user_config)
-    assert iut.config.elements == [ConfigElement(ConfigElementType.BOOL, "APP_VERSION_1", TriState.Y), ConfigElement(ConfigElementType.BOOL, "APP_VERSION_2", TriState.N)]
+    assert iut.config.elements == [
+        ConfigElement(ConfigElementType.BOOL, "APP_VERSION_1", TriState.Y),
+        ConfigElement(ConfigElementType.BOOL, "APP_VERSION_2", TriState.N),
+    ]
 
 
 def test_define_string_choices():
@@ -321,7 +344,10 @@ def test_define_string_choices():
     )
 
     iut = KConfig(feature_model_file, user_config)
-    assert iut.config.elements == [ConfigElement(ConfigElementType.STRING, "APP_VERSION_1", "VERSION_NEW"), ConfigElement(ConfigElementType.STRING, "APP_VERSION_2", "")]
+    assert iut.config.elements == [
+        ConfigElement(ConfigElementType.STRING, "APP_VERSION_1", "VERSION_NEW"),
+        ConfigElement(ConfigElementType.STRING, "APP_VERSION_2", ""),
+    ]
 
 
 def test_define_tristate_choices():
@@ -359,7 +385,10 @@ def test_define_tristate_choices():
     )
 
     iut = KConfig(feature_model_file, user_config)
-    assert iut.config.elements == [ConfigElement(ConfigElementType.BOOL, "APP_VERSION_1", TriState.Y), ConfigElement(ConfigElementType.BOOL, "APP_VERSION_2", TriState.N)]
+    assert iut.config.elements == [
+        ConfigElement(ConfigElementType.BOOL, "APP_VERSION_1", TriState.Y),
+        ConfigElement(ConfigElementType.BOOL, "APP_VERSION_2", TriState.N),
+    ]
 
 
 def test_config_including_other_config():

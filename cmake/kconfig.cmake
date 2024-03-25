@@ -18,7 +18,7 @@ if(EXISTS ${KCONFIG_MODEL_FILE})
 
     # TODO: kconfig.py should not update its outputs when the inputs did not change.
     # So an incremental build with configure is not possible. autoconf.h gets updated
-    # everytime (although the content did not change). Therefore stuff gets compiled.
+    # every time (although the content did not change). Therefore stuff gets compiled.
     execute_process(
         WORKING_DIRECTORY ${SPL_CORE_ROOT_DIRECTORY} # TODO: is there a better way to let kconfig.py find other modules?
         COMMAND python ${SPL_CORE_PYTHON_DIRECTORY}/kconfig/kconfig.py

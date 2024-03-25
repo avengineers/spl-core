@@ -97,7 +97,7 @@ Here is an example of the source directory with two components (``src/comp1`` an
     │   └── ...
     └── variants
 
-* **Component Documentation**: 
+* **Component Documentation**:
     * The ``doc`` directory contains the documentation of the component.
     * If a component has a ``doc/index.rst`` file, SPL Core will automatically generate a ``<component>_docs`` CMake target that can be used to build the documentation.
 * **Component Implementation**:
