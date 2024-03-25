@@ -1,0 +1,14 @@
+# Changes here will be overwritten by Copier
+_commit: 0aec4e7
+_src_path: .
+copyright_year: '2024'
+documentation: true
+email: karsten.guenther@kamg.de
+full_name: Avengineers
+github_username: avengineers
+open_source_license: MIT
+package_name: spl_core
+project_name: SPL Core
+project_short_description: Software Product Line Support for CMake
+project_slug: spl-core
+
