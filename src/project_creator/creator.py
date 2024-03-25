@@ -2,11 +2,11 @@ import argparse
 import logging
 import shutil
 from pathlib import Path
-from typing import Dict, List
-
-from cookiecutter.main import cookiecutter
+from typing import Any, Dict, List
 
 from common.path import existing_path
+from cookiecutter.main import cookiecutter
+
 from project_creator.variant import Variant
 from project_creator.workspace_artifacts import WorkspaceArtifacts
 
@@ -20,15 +20,15 @@ class Creator:
         self.project_artifacts = WorkspaceArtifacts(self.project_root_dir)
 
     @classmethod
-    def from_folder(cls, project_dir: Path):
+    def from_folder(cls, project_dir: Path) -> "Creator":
         return cls(project_dir.name, project_dir.parent)
 
     @staticmethod
-    def create_project_description(name: str, variants: List[Variant], touch_only_variants_data: bool = False) -> Dict:
+    def create_project_description(name: str, variants: List[Variant], touch_only_variants_data: bool = False) -> Dict[str, Any]:
         project_description = {"name": name, "variants": {}, "touch_components": not touch_only_variants_data, "touch_tools": not touch_only_variants_data}
         variants.sort()
         for index, variant in enumerate(variants):
-            project_description["variants"][f"{index}"] = vars(variant)
+            project_description["variants"] = {str(index): vars(variant) for index, variant in enumerate(variants)}
         return project_description
 
     @property
@@ -45,21 +45,21 @@ class Creator:
         self.logger.info(f"Project created under: {result_path}")
         return Path(result_path)
 
-    def materialize_workspace(self, variants, touch_only_variants_data: bool = False):
+    def materialize_workspace(self, variants: List[Variant], touch_only_variants_data: bool = False) -> Path:
         project_description = self.create_project_description(self.project_name, variants, touch_only_variants_data)
         result_path = cookiecutter(str(self.project_template_path), output_dir=f"{self.out_dir}", no_input=True, extra_context=project_description, overwrite_if_exists=True)
         return result_path
 
-    def materialize_variants(self, variants: List[Variant]):
+    def materialize_variants(self, variants: List[Variant]) -> None:
         for variant in variants:
             self.materialize_variant(vars(variant), self.project_artifacts.variants_dir)
 
-    def materialize_variant(self, variant_description: Dict, out_dir: Path):
+    def materialize_variant(self, variant_description: Dict[str, Any], out_dir: Path) -> Path:
         result_path = cookiecutter(str(self.variant_template_path), output_dir=f"{out_dir}", no_input=True, extra_context=variant_description, overwrite_if_exists=True)
         self.logger.info(f"Variant created under: {result_path}")
         return Path(result_path)
 
-    def add_variants(self, variants: List[Variant]):
+    def add_variants(self, variants: List[Variant]) -> None:
         existing_variants = self.collect_project_variants()
         new_variants = [variant for variant in variants if variant not in existing_variants]
         if len(new_variants):
@@ -70,7 +70,7 @@ class Creator:
         else:
             self.logger.warning(f"Nothing to add. All the provided variants" f" ({', '.join([str(v) for v in variants])}) already exist in {self.project_root_dir}.")
 
-    def delete_variants(self, variants: List[Variant]):
+    def delete_variants(self, variants: List[Variant]) -> None:
         existing_variants = self.collect_project_variants()
         variants_to_be_deleted = [variant for variant in variants if variant in existing_variants]
         if len(variants_to_be_deleted):
@@ -83,7 +83,7 @@ class Creator:
         else:
             self.logger.warning(f"Nothing to delete. None of the provided variants" f" ({', '.join([str(v) for v in variants])}) exists in {self.project_root_dir}.")
 
-    def delete_variant_dir(self, variant: Variant):
+    def delete_variant_dir(self, variant: Variant) -> None:
         variant_dir = self.project_artifacts.variants_dir.joinpath(f"{variant}")
         if variant_dir.exists():
             shutil.rmtree(variant_dir)
@@ -96,7 +96,7 @@ class Creator:
         return variants
 
 
-def main(command_arguments=None):
+def main(command_arguments: Any = None) -> None:
     arguments = parse_arguments(command_arguments)
     if arguments.command_scope == "workspace":
         Creator(arguments.name, arguments.out_dir).materialize(arguments.variant)
@@ -108,7 +108,7 @@ def main(command_arguments=None):
             creator.delete_variants(arguments.delete)
 
 
-def parse_arguments(command_arguments=None):
+def parse_arguments(command_arguments: Any = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Workspace creator")
     subparsers = parser.add_subparsers(dest="command_scope")
 
@@ -119,7 +119,9 @@ def parse_arguments(command_arguments=None):
 
     parser_variant = subparsers.add_parser("variant", help="Add/delete variant to existing workspace")
     command_group = parser_variant.add_mutually_exclusive_group(required=True)
-    command_group.add_argument("--add", action="append", type=Variant.from_string, metavar="VARIANT", help="Add a variant to a workspace. Variant name as <flavor>/<subsystem>." " E.g. FLV1/SYS1. This option can be used multiple times.")
+    command_group.add_argument(
+        "--add", action="append", type=Variant.from_string, metavar="VARIANT", help="Add a variant to a workspace. Variant name as <flavor>/<subsystem>." " E.g. FLV1/SYS1. This option can be used multiple times."
+    )
     command_group.add_argument(
         "--delete", action="append", type=Variant.from_string, metavar="VARIANT", help="Delete a variant from a workspace. Variant name as <flavor>/<subsystem>." " E.g. FLV1/SYS1. This option can be used multiple times."
     )

@@ -7,16 +7,16 @@ import subprocess
 from contextlib import ContextDecorator
 from pathlib import Path
 from time import perf_counter
-from typing import Dict, Collection
+from typing import Collection, Dict, Optional
 
-from src.common.cmake import CMake
-from src.project_creator.creator import Creator
-from src.project_creator.variant import Variant
-from src.project_creator.workspace_artifacts import WorkspaceArtifacts
+from common.cmake import CMake
+from project_creator.creator import Creator
+from project_creator.variant import Variant
+from project_creator.workspace_artifacts import WorkspaceArtifacts
 
 
 class ExecutionTime(ContextDecorator):
-    def __init__(self, message: str = None):
+    def __init__(self, message: Optional[str] = None):
         self.name = message
 
     def __enter__(self):
@@ -34,18 +34,18 @@ class TestDir:
     __test__ = False
     path: Path
 
-    def write_file(self, name: str, content: str = None) -> Path:
+    def write_file(self, name: str, content: Optional[str] = None) -> Path:
         file = self.path.joinpath(name)
         file.parent.mkdir(parents=True, exist_ok=True)
         file.write_text(content if content else self.gen_random_text(10))
         return file
 
-    def delete_file(self, name: str):
+    def delete_file(self, name: str) -> None:
         self.path.joinpath(name).unlink()
 
     @staticmethod
     def gen_random_text(size: int) -> str:
-        return "".join(random.choices(string.ascii_uppercase + string.digits, k=size))
+        return "".join(random.choices(string.ascii_uppercase + string.digits, k=size))  # noqa: S311
 
     def joinpath(self, path: str) -> Path:
         return self.path.joinpath(path)
@@ -59,7 +59,7 @@ class TestUtils:
     DEFAULT_TEST_DIR = "tmp_test"
 
     @staticmethod
-    def create_clean_test_dir(name: str = None) -> TestDir:
+    def create_clean_test_dir(name: Optional[str] = None) -> TestDir:
         out_dir = TestUtils.this_repository_root_dir().joinpath("out")
         test_dir = out_dir.joinpath(name if name else TestUtils.DEFAULT_TEST_DIR).absolute()
         if test_dir.exists():
@@ -81,7 +81,6 @@ class TestUtils:
     @staticmethod
     def force_spl_core_usage_to_this_repo():
         os.environ["SPLCORE_PATH"] = TestUtils.this_repository_root_dir().as_posix()
-        os.environ["PIPENV_PIPFILE"] = TestUtils.this_repository_root_dir().as_posix() + "/Pipfile"
 
 
 @dataclasses.dataclass
@@ -104,13 +103,13 @@ class DirectoryTracker:
     def reset_status(self):
         self.start_status = self._collect_files_status()
 
-    def _collect_files_status(self) -> Dict:
+    def _collect_files_status(self) -> Dict[Path, int]:
         """
         Store a set with all files and their timestamps
         """
         status = {}
         for file in self.target_dir.glob("**/*"):
-            if Path(file).is_file():
+            if file.is_file():
                 status[file] = os.stat(file).st_mtime_ns
         return status
 
@@ -155,23 +154,28 @@ class TestWorkspace:
     def install_mandatory(self):
         pass
 
-    def link(self, variant: Variant = DEFAULT_VARIANT) -> subprocess.CompletedProcess:
+    def link(self, variant: Variant = DEFAULT_VARIANT) -> subprocess.CompletedProcess[bytes]:
         return self.execute_command(f"{self.workspace_artifacts.build_script}" f" -target link -variants {variant}")
 
-    def selftests(self) -> subprocess.CompletedProcess:
+    def selftests(self) -> subprocess.CompletedProcess[bytes]:
         return self.execute_command(f"{self.workspace_artifacts.build_script}" f" -target selftests")
 
-    def run_cmake_configure(self, build_kit: str = "prod", variant: Variant = DEFAULT_VARIANT) -> subprocess.CompletedProcess:
+    def run_cmake_configure(self, build_kit: str = "prod", variant: Variant = DEFAULT_VARIANT) -> subprocess.CompletedProcess[bytes]:
         if self.use_local_spl_core:
             TestUtils.force_spl_core_usage_to_this_repo()
         return CMake(self.workspace_artifacts).configure(variant=variant, build_kit=build_kit)
 
-    def run_cmake_build(self, target: str = "all", build_kit: str = "prod", variant: Variant = DEFAULT_VARIANT) -> subprocess.CompletedProcess:
+    def run_cmake_build(
+        self,
+        target: str = "all",
+        build_kit: str = "prod",
+        variant: Variant = DEFAULT_VARIANT,
+    ) -> subprocess.CompletedProcess[bytes]:
         if self.use_local_spl_core:
             TestUtils.force_spl_core_usage_to_this_repo()
         return CMake(self.workspace_artifacts).build(variant=variant, target=target, build_kit=build_kit)
 
-    def execute_command(self, command: str) -> subprocess.CompletedProcess:
+    def execute_command(self, command: str) -> subprocess.CompletedProcess[bytes]:
         if self.use_local_spl_core:
             TestUtils.force_spl_core_usage_to_this_repo()
         return subprocess.run(command.split())

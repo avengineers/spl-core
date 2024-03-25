@@ -1,14 +1,15 @@
-from abc import ABC, abstractmethod
 import argparse
+import json
+import os
+import re
+import sys
+from abc import ABC, abstractmethod
+from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum, auto
-import sys
-import os
-import json
-from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, List, Optional
-import re
+from typing import Any, Generator, List, Optional
+
 import kconfiglib
 
 # Get the directory where the script is located and add it to sys.path.
@@ -19,7 +20,7 @@ from common.path import existing_path, non_existing_path
 
 
 class GeneratedFile:
-    def __init__(self, path: Path, content: str = "", skip_writing_if_unchanged=False) -> None:
+    def __init__(self, path: Path, content: str = "", skip_writing_if_unchanged: bool = False) -> None:
         self.path = path
 
         self.content = content
@@ -30,9 +31,11 @@ class GeneratedFile:
         return self.content
 
     def to_file(self) -> None:
-        """Only write to file if the content has changed.
-        The directory of the file is created if it does not exist."""
+        """
+        Only write to file if the content has changed.
 
+        The directory of the file is created if it does not exist.
+        """
         content = self.to_string()
 
         if not self.path.exists() or not self.skip_writing_if_unchanged or self.path.read_text() != content:
@@ -66,8 +69,10 @@ class ConfigElement:
 
 @dataclass
 class ConfigurationData:
-    """- holds the variant configuration data
-    - requires no variable substitution (this should have been already done)"""
+    """
+    - holds the variant configuration data
+    - requires no variable substitution (this should have been already done)
+    """
 
     elements: List[ConfigElement]
 
@@ -78,9 +83,11 @@ class FileWriter(ABC):
     def __init__(self, output_file: Path):
         self.output_file = output_file
 
-    def write(self, configuration_data: ConfigurationData):
-        """- writes the ConfigurationData to a file
-        The file shall not be modified if the content is the same as the existing one"""
+    def write(self, configuration_data: ConfigurationData) -> None:
+        """
+        - writes the ConfigurationData to a file
+        The file shall not be modified if the content is the same as the existing one
+        """
         content = self.generate_content(configuration_data)
         GeneratedFile(self.output_file, content, skip_writing_if_unchanged=True).to_file()
 
@@ -95,12 +102,19 @@ class HeaderWriter(FileWriter):
     config_prefix = "CONFIG_"  # Prefix for all configuration defines
 
     def generate_content(self, configuration_data: ConfigurationData) -> str:
-        """This method does exactly what the kconfiglib.write_autoconf() method does.
+        """
+        This method does exactly what the kconfiglib.write_autoconf() method does.
         We had to implemented here because we refactor the file writers to use the ConfigurationData
-        instead of the KConfig configuration. ConfigurationData has variable substitution already done."""
-        result: List[str] = ["/** @file */", "#ifndef __autoconf_h__", "#define __autoconf_h__", ""]
+        instead of the KConfig configuration. ConfigurationData has variable substitution already done.
+        """
+        result: List[str] = [
+            "/** @file */",
+            "#ifndef __autoconf_h__",
+            "#define __autoconf_h__",
+            "",
+        ]
 
-        def add_define(define_decl: str, description: str):
+        def add_define(define_decl: str, description: str) -> None:
             result.append(f"/** {description} */")
             result.append(define_decl)
 
@@ -111,17 +125,23 @@ class HeaderWriter(FileWriter):
 
             if element.type in [ConfigElementType.BOOL, ConfigElementType.TRISTATE]:
                 if val == TriState.Y:
-                    add_define("#define {}{} 1".format(self.config_prefix, element.name), element.name)
+                    add_define(f"#define {self.config_prefix}{element.name} 1", element.name)
                 elif val == TriState.M:
-                    add_define("#define {}{}_MODULE 1".format(self.config_prefix, element.name), element.name)
+                    add_define(
+                        f"#define {self.config_prefix}{element.name}_MODULE 1",
+                        element.name,
+                    )
 
             elif element.type is ConfigElementType.STRING:
-                add_define('#define {}{} "{}"'.format(self.config_prefix, element.name, kconfiglib.escape(val)), element.name)
+                add_define(
+                    f'#define {self.config_prefix}{element.name} "{kconfiglib.escape(val)}"',
+                    element.name,
+                )
 
             else:  # element.type in [INT, HEX]:
                 if element.type is ConfigElementType.HEX:
                     val = hex(val)
-                add_define("#define {}{} {}".format(self.config_prefix, element.name, val), element.name)
+                add_define(f"#define {self.config_prefix}{element.name} {val}", element.name)
         result.extend(["", "#endif /* __autoconf_h__ */", ""])
         return "\n".join(result)
 
@@ -157,7 +177,7 @@ class CMakeWriter(FileWriter):
 
 
 @contextmanager
-def working_directory(some_directory: Path):
+def working_directory(some_directory: Path) -> Generator[Any, Any, Any]:
     current_directory = Path().absolute()
     try:
         os.chdir(some_directory)
@@ -167,7 +187,12 @@ def working_directory(some_directory: Path):
 
 
 class KConfig:
-    def __init__(self, k_config_model_file: Path, k_config_file: Optional[Path] = None, k_config_root_directory: Optional[Path] = None):
+    def __init__(
+        self,
+        k_config_model_file: Path,
+        k_config_file: Optional[Path] = None,
+        k_config_root_directory: Optional[Path] = None,
+    ):
         """
         :param k_config_model_file: Feature model definition (KConfig format)
         :param k_config_file: User feature selection configuration file
@@ -188,7 +213,7 @@ class KConfig:
         elements = []
         elements_dict = {}
 
-        def process_node(node):
+        def process_node(node: Any) -> None:
             sym = node.item
             if not isinstance(sym, kconfiglib.Symbol):
                 return
@@ -216,13 +241,21 @@ class KConfig:
         # KConfig variables get replaced like: ${VARIABLE_NAME}, e.g. ${CONFIG_FOO}
         for element in elements:
             if element.type == ConfigElementType.STRING:
-                element.value = re.sub(r"\$\{([A-Za-z0-9_]+)\}", lambda m: str(elements_dict[m.group(1)].value), element.value)
-                element.value = re.sub(r"\$\{ENV:([A-Za-z0-9_]+)\}", lambda m: str(os.environ.get(m.group(1), "")), element.value)
+                element.value = re.sub(
+                    r"\$\{([A-Za-z0-9_]+)\}",
+                    lambda m: str(elements_dict[m.group(1)].value),
+                    element.value,
+                )
+                element.value = re.sub(
+                    r"\$\{ENV:([A-Za-z0-9_]+)\}",
+                    lambda m: str(os.environ.get(m.group(1), "")),
+                    element.value,
+                )
 
         return ConfigurationData(elements)
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="KConfig generation")
     parser.add_argument("--kconfig_model_file", required=True, type=existing_path)
     parser.add_argument("--kconfig_config_file", required=False, type=existing_path)

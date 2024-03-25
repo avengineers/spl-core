@@ -31,6 +31,6 @@ class WorkspaceArtifacts:
 
     def get_component_path(self, component_name: str) -> Path:
         return self.components_dir.joinpath(component_name)
-    
+
     def get_kconfig_config_file(self, variant: Variant) -> Path:
         return self.get_variant_dir(variant).joinpath("config.txt")

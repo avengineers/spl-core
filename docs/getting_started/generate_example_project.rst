@@ -10,7 +10,7 @@ Clone the SPL Core repository:
 
 .. code-block:: powershell
 
-    git clone https://github.com/avengineers/spl-core 
+    git clone https://github.com/avengineers/spl-core
 
 
 Install its dependencies:
@@ -124,16 +124,16 @@ The following is a flowchart describing the script's operation:
     CI -->|Yes| End
     CI -->|No| PressKey
     PressKey --> End
-  
+
 
 Python Dependencies
 ^^^^^^^^^^^^^^^^^^^
 
-There are some SPL Core features which require additional Python packages (the list is not exhaustive): 
+There are some SPL Core features which require additional Python packages (the list is not exhaustive):
 
 * ``kconfiglib`` : used to generate the configuration header file (``autoconf.h``) from the Kconfig files.
 * ``hammocking`` : used to generate the mockups for the unit tests.
-* ``sphinx`` : used to generate the documentation.  
+* ``sphinx`` : used to generate the documentation.
 
 These Python dependencies are defined in the ``Pipfile`` and will be automatically installed when running the ``build.ps1`` script with the ``-install`` parameter.
 There will be a Python virtual environment created in the ``.venv`` directory.
@@ -146,7 +146,7 @@ The build tools dependencies (like CMake, Ninja, Compiler etc.) are defined in t
 The tools are installed in the user directory under ``scoop``.
 
 ..
-    
+
         C:/Users/my_user/scoop/apps
 
 .. note::

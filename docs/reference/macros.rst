@@ -131,7 +131,7 @@ Adding compile options to specific files:
 .. code-block:: cmake
 
   spl_add_compile_options(src/led_driver_main.c COMPILE_OPTIONS "-opt")
-  
+
 This example applies the compile option ``-opt`` specifically to the "led_driver_main.c" file in the "src" directory.
 
 

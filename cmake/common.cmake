@@ -121,7 +121,7 @@ macro(spl_create_component)
     # Collect all component names for later usage (e.g., in an extension)
     list(APPEND COMPONENT_NAMES ${component_name})
     set(COMPONENT_NAMES ${COMPONENT_NAMES} PARENT_SCOPE)
-    
+
     # Collect all component information for sphinx documentation
     #  - We need to keep track of all components and their information to be able to generate the variant reports.
     #    For the variants reports, one need to loop over all components and generate component variant specific targets.
@@ -301,7 +301,7 @@ macro(_spl_create_docs_target)
     set(_docs_out_dir ${CMAKE_CURRENT_BINARY_DIR}/docs)
     set(_docs_html_out_dir ${_docs_out_dir}/html)
     set(_docs_config_json ${_docs_out_dir}/config.json)
-    
+
     # create the config.json file. This is exported as SPHINX_BUILD_CONFIGURATION_FILE env variable
     list(JOIN COMPONENTS_INFO "," _components_info_json)
     set(_components_info_json "[${_components_info_json}]")

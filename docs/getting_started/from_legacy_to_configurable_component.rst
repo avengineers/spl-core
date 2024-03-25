@@ -25,10 +25,10 @@ Let's assume the legacy code for the variants is structured as follows:
         └── component2
             ├── component2.c
             └── component2.h
-    
+
 
 Create a New Component
-**********************	
+**********************
 
 The first step is to create a generic "legacy" component which is just a "redirect" for the variant specific legacy component.
 The idea is to configure the same component for all variants.
@@ -164,7 +164,7 @@ To be able to merge the changes back to the main branch as soon as possible, we 
     # endif
 
 
-Now you can enable the feature tests for every variant separately. 
+Now you can enable the feature tests for every variant separately.
 As soon as one variant is tested, you can merge the changes back to the main branch.
 
 .. important::
