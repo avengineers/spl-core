@@ -2,7 +2,8 @@
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
     "python.analysis.extraPaths": [
-        "src"
+        "src",
+        "tests"
     ],
     "workbench.colorCustomizations": {
         "activityBar.activeBackground": "#fbed80",
@@ -24,9 +25,5 @@
         "titleBar.inactiveForeground": "#15202b99"
     },
     "peacock.color": "#f9e64f",
-    "restructuredtext.preview.docutils.disabled": true,
-    "[python]": {
-        "editor.defaultFormatter": "ms-python.black-formatter"
-    },
     "cmake.configureOnOpen": false
 }

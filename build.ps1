@@ -63,16 +63,24 @@ try {
         Invoke-RestMethod 'https://raw.githubusercontent.com/avengineers/bootstrap/v1.1.0/bootstrap.ps1' -OutFile '.\.bootstrap\bootstrap.ps1'
         . .\.bootstrap\bootstrap.ps1
         Write-Output "For installation changes to take effect, please close and re-open your current shell."
+
+        # Call the bootstrap.py if it exists with all provided arguments
+        Initialize-EnvPath
+        $buildScript = Join-Path $PSScriptRoot "bootstrap.py"
+        if (Test-Path $buildScript) {
+            Write-Output "Calling $buildScript ..."
+            & python $buildScript
+        }
     }
     else {
         if (Test-RunningInCIorTestEnvironment -or $Env:USER_PATH_FIRST) {
             Initialize-EnvPath
         }
         # Execute all tests
-        pipenv run pytest
+        .\.venv\Scripts\poetry run pytest
 
         # Build documentation
-        pipenv run sphinx-build docs out/docs/html
+        .\.venv\Scripts\poetry run sphinx-build docs out/docs/html
     }
 }
 finally {
