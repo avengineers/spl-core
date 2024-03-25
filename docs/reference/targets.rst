@@ -28,4 +28,3 @@ Generates the documentation for the given component.
 ---------------------
 
 Runs the unit tests for the given component.
-

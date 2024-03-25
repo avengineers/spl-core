@@ -22,9 +22,9 @@ Here are the main features supporting component documentation:
 
 * describe the component behavior in text
 * create diagrams using `mermaid <https://mermaid-js.github.io/mermaid/>`_
-* include/exclude content based on configuration 
+* include/exclude content based on configuration
 * use `sphinx-needs <https://www.sphinx-needs.com/>`_ to create traceability between documentation, code and tests
-    
+
 
 **Traceability**
 
@@ -45,7 +45,7 @@ The ``spec`` keyword is used to tag the component specification. It shall have:
 
 **Configurability**
 
-All the configuraton features from the project KConfig file are available in the documentation to be able to tailor it.
+All the configuration features from the project KConfig file are available in the documentation to be able to tailor it.
 
 .. code-block:: rst
 
@@ -211,7 +211,7 @@ In order to access the generated mockups, you need to include the ``mockup_<comp
 
 
 .. code-block:: C++
-    
+
     #include "mockup_src_comp.h"
 
 .. note::
@@ -240,7 +240,7 @@ For more details on how to set expectations with Google Mock, see the `GMock for
 One must include the ``autoconf.h`` file in the test file to be able to use the configuration features.
 
 .. code-block:: C++
-    
+
     #include "autoconf.h"
 
 
@@ -249,7 +249,7 @@ One must include the ``autoconf.h`` file in the test file to be able to use the 
 In order to access symbols from the component C files, you have to include the headers and external symbol declarations accordingly:
 
 .. code-block:: C++
-    
+
     extern "C" {
         #include "my_comp.h"
         #include "autoconf.h"
@@ -261,7 +261,7 @@ In order to access symbols from the component C files, you have to include the h
 Here is a ``test_comp.cc`` template for getting you started testing a component:
 
 .. code-block:: C++
-    
+
     /**
     * @file
     */
