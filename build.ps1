@@ -45,6 +45,22 @@ function Test-RunningInCIorTestEnvironment {
     return [Boolean]($Env:JENKINS_URL -or $Env:PYTEST_CURRENT_TEST -or $Env:GITHUB_ACTIONS)
 }
 
+function Invoke-Bootstrap {
+     # Download and unpack the bootstrap archive_url configured in bootstrap.json
+    $bootstrapJson = Join-Path $PSScriptRoot 'bootstrap.json'
+    if (Test-Path $bootstrapJson) {
+        $bootstrapDir = Join-Path $PSScriptRoot '.bootstrap'
+        if (-Not (Test-Path -Path $bootstrapDir)) {
+            New-Item -ItemType Directory $bootstrapDir
+        }
+        $bootstrapConfig = Get-Content $bootstrapJson | ConvertFrom-Json
+        $archiveFile = Join-Path $bootstrapDir 'bootstrap.zip'
+        Invoke-WebRequest -Uri $bootstrapConfig.archive_url -OutFile $archiveFile
+        Expand-Archive -Path $archiveFile -DestinationPath $bootstrapDir -Force
+        . $bootstrapDir\bootstrap.ps1
+    }
+}
+
 ## start of script
 # Always set the $InformationPreference variable to "Continue" globally, this way it gets printed on execution and continues execution afterwards.
 $InformationPreference = "Continue"
@@ -57,20 +73,7 @@ Write-Output "Running in ${pwd}"
 
 try {
     if ($install) {
-        if (-Not (Test-Path -Path '.bootstrap')) {
-            New-Item -ItemType Directory '.bootstrap'
-        }
-        Invoke-RestMethod 'https://raw.githubusercontent.com/avengineers/bootstrap/v1.1.0/bootstrap.ps1' -OutFile '.\.bootstrap\bootstrap.ps1'
-        . .\.bootstrap\bootstrap.ps1
-        Write-Output "For installation changes to take effect, please close and re-open your current shell."
-
-        # Call the bootstrap.py if it exists with all provided arguments
-        Initialize-EnvPath
-        $buildScript = Join-Path $PSScriptRoot "bootstrap.py"
-        if (Test-Path $buildScript) {
-            Write-Output "Calling $buildScript ..."
-            & python $buildScript
-        }
+        Invoke-Bootstrap
     }
     else {
         if (Test-RunningInCIorTestEnvironment -or $Env:USER_PATH_FIRST) {
