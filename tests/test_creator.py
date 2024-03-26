@@ -4,9 +4,10 @@ from subprocess import CompletedProcess
 from unittest.mock import patch
 
 import pytest
-from project_creator.creator import Creator, main, parse_arguments
-from project_creator.variant import Variant
 from utils import TestUtils, TestWorkspace
+
+from spl_core.project_creator.creator import Creator, main, parse_arguments
+from spl_core.project_creator.variant import Variant
 
 
 def execute_command(command: str) -> CompletedProcess[bytes]:

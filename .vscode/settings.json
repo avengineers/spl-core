@@ -23,5 +23,9 @@
     },
     "peacock.color": "#f9e64f",
     "cmake.configureOnOpen": false,
-    "cSpell.words": ["kconfiglib"]
+    "cSpell.words": [
+        "cookiecutter",
+        "kconfig",
+        "kconfiglib"
+    ]
 }

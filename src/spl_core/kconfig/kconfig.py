@@ -2,7 +2,6 @@ import argparse
 import json
 import os
 import re
-import sys
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -12,11 +11,7 @@ from typing import Any, Generator, List, Optional
 
 import kconfiglib
 
-# Get the directory where the script is located and add it to sys.path.
-# Same as modifying environment variable PYTHONPATH
-sys.path.append(str(Path(__file__).absolute().parent.parent))
-
-from common.path import existing_path, non_existing_path
+from spl_core.common.path import existing_path, non_existing_path
 
 
 class GeneratedFile:

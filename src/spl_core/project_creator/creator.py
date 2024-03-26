@@ -4,11 +4,11 @@ import shutil
 from pathlib import Path
 from typing import Any, Dict, List
 
-from common.path import existing_path
 from cookiecutter.main import cookiecutter
 
-from project_creator.variant import Variant
-from project_creator.workspace_artifacts import WorkspaceArtifacts
+from spl_core.common.path import existing_path
+from spl_core.project_creator.variant import Variant
+from spl_core.project_creator.workspace_artifacts import WorkspaceArtifacts
 
 
 class Creator:
