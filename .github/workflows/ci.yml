@@ -14,31 +14,25 @@ concurrency:
 
 jobs:
     lint:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
-            - uses: actions/setup-python@v5
-              with:
-                  python-version: 3.x
-            - uses: pre-commit/action@v3.0.1
-
-    # Make sure commit messages follow the conventional commits convention:
-    # https://www.conventionalcommits.org
-    commitlint:
-        name: Lint Commit Messages
+        name: Check (Lint) Commit Messages and Files
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
               with:
                   fetch-depth: 0
+            - uses: actions/setup-python@v5
+              with:
+                  python-version: 3.x
+            - uses: pre-commit/action@v3.0.1
+            # Make sure commit messages follow the conventional commits convention:
+            # https://www.conventionalcommits.org
             - uses: wagoid/commitlint-github-action@v5
 
-    # Run all tests on Windows
     test:
-        name: CI Gate
+        name: Run Tests
         runs-on: windows-latest
         needs:
-            - commitlint
+            - lint
         steps:
             - name: Checkout
               uses: actions/checkout@v4
@@ -53,7 +47,7 @@ jobs:
                   .\build.ps1
               shell: powershell
             - name: Publish Test Results
-              uses: EnricoMi/publish-unit-test-result-action/composite@v2
+              uses: EnricoMi/publish-unit-test-result-action/windows@v2
               if: always()
               with:
                   files: |
@@ -63,7 +57,6 @@ jobs:
         needs:
             - test
             - lint
-            - commitlint
 
         runs-on: ubuntu-latest
         environment: release
