@@ -2,8 +2,8 @@ import logging
 import subprocess
 from subprocess import CompletedProcess
 
-from project_creator.variant import Variant
-from project_creator.workspace_artifacts import WorkspaceArtifacts
+from spl_core.project_creator.variant import Variant
+from spl_core.project_creator.workspace_artifacts import WorkspaceArtifacts
 
 
 class CMake:

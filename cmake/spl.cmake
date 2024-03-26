@@ -2,7 +2,7 @@
 # relative to the SPL Core installation directory.
 set(SPL_CORE_ROOT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/..)
 set(SPL_CORE_CMAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
-set(SPL_CORE_PYTHON_DIRECTORY ${SPL_CORE_ROOT_DIRECTORY}/src)
+set(SPL_CORE_PYTHON_DIRECTORY ${SPL_CORE_ROOT_DIRECTORY}/src/spl_core)
 
 # Always create a compile_commands.json file for C/C++ intellisense / CMake Tools extension
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

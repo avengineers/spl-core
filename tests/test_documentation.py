@@ -1,7 +1,6 @@
 from typing import List
 
-from project_creator.variant import Variant
-
+from spl_core.project_creator.variant import Variant
 from tests.utils import ExecutionTime, TestWorkspace
 
 

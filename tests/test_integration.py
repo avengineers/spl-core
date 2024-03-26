@@ -4,8 +4,9 @@ import xml.etree.ElementTree as ET
 from os import makedirs
 
 import pytest
-from project_creator.variant import Variant
 from utils import ExecutionTime, TestWorkspace
+
+from spl_core.project_creator.variant import Variant
 
 
 class TestIntegration:

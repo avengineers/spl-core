@@ -1,7 +1,8 @@
 import os
 
 import pytest
-from gcov_maid.gcov_maid import wipe_gcda_files, wipe_gcno_files
+
+from spl_core.gcov_maid.gcov_maid import wipe_gcda_files, wipe_gcno_files
 
 
 @pytest.fixture
