@@ -1,4 +1,4 @@
-from project_creator.variant import Variant
+from spl_core.project_creator.variant import Variant
 
 
 class TestVariant:
@@ -16,6 +16,4 @@ class TestVariant:
 
     def test_hash(self):
         assert Variant("A", "B") in [Variant("A", "C"), Variant("A", "B")]
-        assert list({Variant("A", "C"), Variant("A", "B")} - {Variant("A", "B")}) == [
-            Variant("A", "C")
-        ]
+        assert list({Variant("A", "C"), Variant("A", "B")} - {Variant("A", "B")}) == [Variant("A", "C")]

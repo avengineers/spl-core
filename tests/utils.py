@@ -9,10 +9,10 @@ from pathlib import Path
 from time import perf_counter
 from typing import Collection, Dict, Optional
 
-from common.cmake import CMake
-from project_creator.creator import Creator
-from project_creator.variant import Variant
-from project_creator.workspace_artifacts import WorkspaceArtifacts
+from spl_core.common.cmake import CMake
+from spl_core.project_creator.creator import Creator
+from spl_core.project_creator.variant import Variant
+from spl_core.project_creator.workspace_artifacts import WorkspaceArtifacts
 
 
 class ExecutionTime(ContextDecorator):

@@ -4,7 +4,9 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-from kconfig.kconfig import (
+from utils import TestUtils
+
+from spl_core.kconfig.kconfig import (
     CMakeWriter,
     ConfigElement,
     ConfigElementType,
@@ -15,7 +17,6 @@ from kconfig.kconfig import (
     TriState,
     main,
 )
-from utils import TestUtils
 
 
 @pytest.fixture
