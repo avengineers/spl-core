@@ -75,7 +75,7 @@ version_variables = [
     "src/spl_core/__init__.py:__version__",
     "docs/conf.py:release",
 ]
-build_command = ".venv/Scripts/poetry build"
+build_command = "poetry build"
 
 [tool.semantic_release.changelog]
 exclude_commit_patterns = [
