@@ -71,14 +71,14 @@ jobs:
                   fetch-depth: 0
                   ref: ${{ github.head_ref || github.ref_name }}
 
-            # Do a dry run of PSR
+            # Do a dry run of release
             - name: Test release
               uses: python-semantic-release/python-semantic-release@v9.0.3
               if: github.ref_name != 'develop'
               with:
                   root_options: --noop
 
-            # On main branch: actual PSR + upload to PyPI & GitHub
+            # On main branch: actual release + upload to PyPI & GitHub
             - name: Release
               uses: python-semantic-release/python-semantic-release@v9.0.3
               id: release
