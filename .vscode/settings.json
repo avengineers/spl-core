@@ -26,6 +26,7 @@
     "cSpell.words": [
         "cookiecutter",
         "kconfig",
-        "kconfiglib"
+        "kconfiglib",
+        "SPLE"
     ]
 }

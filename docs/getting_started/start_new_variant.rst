@@ -1,4 +1,4 @@
-How to Start Working on a :ref:`Variant <what_is_a_variant>`
-############################################################
+How to Start Working on a :ref:`Variant <glossary_variant>`
+###########################################################
 
 TODO: write this section
