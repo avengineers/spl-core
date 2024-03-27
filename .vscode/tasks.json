@@ -2,8 +2,8 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "install dependencies",
-            "command": ".\\build.ps1 -install",
+            "label": "Run tests",
+            "command": "poetry run pytest --cov",
             "type": "shell",
             "presentation": {
                 "reveal": "always"
@@ -14,8 +14,8 @@
             }
         },
         {
-            "label": "run tests",
-            "command": ".venv/Scripts/poetry run pytest --cov",
+            "label": "Build docs",
+            "command": "poetry run sphinx-build docs out/docs/html",
             "type": "shell",
             "presentation": {
                 "reveal": "always"
@@ -26,8 +26,8 @@
             }
         },
         {
-            "label": "build docs",
-            "command": ".venv/Scripts/poetry run sphinx-build docs out/docs/html",
+            "label": "Build docs (all and clean)",
+            "command": "poetry run sphinx-build -a -E docs out/docs/html",
             "type": "shell",
             "presentation": {
                 "reveal": "always"
@@ -38,19 +38,7 @@
             }
         },
         {
-            "label": "clean build docs",
-            "command": ".venv/Scripts/poetry run sphinx-build -E docs out/docs/html",
-            "type": "shell",
-            "presentation": {
-                "reveal": "always"
-            },
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            }
-        },
-        {
-            "label": "open docs index.html",
+            "label": "Open docs in browser",
             "command": "out/docs/html/index.html",
             "type": "shell",
             "presentation": {
@@ -62,8 +50,8 @@
             }
         },
         {
-            "label": "run pre-commit checks",
-            "command": ".venv/Scripts/poetry run pre-commit run --all-files",
+            "label": "Run pre-commit checks",
+            "command": "poetry run pre-commit run --all-files",
             "type": "shell",
             "presentation": {
                 "reveal": "always"
