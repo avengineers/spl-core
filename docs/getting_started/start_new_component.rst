@@ -1,7 +1,7 @@
-How to Start Working on a :ref:`Component <what_is_a_component>`
-################################################################
+How to Start Working on a :ref:`Component <glossary_component>`
+###############################################################
 
-To support :ref:`component <what_is_a_component>` development, SPL Core provides features to:
+To support :ref:`component <glossary_component>` development, SPL Core provides features to:
 
 - document the component behavior
 - test the component behavior
@@ -217,7 +217,7 @@ In order to access the generated mockups, you need to include the ``mockup_<comp
 .. note::
 
     In SPL Core the component name is the relative path to the project directory
-    - see :ref:`What is a component <what_is_a_component>` for more details.
+    - see :ref:`What is a component <glossary_component>` for more details.
 
 One must create the mockup object in every test case before being able to use it:
 
