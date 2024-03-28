@@ -2,6 +2,13 @@
 
 
 
+## v4.0.0 (2024-03-28)
+
+### Breaking
+
+* feat!: convert to python package ([`2b7f0d8`](https://github.com/avengineers/spl-core/commit/2b7f0d87f37e6832c32734e68aad529318d25821))
+
+
 ## v3.16.0 (2024-02-02)
 
 ### Feature
@@ -10,14 +17,6 @@
 
 
 ## v3.15.0 (2024-01-09)
-
-### Chore
-
-* chore: fix all review findings ([`c4b3b0a`](https://github.com/avengineers/spl-core/commit/c4b3b0a01e75e040df619be93290e6f66c8e7dbc))
-
-* chore: update spl project template ([`211f57c`](https://github.com/avengineers/spl-core/commit/211f57c669fc1c3b2681bc65d558353fdd13971e))
-
-* chore: review and refactor variant reports target ([`d7c8566`](https://github.com/avengineers/spl-core/commit/d7c85665a05cd9c64ac845581ffe2c1ebc3f5ed1))
 
 ### Documentation
 
@@ -65,10 +64,6 @@ Co-authored-by: Kobagapu, Akshit (RDS-RM) &lt;Akshit.Kobagapu@marquardt.com&gt; 
 
 ## v3.12.0 (2023-11-30)
 
-### Chore
-
-* chore: link keywords like component, variant ([`66226fa`](https://github.com/avengineers/spl-core/commit/66226faf21bef5db659b470741a48a6e8750d90d))
-
 ### Documentation
 
 * docs: how to create a new component ([`616c802`](https://github.com/avengineers/spl-core/commit/616c8026c25bcd8b9ad9e9d500a139b31f563aee))
@@ -110,12 +105,6 @@ cjore: add link to components and variants  within SPL Core Docu ([`45325df`](ht
 
 
 ## v3.11.0 (2023-11-08)
-
-### Chore
-
-* chore: improve SPL description ([`a222cc8`](https://github.com/avengineers/spl-core/commit/a222cc8d13714a6ae18542f004dcdb83e442f6db))
-
-* chore: add linting of commit messages ([`fa02d0b`](https://github.com/avengineers/spl-core/commit/fa02d0be6fd69bd9e99721344fc4d2eff976c3c1))
 
 ### Feature
 
@@ -193,10 +182,6 @@ Improve SPL description ([`26c9a34`](https://github.com/avengineers/spl-core/com
 
 
 ## v3.5.0 (2023-10-11)
-
-### Unknown
-
-* change prefix for sphinx-needs test results ([`5213d70`](https://github.com/avengineers/spl-core/commit/5213d700a5b166b21b60051276d3602fbea5b129))
 
 
 ## v3.4.0 (2023-10-11)
@@ -276,12 +261,6 @@ This reverts commit 56dc4578f3614d93d5963ec10467c7b56b19c1c5. ([`838abb0`](https
 
 
 ## v2.8.0 (2023-08-11)
-
-### Unknown
-
-* change index rst of unit test specification (#74)
-
-Co-authored-by: Michelon, Dr. Gabriela (RDS-RM) &lt;Gabriela.Michelon@marquardt.com&gt; ([`56dc457`](https://github.com/avengineers/spl-core/commit/56dc4578f3614d93d5963ec10467c7b56b19c1c5))
 
 
 ## v2.7.1 (2023-08-08)
@@ -834,8 +813,6 @@ Use gtest and hammock ([`e9e9cfa`](https://github.com/avengineers/spl-core/commi
 
 * fix behavior for postprocessing. use build kit now ([`bcd9d48`](https://github.com/avengineers/spl-core/commit/bcd9d487ea6e59009dc29cbce748f1202b2b92f1))
 
-* correct return code for python stuff ([`4d0ad44`](https://github.com/avengineers/spl-core/commit/4d0ad44dec60d0efb8cbf0410ce15eed4520d5d0))
-
 * generic postprocessing mechanism, add proxy hint to example ([`612f1c6`](https://github.com/avengineers/spl-core/commit/612f1c65affc3871383853c3d77177e95887fa78))
 
 * add generic postprocessing mechanism ([`b30dc16`](https://github.com/avengineers/spl-core/commit/b30dc1693f097e7697f5037e0d866bd2e94afce7))
@@ -852,11 +829,7 @@ Use gtest and hammock ([`e9e9cfa`](https://github.com/avengineers/spl-core/commi
 
 * try different installation ([`da727ca`](https://github.com/avengineers/spl-core/commit/da727ca0388843430cafe2a27d62b7222e5fcda4))
 
-* change workflows and how to call installer ([`4a0cb19`](https://github.com/avengineers/spl-core/commit/4a0cb19a910736b7d78e77b217d09d3e1f489a9e))
-
 * update latest stuff, import still missing ([`3f8acb4`](https://github.com/avengineers/spl-core/commit/3f8acb4b8266980f3b33becdb38ccc3bf6b337ea))
-
-* change readme, cleanup cmake ([`cf66fe3`](https://github.com/avengineers/spl-core/commit/cf66fe36bb35425e44e74f770feae749a177260b))
 
 * remove unused test case and fix github action ([`e5cb4b8`](https://github.com/avengineers/spl-core/commit/e5cb4b8111bdfd10bf447af6fcec90279d73c3d4))
 
@@ -874,10 +847,7 @@ Use gtest and hammock ([`e9e9cfa`](https://github.com/avengineers/spl-core/commi
 
 * improve submodule behavior in cmake ([`02ec908`](https://github.com/avengineers/spl-core/commit/02ec908831bc00e3f5e19b1fada532e6851a212d))
 
-* correctly evaluate junit results ([`78b8d10`](https://github.com/avengineers/spl-core/commit/78b8d1073d21d0aa3c7295871eb160f29f97b1f2))
-
-* correctly setup scoop and tool installation in workflow actions ([`dd60a9b`](https://github.com/avengineers/spl-core/commit/dd60a9b4110f169a99ccfb4826e85bf21016a3b7))
-
 * add Github actions workflow ([`fa10b0e`](https://github.com/avengineers/spl-core/commit/fa10b0e8cecff57541cb75698ea939b19daf1cf3))
 
 * initial public commit ([`13896ae`](https://github.com/avengineers/spl-core/commit/13896aec4c7ea583fe1fa19c03c545651d8927f5))
+
