@@ -4,7 +4,7 @@
 .. toctree::
    :maxdepth: 2
 
-   concepts
+   glossary
    hello_world
    generate_example_project
    start_new_component

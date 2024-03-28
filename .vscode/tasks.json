@@ -2,19 +2,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "install dependencies",
-            "command": ".\\build.ps1 -install",
-            "type": "shell",
-            "presentation": {
-                "reveal": "always"
-            },
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            }
-        },
-        {
-            "label": "run tests",
+            "label": "Run tests",
             "command": ".venv/bin/poetry run pytest --cov",
             "windows": {
                 "command": ".venv/Scripts/poetry run pytest --cov"
@@ -29,8 +17,11 @@
             }
         },
         {
-            "label": "build docs",
+            "label": "Build docs",
             "command": ".venv/bin/poetry run sphinx-build docs out/docs/html",
+            "windows": {
+                "command": ".venv/Scripts/poetry run sphinx-build docs out/docs/html"
+            },
             "type": "shell",
             "presentation": {
                 "reveal": "always"
@@ -41,8 +32,11 @@
             }
         },
         {
-            "label": "clean build docs",
-            "command": ".venv/bin/poetry run sphinx-build -E docs out/docs/html",
+            "label": "Build docs (all and clean)",
+            "command": ".venv/bin/poetry run sphinx-build -a -E docs out/docs/html",
+            "windows": {
+                "command": ".venv/Scripts/poetry run sphinx-build -a -E docs out/docs/html"
+            },
             "type": "shell",
             "presentation": {
                 "reveal": "always"
@@ -53,7 +47,7 @@
             }
         },
         {
-            "label": "open docs index.html",
+            "label": "Open docs in browser",
             "command": "out/docs/html/index.html",
             "type": "shell",
             "presentation": {
@@ -65,7 +59,7 @@
             }
         },
         {
-            "label": "run pre-commit checks",
+            "label": "Run pre-commit checks",
             "command": ".venv/bin/poetry run pre-commit run --all-files",
             "windows": {
                 "command": ".venv/Scripts/poetry run pre-commit run --all-files"
