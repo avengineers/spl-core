@@ -46,20 +46,12 @@ function Test-RunningInCIorTestEnvironment {
 }
 
 function Invoke-Bootstrap {
-     # Download and unpack the bootstrap archive_url configured in bootstrap.json
-    $bootstrapJson = Join-Path $PSScriptRoot 'bootstrap.json'
-    if (Test-Path $bootstrapJson) {
-        $bootstrapDir = Join-Path $PSScriptRoot '.bootstrap'
-        if (-Not (Test-Path -Path $bootstrapDir)) {
-            New-Item -ItemType Directory $bootstrapDir
-        }
-        $bootstrapConfig = Get-Content $bootstrapJson | ConvertFrom-Json
-        $archiveFile = Join-Path $bootstrapDir 'bootstrap.zip'
-        Invoke-WebRequest -Uri $bootstrapConfig.archive_url -OutFile $archiveFile
-        Expand-Archive -Path $archiveFile -DestinationPath $bootstrapDir -Force
-        . $bootstrapDir\bootstrap.ps1
-    }
+    # Download bootstrap scripts from external repository
+    Invoke-RestMethod https://raw.githubusercontent.com/avengineers/bootstrap-installer/v1.5.0/install.ps1 | Invoke-Expression
+    # Execute bootstrap script
+    . .\.bootstrap\bootstrap.ps1
 }
+
 
 ## start of script
 # Always set the $InformationPreference variable to "Continue" globally, this way it gets printed on execution and continues execution afterwards.
