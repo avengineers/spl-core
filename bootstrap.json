@@ -1,0 +1,14 @@
+{
+    "python_version": "3.11",
+    "python_package_manager": "poetry>=1.7.1",
+    "scoop_installer": "https://raw.githubusercontent.com/ScoopInstaller/Install/master/install.ps1",
+    "scoop_default_bucket_base_url": "https://raw.githubusercontent.com/ScoopInstaller/Main/master/bucket",
+    "scoop_python_bucket_base_url": "https://raw.githubusercontent.com/ScoopInstaller/Versions/master/bucket",
+    "scoop_ignore_scoopfile": true,
+    "scoop_config": {
+        "autostash_on_conflict": "true",
+        "use_lessmsi": "true",
+        "scoop_repo": "https://github.com/ScoopInstaller/Scoop.git",
+        "scoop_branch": "master"
+    }
+}
