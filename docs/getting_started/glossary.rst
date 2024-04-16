@@ -109,7 +109,7 @@ If a ``config.txt`` file is present in the :ref:`variant <glossary_variant>` dir
 Pipeline
 --------
 
-A pipeline is a directed graph of steps with a single entry point and a single exit point. The steps are executed in a specific order.
+A pipeline is a directed graph of  :ref:`steps <glossary_step>` with a single entry point and a single exit point. The :ref:`steps <glossary_step>` are executed in a specific order.
 
 
 .. _glossary_platform:
@@ -137,6 +137,14 @@ A quality gate is a check of quality criteria at the end of a pipeline.
 It is defined by the development team, e.g., by a test manager inside the pipeline configuration.
 It protects a branch of a repository.
 
+.. _glossary_release:
+
+Release
+-------
+
+A software version that fulfills a complete set of quality criteria. Usually this is sent to a customer.
+
+
 .. _glossary_snapshot:
 
 Snapshot
@@ -145,13 +153,7 @@ Snapshot
 A software version that fulfills a certain set of quality criteria. Might be sent to a customer.
 
 
-.. _glossary_release:
-
-Release
--------
-
-A software version that fulfills a complete set of quality criteria. Usually this is sent to a customer.
-
+.. _glossary_spl:
 
 Software Product Line (SPL)
 ---------------------------
@@ -163,6 +165,8 @@ Each car is special - some are race cars, some are trucks, and others might be c
 But they all start from some common :ref:`components <glossary_component>` like wheels and engines with different configurations like size and horsepowers.
 Thinking this way, making a new software is like building a new car but faster and easier because we already have the :ref:`components <glossary_component>` we need.
 
+
+.. _glossary_spl_core:
 
 SPL Core
 --------
