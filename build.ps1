@@ -1,17 +1,7 @@
 param(
-    [switch]$clean ## clean build, wipe out all build artifacts
+    [Parameter(Mandatory = $false, HelpMessage = 'Clean build, wipe out all build artifacts. (Switch, default: false)')]
+    [switch]$clean = $false
 )
-
-# Update/Reload current environment variable PATH with settings from registry
-Function Initialize-EnvPath {
-    # workaround for system-wide installations
-    if ($Env:USER_PATH_FIRST) {
-        $Env:Path = [System.Environment]::GetEnvironmentVariable("Path", "User") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "Machine")
-    }
-    else {
-        $Env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
-    }
-}
 
 function Test-RunningInCIorTestEnvironment {
     return [Boolean]($Env:JENKINS_URL -or $Env:PYTEST_CURRENT_TEST -or $Env:GITHUB_ACTIONS)
@@ -24,6 +14,20 @@ function Invoke-Bootstrap {
     . .\.bootstrap\bootstrap.ps1
 }
 
+Function Remove-Path {
+    param (
+        [Parameter(Mandatory = $true, Position = 0)]
+        [string]$path
+    )
+    if (Test-Path -Path $path -PathType Container) {
+        Write-Output "Deleting directory '$path' ..."
+        Remove-Item $path -Force -Recurse
+    }
+    elseif (Test-Path -Path $path -PathType Leaf) {
+        Write-Output "Deleting file '$path' ..."
+        Remove-Item $path -Force
+    }
+}
 
 ## start of script
 # Always set the $InformationPreference variable to "Continue" globally, this way it gets printed on execution and continues execution afterwards.
@@ -36,10 +40,14 @@ Push-Location $PSScriptRoot
 Write-Output "Running in ${pwd}"
 
 try {
+    # clean build
+    if ($clean) {
+        Remove-Path "build"
+        Remove-Path ".venv"
+    }
+
     # bootstrap environment
     Invoke-Bootstrap
-
-    Initialize-EnvPath
 
     # Run pypeline
     .\.venv\Scripts\pypeline run
