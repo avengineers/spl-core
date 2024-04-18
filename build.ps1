@@ -1,6 +1,8 @@
 param(
     [Parameter(Mandatory = $false, HelpMessage = 'Clean build, wipe out all build artifacts. (Switch, default: false)')]
-    [switch]$clean = $false
+    [switch]$clean = $false,
+    [Parameter(Mandatory = $false, HelpMessage = 'Install all dependencies required to build. (Switch, default: false)')]
+    [switch]$install = $false
 )
 
 function Test-RunningInCIorTestEnvironment {
@@ -49,8 +51,10 @@ try {
     # bootstrap environment
     Invoke-Bootstrap
 
-    # Run pypeline
-    .\.venv\Scripts\pypeline run
+    if (-Not $install) {
+        # Run pypeline
+        .\.venv\Scripts\pypeline run
+    }
 }
 finally {
     Pop-Location
