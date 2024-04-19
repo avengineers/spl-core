@@ -1,6 +1,8 @@
 Software Product Line (SPL) Core Documentation
 ##############################################
 
+Just a test!
+
 .. toctree::
     :maxdepth: 2
 
