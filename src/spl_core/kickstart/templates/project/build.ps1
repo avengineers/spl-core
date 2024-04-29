@@ -169,7 +169,7 @@ Function Invoke-Build {
             $dirs = Get-Childitem -Include config.cmake -Path variants -Recurse | Resolve-Path -Relative
             $variantsList = @()
             Foreach ($dir in $dirs) {
-                $variant = (get-item $dir).Directory.Parent.BaseName + "/" + (get-item $dir).Directory.BaseName
+                $variant = (get-item $dir).Directory.BaseName
                 $variantsList += $variant
             }
             $variantsSelected = @()

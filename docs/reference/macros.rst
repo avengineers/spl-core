@@ -58,6 +58,7 @@ Adding an include directory to the project:
 
 This example adds the "include/my_library" directory to the project's list of include directories, making header files within this directory accessible to the project's source code.
 
+.. _spl_add_source:
 
 spl_add_source
 --------------
@@ -134,6 +135,7 @@ Adding compile options to specific files:
 
 This example applies the compile option ``-opt`` specifically to the "led_driver_main.c" file in the "src" directory.
 
+.. _spl_add_test_source:
 
 spl_add_test_source
 -------------------
@@ -162,6 +164,7 @@ Adding a test source file to the component:
 
 This example adds the "test_led_driver.cc" source file located in the "test" directory to the component.
 
+.. _spl_create_component:
 
 spl_create_component
 --------------------

@@ -25,25 +25,32 @@ Activate the python virtual environment and use the project creator to generate 
 
 .. code-block:: powershell
 
-    .\.venv\Scripts\activate
-    poetry run python src/spl_core/project_creator/creator.py workspace --name MyProject --variant some/variant --out_dir C:\tmp
+    .\please.ps1 init --project-dir C:\tmp\MyProject
 
-This will create a new project in the directory ``MyProject``.
+This will create a new SPL project in the directory ``C:\tmp\MyProject``.
 
 Before you can build the project, you need to install the dependencies:
 
 .. code-block:: powershell
 
-    cd MyProject
+    cd C:\tmp\MyProject
     .\build.ps1 -install
 
 Now you can build the project:
 
 .. code-block:: powershell
 
-    .\build.ps1
+    .\build.ps1 -build
 
-The created executable can be found in the directory ``.\build\VARIANT\prod\my_main.exe``.
+Select one of the variants to build, e.g., ``EnglishVariant``.
+The created executable can be found in the directory ``build\EnglishVariant\prod\my_main.exe``.
+
+Run the executable in the terminal will output:
+
+.. code-block::
+
+    Hello, World!
+
 
 Generated Project
 -----------------
@@ -56,13 +63,15 @@ The ``build.ps1`` PowerShell script acts as a centralized tool to streamline sev
 
 You can provide several parameters to customize the script's behavior:
 
-* ``-clean`` : Clean build wipes out all build artifacts.
-* ``-install`` : Install mandatory packages.
-* ``-target`` : Specifies the target to be built (default is "all").
-* ``-variants`` : Specifies the variants (projects) to be built.
-* ``-filter`` : Filter for selftests in pytest syntax.
-* ``-ninjaArgs`` : Additional build arguments for Ninja.
-* ``-reconfigure`` : Delete CMake cache and reconfigure.
+* ``install`` : Install all dependencies required to build.
+* ``build`` : Build the target.
+* ``clean`` : Clean build, wipe out all build artifacts.
+* ``buildKit`` : Build kit to be used.
+* ``target`` : Target to be built.
+* ``variants`` : Variants (of the product) to be built (List of strings, leave empty to be asked or "all" for automatic build of all variants)
+* ``filter`` : filter for selftests; define in pytest syntax: https://docs.pytest.org/en/6.2.x/usage.html; e.g. "EnglishVariant or test_EnglishVariant.py"
+* ``ninjaArgs`` : Additional build arguments for Ninja (e.g., "-d explain -d keepdepfile" for debugging purposes)
+* ``reconfigure`` : Delete CMake cache and reconfigure.
 
 The following is a flowchart describing the script's operation:
 
@@ -70,60 +79,56 @@ The following is a flowchart describing the script's operation:
 
     flowchart TD
 
-    Start(Start Script)
-    Install{Install?}
-    Clean{Clean?}
-    CI{CI Build?}
-    End(End Script)
-    PressKey[Press Any Key to Continue]
+        Start(Start Script)
+        Install{Install?}
+        Build{Build?}
+        Clean{Clean?}
+        HandleClean[Remove All Build Artifacts]
+        End(End Script)
+        PressKey[Press Any Key to Continue]
 
-    CheckTarget{Target 'selftests'?}
-    HandleSelfTests[Execute Selftests]
-    HandleVariants[Detect Variants]
-    CleanCheck{Clean?}
-    HandleClean[Remove Variant Build Artifacts]
-    ReconfigureCheck{Reconfigure?}
-    HandleReconfigure[Remove Variant CMake Files]
-    CMakeConfigure[Configure & Generate CMake]
-    CMakeBuild[Build with CMake]
+        CheckTargetSelftests{Target 'selftests'?}
+        HandleSelfTests[Execute Selftests]
+        HandleVariants[Detect Variants]
+        CleanVariant{Clean?}
+        HandleVariantClean[Remove Variant Build Artifacts]
+        ReconfigureCheck{Reconfigure?}
+        HandleReconfigure[Remove Variant CMake Files]
+        CMakeConfigure[Configure & Generate CMake]
+        CMakeBuild[Build with CMake]
 
-    Start --> Install
-    Install -->|Yes| Scoop(Install-Scoop)
+        Start --> Install
+        Install -->|Yes| Bootstrap(Invoke Bootstrap)
 
-    subgraph " "
         subgraph "BOOTSTRAP"
-            Scoop-->Python(Install-Python-Dependency)
+            Bootstrap-->GitConfig(Git-Config)
         end
-        Python-->GitConfig(Git-Config)
-    end
+        GitConfig-->Build
 
-    GitConfig --> CI
-    Install -->|No| Clean
+        Install -->|No| Build
+        Build -->|No| PressKey
+        Build -->|Yes| CheckTargetSelftests
 
-    subgraph "CLEAN"
-        Clean -->|Yes| CleanAction[Remove All Build Artifacts]
-    end
+        subgraph "BUILD"
+            CheckTargetSelftests -->|Yes| Clean
+            Clean -->|Yes| HandleClean
+            Clean -->|No| HandleSelfTests
+            HandleClean --> HandleSelfTests
+            CheckTargetSelftests -->|No| HandleVariants
+            HandleVariants --> CleanVariant
+            CleanVariant -->|Yes| HandleVariantClean
+            CleanVariant -->|No| ReconfigureCheck
+            HandleVariantClean --> ReconfigureCheck
+            ReconfigureCheck -->|Yes| HandleReconfigure
+            ReconfigureCheck -->|No| CMakeConfigure
+            HandleReconfigure --> CMakeConfigure
+            CMakeConfigure --> CMakeBuild
+        end
 
-    subgraph "CMAKE BUILD"
-        Clean -->|No| CheckTarget
-        CleanAction --> CheckTarget
-        CheckTarget -->|Yes| HandleSelfTests
-        CheckTarget -->|No| HandleVariants
-        HandleVariants --> CleanCheck
-        CleanCheck -->|Yes| HandleClean
-        CleanCheck -->|No| ReconfigureCheck
-        HandleClean --> ReconfigureCheck
-        ReconfigureCheck -->|Yes| HandleReconfigure
-        ReconfigureCheck -->|No| CMakeConfigure
-        HandleReconfigure --> CMakeConfigure
-        CMakeConfigure --> CMakeBuild
-    end
+        HandleSelfTests --> PressKey
+        CMakeBuild --> PressKey
+        PressKey --> End
 
-    HandleSelfTests --> CI
-    CMakeBuild --> CI
-    CI -->|Yes| End
-    CI -->|No| PressKey
-    PressKey --> End
 
 
 Python Dependencies

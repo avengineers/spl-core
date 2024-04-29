@@ -44,9 +44,6 @@ extensions.extend(
     ]
 )
 
-# Enable links to sections
-extensions.append("sphinx.ext.autosectionlabel")
-
 # Resize rtd theme
 extensions.append("sphinx_rtd_size")
 sphinx_rtd_size_width = "90%"
