@@ -25,7 +25,7 @@ class TestCmake:
             int: exit (return) code of the cmake command
 
         """
-        unit_test_command = f"cmake -S tests\\{unit_test} -B {self.test_workspace}\\{unit_test} -G Ninja --log-level=DEBUG"
+        unit_test_command = f"cmake -S tests\\cmake\\{unit_test} -B {self.test_workspace}\\{unit_test} -G Ninja --log-level=DEBUG"
         print(f"Execute: {unit_test_command}")
         return subprocess.run(unit_test_command).returncode
 

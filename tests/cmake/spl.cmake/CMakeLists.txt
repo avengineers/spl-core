@@ -14,7 +14,7 @@ set(BUILD_KIT prod)
 set(LINKER_OUTPUT_FILE main.exe)
 
 # when
-include(${CMAKE_CURRENT_LIST_DIR}/../../cmake/spl.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/../../../cmake/spl.cmake)
 
 # expect
 if(NOT LINK_TARGET_NAME STREQUAL "link")

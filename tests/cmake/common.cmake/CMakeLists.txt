@@ -4,7 +4,7 @@ project(test-common-cmake C ASM)
 set(VARIANT mytestvariant)
 
 # ## IUT ####################################
-include(${CMAKE_CURRENT_LIST_DIR}/../../cmake/common.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/../../../cmake/common.cmake)
 
 # ## test: _spl_slash_to_underscore #########
 # given
@@ -23,7 +23,7 @@ endif()
 _spl_get_absolute_path(absolute_path "${PROJECT_SOURCE_DIR}/some_dir")
 
 # then
-set(expected_path tests/common.cmake/some_dir)
+set(expected_path tests/cmake/common.cmake/some_dir)
 string(FIND "${absolute_path}" "${expected_path}" out)
 
 if(NOT "${out}" GREATER 0)
