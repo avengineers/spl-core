@@ -1,13 +1,11 @@
 from time import sleep
 
-from utils import DirectoryTracker, TestUtils
+from utils import DirectoryTracker, create_clean_test_dir
 
 
 class TestDirectoryTracker:
     def test_directory_tracker_update_status(self):
-        out_dir = TestUtils.create_clean_test_dir(
-            "test_directory_tracker_update_status"
-        )
+        out_dir = create_clean_test_dir("test_directory_tracker_update_status")
         out_dir.write_file("file1.txt")
         out_dir.write_file("file2.txt")
         tracker = DirectoryTracker(out_dir.path)

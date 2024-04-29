@@ -92,7 +92,7 @@ class Creator:
         variants = []
         variant_dirs = self.project_artifacts.variants_dir.glob("*/*/")
         for variant_dir in variant_dirs:
-            variants.append(Variant(variant_dir.parent.name, variant_dir.name))
+            variants.append(Variant(variant_dir.name))
         return variants
 
 
@@ -114,17 +114,13 @@ def parse_arguments(command_arguments: Any = None) -> argparse.Namespace:
 
     parser_workspace = subparsers.add_parser("workspace", help="Create a workspace")
     parser_workspace.add_argument("--name", required=True, type=str, help="Workspace name. A directory with this name will be created in the <out_dir>.")
-    parser_workspace.add_argument("--variant", required=True, action="append", type=Variant.from_string, help="Variant name as <flavor>/<subsystem>. E.g. FLV1/SYS1. " "This option can be used multiple times.")
+    parser_workspace.add_argument("--variant", required=True, action="append", type=Variant.from_string, help="Variant name. This option can be used multiple times.")
     parser_workspace.add_argument("--out_dir", required=True, type=existing_path, help="Target directory where the workspace folder will be created.")
 
     parser_variant = subparsers.add_parser("variant", help="Add/delete variant to existing workspace")
     command_group = parser_variant.add_mutually_exclusive_group(required=True)
-    command_group.add_argument(
-        "--add", action="append", type=Variant.from_string, metavar="VARIANT", help="Add a variant to a workspace. Variant name as <flavor>/<subsystem>." " E.g. FLV1/SYS1. This option can be used multiple times."
-    )
-    command_group.add_argument(
-        "--delete", action="append", type=Variant.from_string, metavar="VARIANT", help="Delete a variant from a workspace. Variant name as <flavor>/<subsystem>." " E.g. FLV1/SYS1. This option can be used multiple times."
-    )
+    command_group.add_argument("--add", action="append", type=Variant.from_string, metavar="VARIANT", help="Add a variant to a workspace. This option can be used multiple times.")
+    command_group.add_argument("--delete", action="append", type=Variant.from_string, metavar="VARIANT", help="Delete a variant from a workspace. This option can be used multiple times.")
     parser_variant.add_argument("--workspace_dir", required=True, type=existing_path, help="Workspace root directory.")
     return parser.parse_args(command_arguments)
 

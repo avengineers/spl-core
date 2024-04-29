@@ -3,17 +3,17 @@ from spl_core.project_creator.variant import Variant
 
 class TestVariant:
     def test_from_string(self):
-        assert Variant.from_string("Bla/Blub") == Variant("Bla", "Blub")
+        assert Variant.from_string("Bla/Blub") == Variant("Bla/Blub")
 
     def test_lt(self):
-        assert Variant("A", "A") < Variant("A", "B")
-        assert Variant("A", "B") > Variant("A", "A")
-        assert Variant("1", "B") < Variant("A", "A")
-        assert Variant("2", "B") > Variant("1", "A")
+        assert Variant("A") < Variant("B")
+        assert Variant("B") > Variant("A")
+        assert Variant("1") < Variant("A")
+        assert Variant("2") > Variant("1")
 
     def test_vars(self):
-        assert vars(Variant("A", "1")) == {"flavor": "A", "subsystem": "1"}
+        assert vars(Variant("A")) == {"name": "A"}
 
     def test_hash(self):
-        assert Variant("A", "B") in [Variant("A", "C"), Variant("A", "B")]
-        assert list({Variant("A", "C"), Variant("A", "B")} - {Variant("A", "B")}) == [Variant("A", "C")]
+        assert Variant("A") in [Variant("B"), Variant("A")]
+        assert list({Variant("C"), Variant("B")} - {Variant("B")}) == [Variant("C")]

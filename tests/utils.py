@@ -7,12 +7,17 @@ import subprocess
 from contextlib import ContextDecorator
 from pathlib import Path
 from time import perf_counter
-from typing import Collection, Dict, Optional
+from typing import Collection, Dict, List, Optional
 
-from spl_core.common.cmake import CMake
+from spl_core.common.command_line_executor import CommandLineExecutor
+from spl_core.kickstart.create import KickstartProject
 from spl_core.project_creator.creator import Creator
 from spl_core.project_creator.variant import Variant
 from spl_core.project_creator.workspace_artifacts import WorkspaceArtifacts
+
+
+def this_repository_root_dir() -> Path:
+    return Path(__file__).parent.parent.absolute()
 
 
 class ExecutionTime(ContextDecorator):
@@ -54,33 +59,47 @@ class TestDir:
         return f"{self.path}"
 
 
-class TestUtils:
-    __test__ = False
-    DEFAULT_TEST_DIR = "tmp_test"
+def create_clean_test_dir(name: str = "tmp_test") -> TestDir:
+    out_dir = this_repository_root_dir().joinpath("out")
+    test_dir = out_dir.joinpath(name).absolute()
+    if test_dir.exists():
+        # rmtree throws an exception if any of the files to be deleted is read-only
+        if os.name == "nt":
+            rm_dir_cmd = f"cmd /c rmdir /S /Q {test_dir}"
+            print(f"Execute: {rm_dir_cmd}")
+            subprocess.call(rm_dir_cmd)
+        else:
+            shutil.rmtree(test_dir)
+    test_dir.mkdir(parents=True, exist_ok=True)
+    print(f"New clean test directory created: {test_dir}")
+    return TestDir(test_dir)
 
-    @staticmethod
-    def create_clean_test_dir(name: Optional[str] = None) -> TestDir:
-        out_dir = TestUtils.this_repository_root_dir().joinpath("out")
-        test_dir = out_dir.joinpath(name if name else TestUtils.DEFAULT_TEST_DIR).absolute()
-        if test_dir.exists():
-            # rmtree throws an exception if any of the files to be deleted is read-only
-            if os.name == "nt":
-                rm_dir_cmd = f"cmd /c rmdir /S /Q {test_dir}"
-                print(f"Execute: {rm_dir_cmd}")
-                subprocess.call(rm_dir_cmd)
-            else:
-                shutil.rmtree(test_dir)
-        test_dir.mkdir(parents=True, exist_ok=True)
-        print(f"New clean test directory created: {test_dir}")
-        return TestDir(test_dir)
 
-    @staticmethod
-    def this_repository_root_dir() -> Path:
-        return Path(__file__).parent.parent.absolute()
+def create_cli_for_spl_project(project_dir: Path) -> CommandLineExecutor:
+    """Creates a CommandLineExecutor for the given SPL project directory.
 
-    @staticmethod
-    def force_spl_core_usage_to_this_repo():
-        os.environ["SPLCORE_PATH"] = TestUtils.this_repository_root_dir().as_posix()
+    The SPL-Core repository is used as a Python dependency and forces the usage of the project directory virtual environment.
+    """
+    env = os.environ.copy()
+    env["SPLCORE_PATH"] = this_repository_root_dir().as_posix()
+    # Force the usage of the project directory virtual environment
+    env["PIPENV_IGNORE_VIRTUALENVS"] = "1"
+    # Make sure the project directory virtual environment is used
+    env["PATH"] = f"{project_dir.joinpath('.venv/Scripts').as_posix()}{os.pathsep}{env['PATH']}"
+    return CommandLineExecutor(cwd=project_dir, env=env)
+
+
+def setup_new_spl_project(project_dir: Path) -> Path:
+    """Creates a new SPL project in the given directory and returns the path to the project.
+    The current SPL-Core repository is installed as a Python dependency."""
+    KickstartProject(project_dir).run()
+
+    # Replace the SPL-Core dependency in the Pipfile
+    pipfile = project_dir.joinpath("pipfile")
+    new_dependency = f'spl-core = {{path = "{this_repository_root_dir().as_posix()}"}}'
+    pipfile.write_text(pipfile.read_text().replace('spl-core = "*"', new_dependency))
+
+    return project_dir
 
 
 @dataclasses.dataclass
@@ -129,56 +148,45 @@ class DirectoryTracker:
         return status
 
 
-class TestWorkspace:
-    __test__ = False
-    DEFAULT_VARIANT = Variant("Flv1", "Sys1")
+class IntegrationTestsSplProject:
+    """
+    Creates a new SPL project and provides methods to interact with it.
 
-    def __init__(self, out_dir_name: str):
-        self.workspace_dir = self.create_default(out_dir_name)
+    The workspace is created in a new directory and the SPL-Core repository is used as a Python dependency.
+    One can either create a new project or use an example project.
+    """
+
+    DEFAULT_VARIANT = Variant("Variant1")
+
+    def __init__(self, out_dir_name: str, use_example_project: bool = False):
+        if use_example_project:
+            self.workspace_dir = setup_new_spl_project(create_clean_test_dir(out_dir_name).path)
+        else:
+            self.workspace_dir = self.create_default(out_dir_name)
         self.workspace_artifacts = WorkspaceArtifacts(self.workspace_dir)
         self.directory_tracker = DirectoryTracker(self.workspace_dir)
-        self.use_local_spl_core = True
+        self.cli = create_cli_for_spl_project(self.workspace_dir)
 
     @staticmethod
     def create_default(out_dir_name: str) -> Path:
-        out_dir = TestUtils.create_clean_test_dir(out_dir_name)
+        out_dir = create_clean_test_dir(out_dir_name)
         project_name = "MyProject"
-        variants = [TestWorkspace.DEFAULT_VARIANT, Variant("Flv1", "Sys2")]
-        return TestWorkspace.create(out_dir, project_name, variants)
+        variants = [IntegrationTestsSplProject.DEFAULT_VARIANT, Variant("Variant1")]
+        return IntegrationTestsSplProject.create(out_dir, project_name, variants)
 
     @staticmethod
     def create(out_dir, project_name, variants):
         creator = Creator(project_name, out_dir.path)
         return creator.materialize(variants)
 
-    def install_mandatory(self):
-        pass
+    def bootstrap(self):
+        return self.cli.execute(f"{self.workspace_artifacts.build_script}" f" -install")
 
-    def link(self, variant: Variant = DEFAULT_VARIANT) -> subprocess.CompletedProcess[bytes]:
-        return self.execute_command(f"{self.workspace_artifacts.build_script}" f" -target link -variants {variant}")
+    def link(self, variant: Variant = DEFAULT_VARIANT) -> subprocess.CompletedProcess[str]:
+        return self.cli.execute(f"{self.workspace_artifacts.build_script}" f" -build -target link -variants {variant}")
 
-    def selftests(self) -> subprocess.CompletedProcess[bytes]:
-        return self.execute_command(f"{self.workspace_artifacts.build_script}" f" -target selftests")
-
-    def run_cmake_configure(self, build_kit: str = "prod", variant: Variant = DEFAULT_VARIANT) -> subprocess.CompletedProcess[bytes]:
-        if self.use_local_spl_core:
-            TestUtils.force_spl_core_usage_to_this_repo()
-        return CMake(self.workspace_artifacts).configure(variant=variant, build_kit=build_kit)
-
-    def run_cmake_build(
-        self,
-        target: str = "all",
-        build_kit: str = "prod",
-        variant: Variant = DEFAULT_VARIANT,
-    ) -> subprocess.CompletedProcess[bytes]:
-        if self.use_local_spl_core:
-            TestUtils.force_spl_core_usage_to_this_repo()
-        return CMake(self.workspace_artifacts).build(variant=variant, target=target, build_kit=build_kit)
-
-    def execute_command(self, command: str) -> subprocess.CompletedProcess[bytes]:
-        if self.use_local_spl_core:
-            TestUtils.force_spl_core_usage_to_this_repo()
-        return subprocess.run(command.split())
+    def selftests(self) -> subprocess.CompletedProcess[str]:
+        return self.cli.execute(f"{self.workspace_artifacts.build_script}" f" -build -target selftests")
 
     def get_component_file(self, component_name: str, component_file: str) -> Path:
         return self.workspace_artifacts.get_component_path(component_name).joinpath(component_file)
@@ -188,3 +196,19 @@ class TestWorkspace:
 
     def get_workspace_files_status(self) -> DirectoryStatus:
         return self.directory_tracker.get_status()
+
+
+class SplKickstartProjectIntegrationTestBase:
+    project_dir: Path
+    cli: CommandLineExecutor
+    component_paths: List[str]
+
+    @classmethod
+    def setup_class(cls):
+        # create new project
+        cls.project_dir = setup_new_spl_project(create_clean_test_dir(cls.__name__).path)
+        cls.component_paths = ["src/main", "src/greeter"]
+        cls.cli = create_cli_for_spl_project(cls.project_dir)
+        # Bootstrap the project
+        result = cls.cli.execute(["build.bat", "-install"])
+        assert result.returncode == 0, "Execution shall not fail."

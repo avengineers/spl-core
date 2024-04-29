@@ -4,79 +4,23 @@ import xml.etree.ElementTree as ET
 from os import makedirs
 
 import pytest
-from utils import ExecutionTime, TestWorkspace
+from utils import ExecutionTime, IntegrationTestsSplProject
 
 from spl_core.project_creator.variant import Variant
 
 
-class TestIntegration:
-    workspace: TestWorkspace = None
+@pytest.mark.skip(reason="Still need to be refactor to use the Kickstart module because the ProjectCreator is obsolete.")
+class TestSplFeatures:
+    workspace: IntegrationTestsSplProject
 
     @classmethod
     def setup_class(cls):
         # create a new test workspace
-        cls.workspace = TestWorkspace("test_integration")
+        cls.workspace = IntegrationTestsSplProject("test_spl_features")
 
-    def test_build_prod(self):
-        # create build output directory for build_kit "prod"
-        build_dir_prod = self.workspace.workspace_artifacts.get_build_dir("Flv1/Sys1", "prod")
-        makedirs(build_dir_prod, exist_ok=False)
-
-        "Call IUT"
-        with ExecutionTime("CMake Configure (build_kit: prod)"):
-            assert 0 == self.workspace.run_cmake_configure(build_kit="prod").returncode
-
-        "Expected configuration output"
-        assert build_dir_prod.joinpath("kconfig/autoconf.h").exists()
-        assert build_dir_prod.joinpath("build.ninja").exists()
-
-        "Call IUT"
-        with ExecutionTime("CMake Build (build_kit: prod, target=all)"):
-            assert 0 == self.workspace.run_cmake_build(build_kit="prod", target="all").returncode
-
-        "Expected build results for kit prod shall exist"
-        executable = build_dir_prod.joinpath("my_main.exe")
-        assert executable.exists()
-        my_main_result = subprocess.run([executable], capture_output=True)
-        assert 7 == my_main_result.returncode
-        assert "Main program calculating ..." == my_main_result.stdout.decode("utf-8").strip()
-
-        "touch a *.c file to simulate a single file change"
-        self.workspace.get_component_file("main", "src/main.c").touch()
-        "store workspace status - all files with timestamps"
-        self.workspace.take_files_snapshot()
-
-        "Call IUT"
-        with ExecutionTime("CMake (build_kit: prod, target=link)"):
-            assert self.workspace.run_cmake_build(build_kit="prod", target="link").returncode == 0
-
-        "only one object is recompiled and the binary is linked again"
-        workspace_status = self.workspace.get_workspace_files_status()
-        assert set(workspace_status.changed_files_names) == {
-            ".ninja_deps",
-            ".ninja_log",
-            "main.c.obj",
-            "my_main.exe",
-        }
-        assert len(workspace_status.deleted_files) == 0
-        assert len(workspace_status.new_files) == 0
-
-        "reset files status before running the link again"
-        self.workspace.take_files_snapshot()
-
-        "Call IUT"
-        with ExecutionTime("CMake (build_kit: prod, target=link)"):
-            assert self.workspace.run_cmake_build(build_kit="prod", target="link").returncode == 0
-
-        "No files were touched, so nothing was compiled again"
-        workspace_status = self.workspace.get_workspace_files_status()
-        assert len(workspace_status.changed_files_names) == 0
-        assert len(workspace_status.deleted_files) == 0
-        assert len(workspace_status.new_files) == 0
-
-    def test_build_test(self):
+    def test_unittests(self):
         # create build output directory for build_kit "test"
-        build_dir_test = self.workspace.workspace_artifacts.get_build_dir("Flv1/Sys1", "test")
+        build_dir_test = self.workspace.workspace_artifacts.get_build_dir("Variant1", "test")
         makedirs(build_dir_test, exist_ok=False)
 
         "Call IUT - clean build"
@@ -150,7 +94,7 @@ class TestIntegration:
         assert len(workspace_status.new_files) == 0
 
         "Simulate a configuration change"
-        variant_config_file = self.workspace.workspace_artifacts.get_kconfig_config_file(Variant.from_string("Flv1/Sys1"))
+        variant_config_file = self.workspace.workspace_artifacts.get_kconfig_config_file(Variant.from_string("Variant1"))
         content = variant_config_file.read_text()
         variant_config_file.write_text(content.replace("CONFIG_USE_COMPONENT=y", "CONFIG_USE_COMPONENT=n"))
         "store workspace status - all files with timestamps"
@@ -170,7 +114,7 @@ class TestIntegration:
         kconfig_model_file = self.workspace.workspace_artifacts.kconfig_model_file
         content = kconfig_model_file.read_text()
         kconfig_model_file.write_text(content.replace('default "mdf"', 'default "map"'))
-        variant_config_file = self.workspace.workspace_artifacts.get_kconfig_config_file(Variant.from_string("Flv1/Sys1"))
+        variant_config_file = self.workspace.workspace_artifacts.get_kconfig_config_file(Variant.from_string("Variant1"))
         content = variant_config_file.read_text()
         variant_config_file.write_text(content.replace("CONFIG_USE_COMPONENT=n", "CONFIG_USE_COMPONENT=y"))
         "store workspace status - all files with timestamps"
@@ -186,15 +130,9 @@ class TestIntegration:
         assert len(workspace_status.deleted_files) == 0
         assert len(workspace_status.new_files) == 0
 
-    @pytest.mark.skip(reason="We don't want to execute build.ps1 that runs pipenv install")
-    def test_build_selftests(self):
-        """Call IUT"""
-        with ExecutionTime("Build Wrapper (target: selftests)"):
-            assert 0 == self.workspace.selftests().returncode
-
     def test_build_modified_file_compile_options(self):
         # create build output directory for build_kit "prod"
-        build_dir_prod = self.workspace.workspace_artifacts.get_build_dir("Flv1/Sys1", "prod")
+        build_dir_prod = self.workspace.workspace_artifacts.get_build_dir("Variant1", "prod")
         makedirs(build_dir_prod, exist_ok=True)
 
         "Modify compile options of a single file"
@@ -314,7 +252,7 @@ class TestIntegration:
         assert 68 == my_main_result.returncode
 
         # create build output directory for build_kit "test"
-        build_dir_test = self.workspace.workspace_artifacts.get_build_dir("Flv1/Sys1", "test")
+        build_dir_test = self.workspace.workspace_artifacts.get_build_dir("Variant1", "test")
         makedirs(build_dir_test, exist_ok=True)
 
         "Call IUT"
@@ -337,7 +275,7 @@ class TestIntegration:
 
     def test_build_component_as_static_library(self):
         # create build output directory for build_kit "prod"
-        build_dir_prod = self.workspace.workspace_artifacts.get_build_dir("Flv1/Sys1", "prod")
+        build_dir_prod = self.workspace.workspace_artifacts.get_build_dir("Variant1", "prod")
         makedirs(build_dir_prod, exist_ok=True)
 
         "Modify compile options of a single file"

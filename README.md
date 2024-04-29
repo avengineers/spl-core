@@ -26,7 +26,7 @@ _SPL Core_ is our CMake module to support multiple projects as variants of one S
 With the integrated project creator you can create a new SPL workspace, e.g.:
 
 ```powershell
-pipenv run python src/project_creator/creator.py workspace --name MyProject --variant FLV1/SYS1 --out_dir C:\dev
+pipenv run python src/project_creator/creator.py workspace --name MyProject --variant MyVariant --out_dir C:\dev
 ```
 
 Note: one can use the `--variant` argument several times to create a project with multiple variants.

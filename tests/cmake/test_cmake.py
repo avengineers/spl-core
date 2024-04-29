@@ -1,6 +1,6 @@
 import subprocess
 
-from tests.utils import TestDir, TestUtils
+from tests.utils import TestDir, create_clean_test_dir
 
 
 class TestCmake:
@@ -9,7 +9,7 @@ class TestCmake:
     @classmethod
     def setup_class(cls):
         # create a new test workspace
-        cls.test_workspace = TestUtils.create_clean_test_dir("test_cmake")
+        cls.test_workspace = create_clean_test_dir("test_cmake")
 
     def run_cmake_unit_test(self, unit_test: str) -> int:
         """

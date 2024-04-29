@@ -4,7 +4,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-from utils import TestUtils
+from utils import create_clean_test_dir
 
 from spl_core.kconfig.kconfig import (
     CMakeWriter,
@@ -75,10 +75,7 @@ def test_create_configuration_data_with_variables(tmp_path: Path) -> None:
     iut = KConfig(feature_model_file)
     assert iut.config.elements[0].value == "John Smith"
     assert iut.config.elements[1].type == ConfigElementType.STRING
-    assert (
-        iut.config.elements[1].value
-        == "Variable: John Smith, environment variable: MY_ENV_VAR_VALUE"
-    )
+    assert iut.config.elements[1].value == "Variable: John Smith, environment variable: MY_ENV_VAR_VALUE"
 
 
 def test_header_writer(tmp_path: Path, configuration_data: ConfigurationData) -> None:
@@ -134,14 +131,10 @@ def test_header_file_written_when_changed(tmp_path: Path) -> None:
     assert header_file.exists()
     timestamp = header_file.stat().st_mtime
     writer.write(config)
-    assert (
-        header_file.stat().st_mtime == timestamp
-    ), "the file shall not be written if content is not changed"
+    assert header_file.stat().st_mtime == timestamp, "the file shall not be written if content is not changed"
     header_file.write_text("Modified content")
     writer.write(config)
-    assert (
-        header_file.read_text() != "Modified content"
-    ), "the file should have been updated because the content changed"
+    assert header_file.read_text() != "Modified content", "the file should have been updated because the content changed"
 
 
 def test_json_writer(configuration_data: ConfigurationData) -> None:
@@ -176,7 +169,7 @@ def test_boolean_without_description():
     """
     A configuration without description can not be selected by the user
     """
-    out_dir = TestUtils.create_clean_test_dir("")
+    out_dir = create_clean_test_dir()
     feature_model_file = out_dir.write_file(
         "kconfig.txt",
         """
@@ -203,16 +196,14 @@ def test_boolean_without_description():
     )
 
     iut = KConfig(feature_model_file, user_config)
-    assert iut.config.elements == [
-        ConfigElement(ConfigElementType.STRING, "FIRST_NAME", "Dude")
-    ]
+    assert iut.config.elements == [ConfigElement(ConfigElementType.STRING, "FIRST_NAME", "Dude")]
 
 
 def test_boolean_with_description():
     """
     A configuration with description can be selected by the user
     """
-    out_dir = TestUtils.create_clean_test_dir("")
+    out_dir = create_clean_test_dir()
     feature_model_file = out_dir.write_file(
         "kconfig.txt",
         """
@@ -246,7 +237,7 @@ def test_hex():
     """
     A configuration with description can be selected by the user
     """
-    out_dir = TestUtils.create_clean_test_dir("")
+    out_dir = create_clean_test_dir()
     feature_model_file = out_dir.write_file(
         "kconfig.txt",
         """
@@ -270,7 +261,7 @@ def test_define_boolean_choices():
     Only the choices with a 'prompt' are selectable.
     There is a warning generated for choices without a 'prompt'.
     """
-    out_dir = TestUtils.create_clean_test_dir("")
+    out_dir = create_clean_test_dir()
     feature_model_file = out_dir.write_file(
         "kconfig.txt",
         """
@@ -314,7 +305,7 @@ def test_define_string_choices():
     A choice can only be of type bool or tristate.
     One can use string but a warning will be issued.
     """
-    out_dir = TestUtils.create_clean_test_dir("")
+    out_dir = create_clean_test_dir()
     feature_model_file = out_dir.write_file(
         "kconfig.txt",
         """
@@ -356,7 +347,7 @@ def test_define_tristate_choices():
     For KConfig, `bool` and `tristate` types are represented as JSON Booleans,
     the third `tristate` state is not supported.
     """
-    out_dir = TestUtils.create_clean_test_dir("")
+    out_dir = create_clean_test_dir()
     feature_model_file = out_dir.write_file(
         "kconfig.txt",
         """
@@ -400,7 +391,7 @@ def test_config_including_other_config():
         * 'rsource' - for paths relative to the current file
         * 'osource' - for files that might not exist
     """
-    out_dir = TestUtils.create_clean_test_dir("")
+    out_dir = create_clean_test_dir()
     feature_model_file = out_dir.write_file(
         "kconfig.txt",
         """
@@ -454,7 +445,7 @@ def test_config_including_other_configs_based_on_env_vars():
     """
     One can refer to environment variables when including other files
     """
-    out_dir = TestUtils.create_clean_test_dir("")
+    out_dir = create_clean_test_dir()
     feature_model_file = out_dir.write_file(
         "kconfig.txt",
         """
@@ -498,7 +489,7 @@ def test_main():
     """
     KConfigLib can generate the configuration as C-header file (like autoconf.h)
     """
-    out_dir = TestUtils.create_clean_test_dir("")
+    out_dir = create_clean_test_dir()
     feature_model_file = out_dir.write_file(
         "kconfig.txt",
         """

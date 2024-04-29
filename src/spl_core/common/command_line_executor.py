@@ -30,7 +30,9 @@ class CommandLineExecutor:
         command = " ".join([cmd] if isinstance(cmd, str) else cmd)
         output = ""
         try:
-            print(f"Running command: {command}")
+            print("=" * 120)
+            print(f"= Running command: {command}")
+            print("=" * 120)
             with subprocess.Popen(
                 command,
                 cwd=str(self.current_working_directory or Path.cwd()),
