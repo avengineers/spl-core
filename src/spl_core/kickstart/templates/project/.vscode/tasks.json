@@ -1,0 +1,113 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Get mandatory tools",
+            "detail": "Installation of mandatory tools",
+            "type": "shell",
+            "command": ".\\build.ps1 -install",
+            "problemMatcher": []
+        },
+        {
+            "label": "Update all tools",
+            "detail": "Update of all installed scoop packages",
+            "type": "shell",
+            "command": ".\\build.ps1 -command 'scoop update --all'",
+            "problemMatcher": []
+        },
+        {
+            "label": "Environment",
+            "detail": "Print all environment variables for debugging purposes",
+            "type": "shell",
+            "command": "dir env:",
+            "problemMatcher": []
+        },
+        {
+            "type": "cmake",
+            "label": "Build with CMake",
+            "detail": "Build target 'all' of selected variant",
+            "command": "build",
+            "targets": [
+                "all"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                {
+                    "owner": "c/cpp",
+                    "fileLocation": [
+                        "absolute"
+                    ],
+                    "pattern": {
+                        "regexp": "^ctc (I|W|E)(\\d+): \\[\"(.*)\" (\\d+)/(\\d+)\\] (.*)",
+                        "file": 3,
+                        "line": 4,
+                        "column": 5,
+                        "severity": 1,
+                        "message": 6
+                    }
+                }
+            ]
+        },
+        {
+            "type": "cmake",
+            "label": "Clean with CMake",
+            "command": "clean",
+            "problemMatcher": [],
+            "detail": "Clean build artifacts of selected variant"
+        },
+        {
+            "type": "cmake",
+            "label": "Configure with CMake",
+            "command": "configure",
+            "problemMatcher": [],
+            "detail": "Configure selected variant"
+        },
+        {
+            "label": "Configure variant",
+            "detail": "Feature configuration using KConfig",
+            "type": "shell",
+            "command": ".venv/Scripts/poetry run guiconfig",
+            "options": {
+                "env": {
+                    "KCONFIG_CONFIG": "variants/${input:variant}/config.txt"
+                }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "open report html",
+            "command": "${workspaceFolder}/build/${input:variant}/test/src/${input:component}/reports/html/index.html",
+            "type": "shell",
+            "presentation": {
+                "reveal": "always"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+        }
+    ],
+    "inputs": [
+        {
+            "type": "pickString",
+            "id": "variant",
+            "description": "Which variant do you want to select?",
+            "options": [
+                "EnglishVariant",
+                "GermanVariant"
+            ]
+        },
+        {
+            "type": "pickString",
+            "id": "component",
+            "description": "Which component do you want to select?",
+            "options": [
+                "greeter",
+                "main"
+            ]
+        }
+    ]
+}

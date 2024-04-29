@@ -1,0 +1,13 @@
+
+#
+# Linking
+#
+CONFIG_LINKER_OUTPUT_FILE="my_main.exe"
+CONFIG_LINKER_BYPRODUCTS_EXTENSIONS="map"
+# end of Linking
+
+#
+# Feature Model
+#
+CONFIG_LANG_DE=y
+# end of Feature Model

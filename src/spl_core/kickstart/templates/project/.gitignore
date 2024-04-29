@@ -1,0 +1,36 @@
+# Python virtual environment
+.venv
+
+# Binary output dir, not recommended to push binary results to Git.
+/build
+
+# Output directory of test results
+/test/output
+
+# What: Python: byte-compiled / optimized / DLL files
+# Why: automatically created by Python during script execution
+__pycache__/
+/.pytest_cache
+*.py[cod]
+*$py.class
+
+# Any log directory
+**/[Ll][Oo][Gg]/*
+
+# Any backup file of text editors
+*.bak
+
+# Any log file
+*.log
+
+# Backup files of KConfig
+*.old
+
+# Generated IDEA project files
+.idea
+
+# bootstrap files are downloaded during installation
+/.bootstrap
+
+# Drawio Backup Files
+*.drawio.bkp

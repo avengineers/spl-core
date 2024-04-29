@@ -1,0 +1,20 @@
+{
+  "variant": {
+    "choices": {"EnglishVariant": {
+        "buildType": "EnglishVariant",
+        "long": "select to build variant 'EnglishVariant'",
+        "settings": {
+          "VARIANT": "EnglishVariant"
+        },
+        "short": "EnglishVariant"
+      }, "GermanVariant": {
+        "buildType": "GermanVariant",
+        "long": "select to build variant 'GermanVariant'",
+        "settings": {
+          "VARIANT": "GermanVariant"
+        },
+        "short": "GermanVariant"
+      }},
+    "default": "EnglishVariant"
+  }
+}

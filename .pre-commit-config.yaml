@@ -1,6 +1,6 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
-exclude: "CHANGELOG\\.md|\\.copier-answers\\.yml|\\.all-contributorsrc|\\.vscode/.*|.*\\.svg|src/spl_core/project_creator/templates/.*"
+exclude: "CHANGELOG\\.md|\\.copier-answers\\.yml|\\.all-contributorsrc|\\.vscode/.*|.*\\.svg|src/spl_core/project_creator/templates/.*|src/spl_core/kickstart/templates/project/conf.py"
 default_stages: [commit]
 
 ci:
