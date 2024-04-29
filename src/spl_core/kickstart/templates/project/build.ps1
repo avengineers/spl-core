@@ -192,7 +192,7 @@ Function Invoke-Build {
         }
 
         # Select 'test' build kit based on target
-        if ($target.Contains("unittests") -or $target.Contains("reports")) {
+        if ($target.Contains("unittests") -or $target.Contains("reports") -or $target.Contains("docs")) {
             $buildKit = "test"
         }
 

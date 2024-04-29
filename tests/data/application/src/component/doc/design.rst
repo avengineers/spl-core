@@ -5,7 +5,7 @@ Design
 
 Requirements
 ------------
-   
+
 .. needtable::
    :filter: type == 'spec'
    :columns: id, title, tested by, is implemented by
