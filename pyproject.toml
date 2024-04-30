@@ -18,6 +18,9 @@ packages = [
     { include = "spl_core", from = "src" },
 ]
 
+[tool.poetry.scripts]
+please = "spl_core.main:main"
+
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/avengineers/spl-core/issues"
 "Changelog" = "https://github.com/avengineers/spl-core/blob/develop/CHANGELOG.md"
