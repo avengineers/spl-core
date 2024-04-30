@@ -3,37 +3,51 @@
 Generate SPL Example Project
 ============================
 
-Run Project creator
--------------------
+Download SPL Core
+-----------------
 
-Clone the SPL Core repository:
+You can either install the SPL Core from the Python Package Index (PyPI)
+
+.. code-block:: powershell
+
+    pip install spl-core
+
+or clone the repository from GitHub and install its dependencies:
 
 .. code-block:: powershell
 
     git clone https://github.com/avengineers/spl-core
-
-
-Install its dependencies:
-
-.. code-block:: powershell
-
     cd spl-core
     .\build.ps1 -install
 
+SPL Core has a command-line interface called ``please``.
 
-Activate the python virtual environment and use the project creator to generate the example project:
+.. note::
+    If you have cloned the SPL Core repository you find the ``please`` script in the ``.venv/Scripts`` directory.
+
+Make sure the installation was successful by running the following command:
 
 .. code-block:: powershell
 
-    .\please.ps1 init --project-dir C:\tmp\MyProject
+    please --help
+
+
+Initialize a new SPL Project
+----------------------------
+
+Generate the example project:
+
+.. code-block:: powershell
+
+    please init --project-dir C:\tmp\MyProject
 
 This will create a new SPL project in the directory ``C:\tmp\MyProject``.
 
-Before you can build the project, you need to install the dependencies:
+Before you can build the project, you need to install its dependencies.
+Change to the project directory and run the following command:
 
 .. code-block:: powershell
 
-    cd C:\tmp\MyProject
     .\build.ps1 -install
 
 Now you can build the project:
@@ -152,7 +166,7 @@ The tools are installed in the user directory under ``scoop``.
 
 ..
 
-        C:/Users/my_user/scoop/apps
+        C:/Users/<username>/scoop/apps
 
 .. note::
 
