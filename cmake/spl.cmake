@@ -56,14 +56,33 @@ if(BUILD_KIT STREQUAL prod)
             # combine basename and byproduct extension
             string(REPLACE "," ";" LINKER_BYPRODUCTS "${LINKER_BYPRODUCTS_EXTENSIONS}")
             list(TRANSFORM LINKER_BYPRODUCTS PREPEND ${LINK_FILE_BASENAME}.)
+        endif(LINKER_BYPRODUCTS_EXTENSIONS)
 
+        if(LINKER_BYPRODUCT_HEX)
+            list(APPEND LINKER_BYPRODUCTS ${LINKER_BYPRODUCT_HEX})
+        endif(LINKER_BYPRODUCT_HEX)
+
+        if(LINKER_BYPRODUCT_MAP)
+            list(APPEND LINKER_BYPRODUCTS ${LINKER_BYPRODUCT_MAP})
+        endif(LINKER_BYPRODUCT_MAP)
+
+        if(LINKER_BYPRODUCT_MDF)
+            list(APPEND LINKER_BYPRODUCTS ${LINKER_BYPRODUCT_MDF})
+        endif(LINKER_BYPRODUCT_MDF)
+
+        if(LINKER_BYPRODUCT_OTHERS)
+            string(REPLACE "," ";" LINKER_BYPRODUCTS_TMP "${LINKER_BYPRODUCT_OTHERS}")
+            list(APPEND LINKER_BYPRODUCTS ${LINKER_BYPRODUCTS_TMP})
+        endif(LINKER_BYPRODUCT_OTHERS)
+
+        if(LINKER_BYPRODUCTS)
             add_custom_target(
                 linker_byproducts ALL
                 COMMAND ${CMAKE_COMMAND} -E true
                 DEPENDS ${LINKER_OUTPUT_FILE}
                 BYPRODUCTS ${LINKER_BYPRODUCTS}
             )
-        endif(LINKER_BYPRODUCTS_EXTENSIONS)
+        endif(LINKER_BYPRODUCTS)
     endif(LINKER_OUTPUT_FILE)
 elseif(BUILD_KIT STREQUAL test)
     _spl_get_google_test()
