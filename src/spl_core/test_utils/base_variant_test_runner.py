@@ -7,6 +7,8 @@ from spl_core.test_utils.spl_build import SplBuild
 
 
 class BaseVariantTestRunner(ABC):
+    expected_build_artifacts: List[Path]
+
     @property
     def variant(self) -> str:
         return re.sub(r"^Test_", "", self.__class__.__name__).replace("__", "/")
@@ -17,9 +19,8 @@ class BaseVariantTestRunner(ABC):
         pass
 
     @property
-    @abstractmethod
-    def expected_build_artifacts(self) -> List[Path]:
-        pass
+    def additional_build_artifacts(self) -> List[Path]:
+        return []
 
     @property
     def expected_test_artifacts(self) -> List[Path]:
@@ -60,6 +61,7 @@ class BaseVariantTestRunner(ABC):
     def test_build(self) -> None:
         spl_build: SplBuild = SplBuild(variant=self.variant, build_kit="prod")
         assert 0 == spl_build.execute(target="all")  # noqa: S101
+        self.expected_build_artifacts = spl_build.get_build_artifacts() + self.additional_build_artifacts
         for artifact in self.expected_build_artifacts:
             self.assert_artifact_exists(dir=spl_build.build_dir, artifact=artifact)
         if self.create_artifacts_archive:
