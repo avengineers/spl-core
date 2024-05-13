@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 from spl_core.common.command_line_executor import CommandLineExecutor
@@ -29,3 +31,10 @@ class TestCommandLineExecuter:
         assert result.stdout == exp_stdout
         assert result.stderr == exp_stderr
         assert result.returncode == exp_returncode
+
+    def test_CommandLineExecuter_exception(self, tmp_path: Path) -> None:
+        test_path = tmp_path.joinpath("test")
+        test_path.mkdir()
+        link_path = test_path.joinpath("link")
+        result = CommandLineExecutor().execute(["cmd", "/c", "mklink", "/J", str(link_path), str(test_path)])
+        assert result.returncode == 0

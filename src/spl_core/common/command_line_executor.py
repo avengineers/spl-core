@@ -1,4 +1,6 @@
+import locale
 import subprocess
+import sys
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -42,6 +44,7 @@ class CommandLineExecutor:
                 text=True,
                 env=self.env,
                 universal_newlines=True,
+                encoding="cp850" if (locale.getlocale()[0] == "de_DE" and sys.platform == "win32") else "utf-8",
             ) as process:
                 if process.stdout:
                     for line in process.stdout:
