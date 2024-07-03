@@ -1,4 +1,8 @@
 📄 About
 ********
 
-.. mdinclude:: ../../CHANGELOG.md
+.. toctree::
+    :maxdepth: 1
+
+    _readme.md
+    _changelog.md
