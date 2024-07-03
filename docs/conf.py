@@ -13,7 +13,7 @@ sys.path.insert(0, sources_path.as_posix())
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "SPL Core"
-copyright = "2023, RMT"
+copyright = "2024, RMT"
 author = "RMT"
 release = "4.4.1"
 
@@ -22,8 +22,8 @@ release = "4.4.1"
 
 extensions = []
 
-# markdown to rst (m2r) config - @see https://pypi.org/project/m2r/
-extensions.append("m2r")
+# https://myst-parser.readthedocs.io/en/latest/intro.html
+extensions.append("myst_parser")
 
 # TODO: enable this extension when is is supported by readthedocs
 # draw.io config - @see https://pypi.org/project/sphinxcontrib-drawio/
