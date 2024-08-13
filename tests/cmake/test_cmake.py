@@ -1,4 +1,5 @@
 import subprocess
+from pathlib import Path
 
 from tests.utils import TestDir, create_clean_test_dir
 
@@ -31,6 +32,42 @@ class TestCmake:
 
     def test_cmake_common_cmake(self):
         assert 0 == self.run_cmake_unit_test("common.cmake")
+
+        # check if the build.json file was created
+        assert Path(f"{self.test_workspace}/common.cmake/build.json").exists()
+
+        # check if the build.json file has the correct content
+        script_dir = Path(__file__).parent.resolve().as_posix()
+        assert (
+            Path(f"{self.test_workspace}/common.cmake/build.json").read_text()
+            == f"""{{
+    "components":[
+        {{
+            "name": "component",
+            "long_name": "",
+            "path": "{script_dir}/common.cmake/component",
+            "sources": [
+                "{script_dir}/common.cmake/component/src/some_file.c",
+                "{script_dir}/common.cmake/component/src/some_other_file.c"
+            ],
+            "test_sources": []
+        }},
+        {{
+            "name": "some_other_component",
+            "long_name": "Some amazing other component with a long name",
+            "path": "{script_dir}/common.cmake/some_other_component",
+            "sources": [
+                "{script_dir}/common.cmake/some_other_component/src/some_file.c",
+                "{script_dir}/common.cmake/some_other_component/src/some_other_file.c"
+            ],
+            "test_sources": [
+                "{script_dir}/common.cmake/some_other_component/test/some_test_file.cc",
+                "{script_dir}/common.cmake/some_other_component/test/some_other_test_file.cc"
+            ]
+        }}
+    ]
+}}"""
+        )
 
     def test_cmake_spl_cmake(self):
         assert 0 == self.run_cmake_unit_test("spl.cmake")

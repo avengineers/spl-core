@@ -78,9 +78,13 @@ set(some_other_file src/some_other_file.c)
 
 # when
 spl_add_component(component)
+spl_add_component(some_other_component)
 set_target_properties(component PROPERTIES LINKER_LANGUAGE C)
 
 # then
 if(NOT "component" IN_LIST COMPONENT_NAMES)
     message(FATAL_ERROR "Failing Test case: component not found inside ${COMPONENT_NAMES}.")
 endif()
+
+# ## test: _spl_create_build_info_file (tests are written in test_cmake.py)#####
+_spl_create_build_info_file()

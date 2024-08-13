@@ -122,6 +122,37 @@ macro(spl_create_component)
     list(APPEND COMPONENT_NAMES ${component_name})
     set(COMPONENT_NAMES ${COMPONENT_NAMES} PARENT_SCOPE)
 
+    # collect sources for each component in JSON format
+    if(SOURCES)
+        # Whitespaces are needed for beautified JSON output
+        list(JOIN SOURCES "\",\n                \"" formatted_json_sources)
+        set(formatted_json_sources "[\n                \"${formatted_json_sources}\"\n            ]")
+    else()
+        set(formatted_json_sources "[]")
+    endif()
+
+    # collect test sources for each component in JSON format
+    if(TEST_SOURCES)
+        # Whitespaces are needed for beautified JSON output
+        list(JOIN TEST_SOURCES "\",\n                \"" formatted_json_test_sources)
+        set(formatted_json_test_sources "[\n                \"${formatted_json_test_sources}\"\n            ]")
+    else()
+        set(formatted_json_test_sources "[]")
+    endif()
+
+    # Collect all component information for build.json
+    set(_build_info "    {
+            \"name\": \"${component_name}\",
+            \"long_name\": \"${CREATE_COMPONENT_LONG_NAME}\",
+            \"path\": \"${CMAKE_SOURCE_DIR}/${component_path}\",
+            \"sources\": ${formatted_json_sources},
+            \"test_sources\": ${formatted_json_test_sources}
+        }")
+
+    # Append the component information to the global build_info list
+    list(APPEND build_info ${_build_info})
+    set(build_info ${build_info} PARENT_SCOPE)
+
     # Collect all component information for sphinx documentation
     #  - We need to keep track of all components and their information to be able to generate the variant reports.
     #    For the variants reports, one need to loop over all components and generate component variant specific targets.
@@ -610,4 +641,20 @@ endmacro()
 # deprecated
 macro(create_component)
     spl_create_component(${ARGN})
+endmacro()
+
+macro(_spl_create_build_info_file)
+    # create empty build.json file
+    set(build_info_file ${CMAKE_CURRENT_BINARY_DIR}/build.json)
+
+    # create preformatted JSON strings for each component
+    # Whitespaces are needed for beautified JSON output
+    list(JOIN build_info ",\n    " formatted_json_build_info)
+
+    # add the components to the build.json file
+    file(WRITE ${build_info_file} "{
+    \"components\":[
+    ${formatted_json_build_info}
+    ]
+}")
 endmacro()
