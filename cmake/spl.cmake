@@ -102,8 +102,8 @@ function(_spl_hook_end_of_configure)
         _spl_coverage_create_overall_report()
         _spl_create_docs_target()
         _spl_create_reports_target()
-        _spl_create_build_info_file()
     endif(BUILD_KIT STREQUAL test)
+    _spl_create_build_info_file()
 endfunction(_spl_hook_end_of_configure)
 
 # # This is one possibility to open guiconfig of kconfiglib. VSCode task is the preferred solution

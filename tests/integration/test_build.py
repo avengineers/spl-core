@@ -12,6 +12,7 @@ class TestBuild(SplKickstartProjectIntegrationTestBase):
             "rules.ninja",
             "cmake.check_cache",
             "compile_commands.json",
+            "build.json",
             # This file is touched every time Ninja is run
             ".ninja_log",
         }
