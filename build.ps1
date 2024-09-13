@@ -5,7 +5,7 @@
 
 param(
     [switch]$clean ## clean build, wipe out all build artifacts
-    , [switch]$install ## install mandatory packages
+    , [switch]$install ## install dependencies, only
 )
 
 function Invoke-CommandLine {
@@ -43,7 +43,7 @@ function Invoke-CommandLine {
 
 function Invoke-Bootstrap {
     # Download bootstrap scripts from external repository
-    Invoke-RestMethod https://raw.githubusercontent.com/avengineers/bootstrap-installer/v1.12.0/install.ps1 | Invoke-Expression
+    Invoke-RestMethod https://raw.githubusercontent.com/avengineers/bootstrap-installer/v1.13.0/install.ps1 | Invoke-Expression
     # Execute bootstrap script
     . .\.bootstrap\bootstrap.ps1
 }

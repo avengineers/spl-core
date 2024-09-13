@@ -67,7 +67,7 @@ if(unexpected_source_file IN_LIST SOURCES)
     message(FATAL_ERROR "Failing Test case: ${unexpected_source_file} not found inside ${SOURCES}.")
 endif()
 
-#cleanup
+# cleanup
 unset(SOURCES)
 
 # ## test: spl_add_component ###############
@@ -79,11 +79,24 @@ set(some_other_file src/some_other_file.c)
 # when
 spl_add_component(component)
 spl_add_component(some_other_component)
+spl_add_component(comp_without_sources)
 set_target_properties(component PROPERTIES LINKER_LANGUAGE C)
 
 # then
-if(NOT "component" IN_LIST COMPONENT_NAMES)
-    message(FATAL_ERROR "Failing Test case: component not found inside ${COMPONENT_NAMES}.")
+foreach(component IN ITEMS component some_other_component comp_without_sources)
+    if(NOT "${component}" IN_LIST COMPONENT_NAMES)
+        message(FATAL_ERROR "Failing Test case: ${component} not found inside ${COMPONENT_NAMES}.")
+    endif()
+
+    if(NOT TARGET ${component})
+        message(FATAL_ERROR "Failing Test case: ${component} not found as a target.")
+    endif()
+endforeach()
+
+_spl_get_absolute_path(expected_include "comp_without_sources/src")
+
+if(NOT expected_include IN_LIST target_include_directories__INCLUDES)
+    message(FATAL_ERROR "Failing Test case: ${expected_include} not found inside ${target_include_directories__INCLUDES}.")
 endif()
 
 # ## test: _spl_create_build_info_file (tests are written in test_cmake.py)#####

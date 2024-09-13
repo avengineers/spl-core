@@ -16,7 +16,10 @@ macro(spl_add_component component_path)
     add_subdirectory(${CMAKE_SOURCE_DIR}/${component_path})
 
     if(BUILD_KIT STREQUAL prod)
-        target_link_libraries(${LINK_TARGET_NAME} ${component_name})
+        # Only add the target link libraries ${component_name} if the library is defined.
+        if(TARGET ${component_name})
+            target_link_libraries(${LINK_TARGET_NAME} ${component_name})
+        endif()
     endif()
 endmacro()
 
