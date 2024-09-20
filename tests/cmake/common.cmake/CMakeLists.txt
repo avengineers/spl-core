@@ -2,6 +2,7 @@
 cmake_minimum_required(VERSION 3.22.0)
 project(test-common-cmake C ASM)
 set(VARIANT mytestvariant)
+set(BUILD_KIT prod)
 
 # ## IUT ####################################
 include(${CMAKE_CURRENT_LIST_DIR}/../../../cmake/common.cmake)
@@ -67,7 +68,7 @@ if(unexpected_source_file IN_LIST SOURCES)
     message(FATAL_ERROR "Failing Test case: ${unexpected_source_file} not found inside ${SOURCES}.")
 endif()
 
-#cleanup
+# cleanup
 unset(SOURCES)
 
 # ## test: spl_add_component ###############

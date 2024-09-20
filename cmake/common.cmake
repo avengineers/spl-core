@@ -94,24 +94,15 @@ endmacro(_spl_get_google_test)
 
 macro(spl_create_component)
     cmake_parse_arguments(CREATE_COMPONENT "" "LONG_NAME;LIBRARY_TYPE" "" ${ARGN})
+
     # Set the default library type to OBJECT if not provided
     if(NOT CREATE_COMPONENT_LIBRARY_TYPE)
         set(CREATE_COMPONENT_LIBRARY_TYPE "OBJECT")
     endif()
 
+    # Determine the unique component name based on the relative path of the component
     file(RELATIVE_PATH component_path ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_LIST_DIR})
     _spl_slash_to_underscore(component_name ${component_path})
-
-    # Add debug options based on build configuration (kit)
-    if(BUILD_KIT STREQUAL test)
-        # Exclude all components from the ALL target.
-        # Components which have no tests shall not be automatically compiled when ALL target is executed.
-        add_library(${component_name} EXCLUDE_FROM_ALL OBJECT ${SOURCES})
-        target_compile_options(${component_name} PRIVATE ${VARIANT_ADDITIONAL_COMPILE_C_FLAGS} -ggdb --coverage)
-    else()
-        add_library(${component_name} ${CREATE_COMPONENT_LIBRARY_TYPE} ${SOURCES})
-        target_compile_options(${component_name} PRIVATE ${VARIANT_ADDITIONAL_COMPILE_C_FLAGS})
-    endif()
 
     # Collect all productive sources for later usage (e.g., in an extension)
     list(APPEND PROD_SOURCES ${SOURCES})
@@ -154,10 +145,10 @@ macro(spl_create_component)
     set(build_info ${build_info} PARENT_SCOPE)
 
     # Collect all component information for sphinx documentation
-    #  - We need to keep track of all components and their information to be able to generate the variant reports.
-    #    For the variants reports, one need to loop over all components and generate component variant specific targets.
-    #  - We use json strings because the content will be written in a config.json file during configure.
-    #    Also, CMake supports manipulating JSON strings. See the string(JSON ...) documentation.
+    # - We need to keep track of all components and their information to be able to generate the variant reports.
+    # For the variants reports, one need to loop over all components and generate component variant specific targets.
+    # - We use json strings because the content will be written in a config.json file during configure.
+    # Also, CMake supports manipulating JSON strings. See the string(JSON ...) documentation.
     set(_component_info "{
 \"name\": \"${component_name}\",
 \"long_name\": \"${CREATE_COMPONENT_LONG_NAME}\",
@@ -175,11 +166,16 @@ macro(spl_create_component)
     list(REMOVE_DUPLICATES target_include_directories__INCLUDES)
     set(target_include_directories__INCLUDES ${target_include_directories__INCLUDES} PARENT_SCOPE)
 
-    if(BUILD_KIT STREQUAL test)
+    if(BUILD_KIT STREQUAL prod)
+        # Create the component library
+        add_library(${component_name} ${CREATE_COMPONENT_LIBRARY_TYPE} ${SOURCES})
+
+        # Add define of static_scope_file to be used for static functions that should be tested.
+        target_compile_options(${component_name} PRIVATE -Dstatic_scope_file=static)
+    elseif(BUILD_KIT STREQUAL test)
         # Create component unittests target
         if(TEST_SOURCES)
-            set(exe_name ${component_name}_test)
-            _spl_add_test_suite("${SOURCES}" ${TEST_SOURCES})
+            _spl_add_test_suite(${component_name} "${SOURCES}" ${TEST_SOURCES})
         endif()
 
         set(_component_dir ${CMAKE_CURRENT_LIST_DIR})
@@ -189,9 +185,9 @@ macro(spl_create_component)
         set(_component_coverage_json ${CMAKE_CURRENT_BINARY_DIR}/coverage.json)
         set(_component_docs_out_dir ${CMAKE_CURRENT_BINARY_DIR}/docs)
         set(_component_reports_out_dir ${CMAKE_CURRENT_BINARY_DIR}/reports)
+
         # The Sphinx source directory is ALWAYS the project root
         set(_sphinx_source_dir ${PROJECT_SOURCE_DIR})
-
 
         # Create component docs target if there is an index.rst file in the component's doc directory
         if(EXISTS ${_component_doc_file})
@@ -213,6 +209,7 @@ macro(spl_create_component)
             add_custom_target(
                 ${component_name}_docs
                 COMMAND ${CMAKE_COMMAND} -E make_directory ${_component_docs_out_dir}
+
                 # We do not know all dependencies for generating the docs (apart from the rst files).
                 # This might cause incremental builds to not update parts of the documentation.
                 # To avoid this we are using the -E option to make sphinx-build writing all files new.
@@ -288,6 +285,7 @@ Code Coverage
 
                 set(_cov_out_html reports/html/${_rel_component_reports_out_dir}/coverage/index.html)
                 file(RELATIVE_PATH _cov_out_json ${CMAKE_CURRENT_BINARY_DIR} ${_component_coverage_json})
+
                 # For the component report, one needs to generate the coverage/index.html inside the component report sphinx output directory.
                 # This will avoid the need to copy the coverage/** directory inside the component report sphinx output directory.
                 add_custom_command(
@@ -300,6 +298,7 @@ Code Coverage
                 # We need to have a separate component doxygen generation target because it is required
                 # by both the component and variant reports.
                 add_custom_target(
+
                     # No OUTPUT is defined to force execution of this target every time
                     ${component_name}_doxygen
                     COMMAND ${CMAKE_COMMAND} -E make_directory ${_component_reports_out_dir}
@@ -307,6 +306,7 @@ Code Coverage
                     COMMAND ${CMAKE_COMMAND} -E make_directory ${DOXYGEN_OUTPUT_DIRECTORY}
                     COMMAND doxygen ${_rel_component_doxyfile}
                 )
+
                 # No OUTPUT is defined to force execution of this target every time
                 # TODO: list of dependencies is not complete
                 add_custom_target(
@@ -318,11 +318,13 @@ Code Coverage
                     DEPENDS ${TEST_OUT_JUNIT} ${component_name}_doxygen ${_cov_out_html}
                 )
             endif(TEST_SOURCES)
+
             # Collect all component sphinx include pattern to be used in the variant targets (docs, reports)
             list(APPEND COMPONENTS_SPHINX_INCLUDE_PATTERNS "${_rel_component_doc_dir}/**" "${_rel_component_docs_out_dir}/**" "${_rel_component_reports_out_dir}/**")
             set(COMPONENTS_SPHINX_INCLUDE_PATTERNS ${COMPONENTS_SPHINX_INCLUDE_PATTERNS} PARENT_SCOPE)
         endif(EXISTS ${_component_doc_file})
-    endif(BUILD_KIT STREQUAL test)
+    endif(BUILD_KIT STREQUAL prod)
+
     # Collect all component info for later usage (e.g., in an extension)
     list(APPEND COMPONENTS_INFO ${_component_info})
     set(COMPONENTS_INFO ${COMPONENTS_INFO} PARENT_SCOPE)
@@ -363,6 +365,7 @@ macro(_spl_create_reports_target)
     set(_reports_config_json ${_reports_output_dir}/config.json)
     list(JOIN COMPONENTS_INFO "," _components_info_json)
     set(_components_info_json "[${_components_info_json}]")
+
     # Add the variant specific rst files (e.g, coverage.rst) to the include patterns
     list(APPEND COMPONENTS_SPHINX_INCLUDE_PATTERNS "${_rel_reports_output_dir}/**")
     list(JOIN COMPONENTS_SPHINX_INCLUDE_PATTERNS "\",\"" _components_sphinx_include_patterns_json)
@@ -392,7 +395,8 @@ Code Coverage
         string(JSON component_name GET ${component_info} name)
         string(JSON component_path GET ${component_info} path)
         string(JSON component_reports_output_dir GET ${component_info} reports_output_dir)
-        if (component_reports_output_dir)
+
+        if(component_reports_output_dir)
             set(_variant_component_reports_out_dir reports/html/${component_reports_output_dir})
             set(_cov_out_html ${_variant_component_reports_out_dir}/coverage/index.html)
             set(_cov_out_json ${component_path}/coverage.json)
@@ -428,12 +432,14 @@ Code Coverage
         _components_variant_coverage_html_target
         DEPENDS ${_components_coverage_html} ${_cov_out_variant_html}
     )
+
     # add the generated files as dependency to cmake configure step
     set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_reports_config_json})
     add_custom_target(
         reports
         ALL
         COMMAND ${CMAKE_COMMAND} -E make_directory ${_reports_output_dir}
+
         # We need to call sphinx-build with -E to make sure all files are regenerated.
         COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_reports_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -E -b html ${PROJECT_SOURCE_DIR} ${_reports_html_output_dir}
         BYPRODUCTS ${_reports_html_output_dir}/index.html
@@ -469,19 +475,34 @@ function(_spl_coverage_create_overall_report)
     endif(_SPL_COVERAGE_CREATE_OVERALL_REPORT_IS_NECESSARY)
 endfunction(_spl_coverage_create_overall_report)
 
-macro(_spl_add_test_suite PROD_SRC TEST_SOURCES)
+macro(_spl_add_test_suite COMPONENT_NAME PROD_SRC TEST_SOURCES)
     _spl_set_coverage_create_overall_report_is_necessary()
 
-    set(PROD_PARTIAL_LINK prod_partial_${component_name}.obj)
-    set(MOCK_SRC mockup_${component_name}.cc)
+    set(exe_name ${COMPONENT_NAME}_test)
+    set(PROD_PARTIAL_LINK prod_partial_${COMPONENT_NAME}.obj)
+    set(MOCK_SRC mockup_${COMPONENT_NAME}.cc)
 
     add_executable(${exe_name}
         ${TEST_SOURCES}
         ${MOCK_SRC}
     )
 
-    # Produce debugging information to be able to set breakpoints while debugging.
-    target_compile_options(${exe_name} PRIVATE -ggdb)
+    # Create the component library
+    add_library(${COMPONENT_NAME} OBJECT ${SOURCES})
+
+    # Define list of test specific compile options for all sources
+    # -Dstatic_scope_file=: add possibility to remove static from the signature
+    # of static functions to allow testing them.
+    # -ggdb: Produce debugging information to be able to set breakpoints.
+    # -fno-inline, -fno-default-inline, -fkeep-inline-functions:
+    # No inlining of functions to allow mocking them.
+    # -save-temps: save temporary files like preprocessed once for debugging purposes
+    set(TEST_COMPILE_OPTIONS -Dstatic_scope_file= -ggdb -fno-inline -fno-default-inline -fkeep-inline-functions -save-temps)
+
+    target_compile_options(${exe_name} PRIVATE ${TEST_COMPILE_OPTIONS})
+
+    # Coverage data is only generated for the component sources
+    target_compile_options(${COMPONENT_NAME} PRIVATE --coverage ${TEST_COMPILE_OPTIONS})
 
     target_link_options(${exe_name}
         PRIVATE -ggdb --coverage
@@ -489,18 +510,18 @@ macro(_spl_add_test_suite PROD_SRC TEST_SOURCES)
 
     add_custom_command(
         OUTPUT ${PROD_PARTIAL_LINK}
-        COMMAND ${CMAKE_CXX_COMPILER} -r -nostdlib -o ${PROD_PARTIAL_LINK} $<TARGET_OBJECTS:${component_name}>
+        COMMAND ${CMAKE_CXX_COMPILER} -r -nostdlib -o ${PROD_PARTIAL_LINK} $<TARGET_OBJECTS:${COMPONENT_NAME}>
         COMMAND_EXPAND_LISTS
         VERBATIM
-        DEPENDS $<TARGET_OBJECTS:${component_name}>
+        DEPENDS $<TARGET_OBJECTS:${COMPONENT_NAME}>
     )
 
-    set(prop "$<TARGET_PROPERTY:${component_name},INCLUDE_DIRECTORIES>")
+    set(prop "$<TARGET_PROPERTY:${COMPONENT_NAME},INCLUDE_DIRECTORIES>")
     add_custom_command(
         OUTPUT ${MOCK_SRC}
         BYPRODUCTS mockup_${component_name}.h
         WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-        COMMAND python -m hammocking --suffix _${component_name} --sources ${PROD_SRC} --plink ${CMAKE_CURRENT_BINARY_DIR}/${PROD_PARTIAL_LINK} --outdir ${CMAKE_CURRENT_BINARY_DIR} "$<$<BOOL:${prop}>:-I$<JOIN:${prop},;-I>>" -x c
+        COMMAND python -m hammocking --suffix _${COMPONENT_NAME} --sources ${PROD_SRC} --plink ${CMAKE_CURRENT_BINARY_DIR}/${PROD_PARTIAL_LINK} --outdir ${CMAKE_CURRENT_BINARY_DIR} "$<$<BOOL:${prop}>:-I$<JOIN:${prop},;-I>>" -x c
         COMMAND_EXPAND_LISTS
         VERBATIM
         DEPENDS
@@ -532,7 +553,7 @@ macro(_spl_add_test_suite PROD_SRC TEST_SOURCES)
         # Run gcovr to generate coverage json for the component
         COMMAND gcovr --root ${CMAKE_SOURCE_DIR} --json --output ${COV_OUT_JSON} ${GCOVR_ADDITIONAL_OPTIONS} ${CMAKE_CURRENT_BINARY_DIR}
         DEPENDS ${TEST_OUT_JUNIT}
-        COMMENT "Generating component ${component_name} code coverage json report ${COV_OUT_JSON} ..."
+        COMMENT "Generating component ${COMPONENT_NAME} code coverage json report ${COV_OUT_JSON} ..."
     )
 
     set(COV_OUT_HTML reports/coverage/index.html)
@@ -540,21 +561,21 @@ macro(_spl_add_test_suite PROD_SRC TEST_SOURCES)
         OUTPUT ${COV_OUT_HTML}
         COMMAND gcovr --root ${CMAKE_SOURCE_DIR} --add-tracefile ${COV_OUT_JSON} --html --html-details --output ${COV_OUT_HTML} ${GCOVR_ADDITIONAL_OPTIONS}
         DEPENDS ${COV_OUT_JSON}
-        COMMENT "Generating component ${component_name} code coverage html report ${COV_OUT_HTML} ..."
+        COMMENT "Generating component ${COMPONENT_NAME} code coverage html report ${COV_OUT_HTML} ..."
     )
 
     add_custom_target(
-        ${component_name}_coverage
+        ${COMPONENT_NAME}_coverage
         DEPENDS ${COV_OUT_HTML}
     )
     add_custom_target(
-        ${component_name}_unittests
-        DEPENDS ${component_name}_coverage
+        ${COMPONENT_NAME}_unittests
+        DEPENDS ${COMPONENT_NAME}_coverage
     )
-    add_dependencies(coverage ${component_name}_coverage)
+    add_dependencies(coverage ${COMPONENT_NAME}_coverage)
 
     target_link_libraries(${exe_name}
-        ${component_name}
+        ${COMPONENT_NAME}
         GTest::gtest_main
         GTest::gmock_main
         pthread
