@@ -20,6 +20,15 @@ macro(spl_add_component component_path)
     endif()
 endmacro()
 
+macro(spl_add_named_component component_name)
+    message(DEBUG "spl_add_named_component: component_name=${component_name}")
+    add_subdirectory(${CMAKE_SOURCE_DIR}/${${component_name}})
+
+    if(BUILD_KIT STREQUAL prod)
+        target_link_libraries(${LINK_TARGET_NAME} ${component_name})
+    endif()
+endmacro()
+
 macro(spl_add_source fileName)
     message(DEBUG "spl_add_source: fileName=${fileName}")
     cmake_parse_arguments(ADD_SOURCE_ARGS "" "" "COMPILE_OPTIONS" ${ARGN})
@@ -93,7 +102,7 @@ macro(_spl_get_google_test)
 endmacro(_spl_get_google_test)
 
 macro(spl_create_component)
-    cmake_parse_arguments(CREATE_COMPONENT "" "LONG_NAME;LIBRARY_TYPE" "" ${ARGN})
+    cmake_parse_arguments(CREATE_COMPONENT "" "NAME;LONG_NAME;LIBRARY_TYPE" "" ${ARGN})
 
     # Set the default library type to OBJECT if not provided
     if(NOT CREATE_COMPONENT_LIBRARY_TYPE)
@@ -102,7 +111,12 @@ macro(spl_create_component)
 
     # Determine the unique component name based on the relative path of the component
     file(RELATIVE_PATH component_path ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_LIST_DIR})
-    _spl_slash_to_underscore(component_name ${component_path})
+
+    if(NOT CREATE_COMPONENT_NAME)
+        _spl_slash_to_underscore(component_name ${component_path})
+    else()
+        set(component_name ${CREATE_COMPONENT_NAME})
+    endif()
 
     # Collect all productive sources for later usage (e.g., in an extension)
     list(APPEND PROD_SOURCES ${SOURCES})
