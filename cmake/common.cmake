@@ -14,18 +14,20 @@ macro(spl_add_component component_path)
     message(DEBUG "spl_add_component: component_path=${component_path}")
     _spl_slash_to_underscore(component_name ${component_path})
     add_subdirectory(${CMAKE_SOURCE_DIR}/${component_path})
-
-    if(BUILD_KIT STREQUAL prod)
-        target_link_libraries(${LINK_TARGET_NAME} ${component_name})
+    if(TARGET ${component_name})
+        if(BUILD_KIT STREQUAL prod)
+            target_link_libraries(${LINK_TARGET_NAME} ${component_name})
+        endif()
     endif()
 endmacro()
 
 macro(spl_add_named_component component_name)
     message(DEBUG "spl_add_named_component: component_name=${component_name}")
     add_subdirectory(${CMAKE_SOURCE_DIR}/${${component_name}})
-
-    if(BUILD_KIT STREQUAL prod)
-        target_link_libraries(${LINK_TARGET_NAME} ${component_name})
+    if(TARGET ${component_name})
+        if(BUILD_KIT STREQUAL prod)
+            target_link_libraries(${LINK_TARGET_NAME} ${component_name})
+        endif()
     endif()
 endmacro()
 
@@ -190,11 +192,13 @@ macro(spl_create_component)
     set(target_include_directories__INCLUDES ${target_include_directories__INCLUDES} PARENT_SCOPE)
 
     if(BUILD_KIT STREQUAL prod)
+        if(SOURCES)
         # Create the component library
         add_library(${component_name} ${CREATE_COMPONENT_LIBRARY_TYPE} ${SOURCES})
 
         # Add define of static_scope_file to be used for static functions that should be tested.
         target_compile_options(${component_name} PRIVATE -Dstatic_scope_file=static)
+        endif()
     elseif(BUILD_KIT STREQUAL test)
         # Create component unittests target
         if(TEST_SOURCES)
