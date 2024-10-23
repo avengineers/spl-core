@@ -31,15 +31,6 @@ macro(spl_add_named_component component_name)
     endif()
 endmacro()
 
-macro(spl_add_external_component component_name external_path)
-    message(DEBUG "spl_add_named_component: component_name=${component_name}")
-    add_subdirectory(${external_path}/${${component_name}})
-
-    if(BUILD_KIT STREQUAL prod)
-        target_link_libraries(${LINK_TARGET_NAME} ${component_name})
-    endif()
-endmacro()
-
 macro(spl_add_source fileName)
     message(DEBUG "spl_add_source: fileName=${fileName}")
     cmake_parse_arguments(ADD_SOURCE_ARGS "" "" "COMPILE_OPTIONS" ${ARGN})

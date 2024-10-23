@@ -87,5 +87,19 @@ if(NOT "component" IN_LIST COMPONENT_NAMES)
     message(FATAL_ERROR "Failing Test case: component not found inside ${COMPONENT_NAMES}.")
 endif()
 
+# ## test: spl_add_named_component ############
+
+# given
+set(PATH_TO_EXTERNAL_PACKAGE external_package)
+include(${PATH_TO_EXTERNAL_PACKAGE}/components.cmake)
+
+# when
+spl_add_named_component(some_external_component)
+
+# then
+if(NOT "some_external_component" IN_LIST COMPONENT_NAMES)
+    message(FATAL_ERROR "Failing Test case: component not found inside ${COMPONENT_NAMES}.")
+endif()
+
 # ## test: _spl_create_build_info_file (tests are written in test_cmake.py)#####
 _spl_create_build_info_file()

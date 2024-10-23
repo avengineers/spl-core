@@ -64,6 +64,16 @@ class TestCmake:
                 "{script_dir}/common.cmake/some_other_component/test/some_test_file.cc",
                 "{script_dir}/common.cmake/some_other_component/test/some_other_test_file.cc"
             ]
+        }},
+        {{
+            "name": "some_external_component",
+            "long_name": "",
+            "path": "{script_dir}/common.cmake/external_package/some_external_component",
+            "sources": [
+                "{script_dir}/common.cmake/external_package/some_external_component/src/some_file.c",
+                "{script_dir}/common.cmake/external_package/some_external_component/src/some_other_file.c"
+            ],
+            "test_sources": []
         }}
     ]
 }}"""
