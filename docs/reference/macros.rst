@@ -31,6 +31,42 @@ Adding a component to the variant in its parts.cmake:
 This example adds a component located in the "src/led_driver" directory to the variant.
 
 
+spl_add_named_component
+-----------------------
+
+Add a named component to a variant.
+
+.. code-block:: cmake
+
+ spl_add_named_component(<component_name>)
+
+This macro is intended to be used in the variant's parts.cmake file to add a named component to the variant.
+
+The arguments are:
+
+``<component_name>``
+ The name of a CMake variable that contains the path (either absolute or relative from project root) to the component's directory.
+ The variable name becomes the name of the component in the build system.
+
+Examples:
+
+Adding a named component to the variant in its parts.cmake:
+
+.. code-block:: cmake
+
+ set(LED_DRIVER_COMPONENT src/led_driver)
+ spl_add_named_component(LED_DRIVER_COMPONENT)
+
+This example adds a named component to the variant using the variable ``LED_DRIVER_COMPONENT`` that contains the path to the component's directory.
+
+.. code-block:: cmake
+
+ set(LED_DRIVER_COMPONENT ${CMAKE_CURRENT_SOURCE_DIR}/some_package/src/led_driver)
+ spl_add_named_component(LED_DRIVER_COMPONENT)
+
+This example adds a named component to the variant using the variable ``LED_DRIVER_COMPONENT`` that contains the absolute path to the component's directory.
+
+
 spl_add_include
 ---------------
 

@@ -87,19 +87,33 @@ if(NOT "component" IN_LIST COMPONENT_NAMES)
     message(FATAL_ERROR "Failing Test case: component not found inside ${COMPONENT_NAMES}.")
 endif()
 
+# cleanup
+unset(SOURCES)
+unset(COMPONENT_NAMES)
+
 # ## test: spl_add_named_component ############
 
 # given
-set(PATH_TO_EXTERNAL_PACKAGE external_package)
-include(${PATH_TO_EXTERNAL_PACKAGE}/components.cmake)
+# some external component with relative path
+set(some_external_component external_package/some_external_component)
+
+# another external component with absolute path
+set(another_external_component ${CMAKE_CURRENT_LIST_DIR}/external_package/another_external_component)
 
 # when
 spl_add_named_component(some_external_component)
+spl_add_named_component(another_external_component)
 
 # then
-if(NOT "some_external_component" IN_LIST COMPONENT_NAMES)
-    message(FATAL_ERROR "Failing Test case: component not found inside ${COMPONENT_NAMES}.")
-endif()
+foreach(expected_component IN ITEMS some_external_component another_external_component)
+    if(NOT "${expected_component}" IN_LIST COMPONENT_NAMES)
+        message(FATAL_ERROR "Failing Test case: ${expected_component} not found inside ${COMPONENT_NAMES}.")
+    endif()
+endforeach()
 
 # ## test: _spl_create_build_info_file (tests are written in test_cmake.py)#####
 _spl_create_build_info_file()
+
+# cleanup
+unset(SOURCES)
+unset(COMPONENT_NAMES)
