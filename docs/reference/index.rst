@@ -7,3 +7,4 @@
     macros
     variables
     targets
+    c_defines

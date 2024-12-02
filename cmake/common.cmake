@@ -195,8 +195,12 @@ macro(spl_create_component)
             # Create the component library
             add_library(${component_name} ${CREATE_COMPONENT_LIBRARY_TYPE} ${SOURCES})
 
-            # Add define of static_scope_file to be used for static functions that should be tested.
-            target_compile_options(${component_name} PRIVATE -Dstatic_scope_file=static)
+            # Define list of productive specific compile options for component's sources
+            target_compile_definitions(${component_name} PRIVATE
+                SPLE_TESTABLE_STATIC=static
+                SPLE_TESTABLE_INLINE=inline
+                static_scope_file=static
+            )
         endif()
     elseif(BUILD_KIT STREQUAL test)
         # Create component unittests target
@@ -517,18 +521,30 @@ macro(_spl_add_test_suite COMPONENT_NAME PROD_SRC TEST_SOURCES)
     add_library(${COMPONENT_NAME} OBJECT ${SOURCES})
 
     # Define list of test specific compile options for all sources
-    # -Dstatic_scope_file=: add possibility to remove static from the signature
-    # of static functions to allow testing them.
     # -ggdb: Produce debugging information to be able to set breakpoints.
-    # -fno-inline, -fno-default-inline, -fkeep-inline-functions:
-    # No inlining of functions to allow mocking them.
-    # -save-temps: save temporary files like preprocessed once for debugging purposes
-    set(TEST_COMPILE_OPTIONS -Dstatic_scope_file= -ggdb -fno-inline -fno-default-inline -fkeep-inline-functions -save-temps)
+    # -save-temps: save temporary files like preprocessed ones for debugging purposes
+    set(TEST_COMPILE_OPTIONS -ggdb -save-temps)
 
     target_compile_options(${exe_name} PRIVATE ${TEST_COMPILE_OPTIONS})
 
-    # Coverage data is only generated for the component sources
+    # Coverage data is only generated for the component's sources
     target_compile_options(${COMPONENT_NAME} PRIVATE --coverage ${TEST_COMPILE_OPTIONS})
+
+    # Define list of test specific compile options for all sources
+    # SPLE_UNIT_TESTING: add possibility to configure the code for unit testing
+    # SPLE_TESTABLE_STATIC=: add possibility to make static functions testable and mockable
+    # SPLE_TESTABLE_INLINE=: add possibility to make inline functions testable and mockable
+    # static_scope_file=: add possibility to remove static from the signature (obsolete, use SPLE_TESTABLE_STATIC instead)
+    set(TEST_COMPILE_DEFINITIONS
+        SPLE_UNIT_TESTING
+        SPLE_TESTABLE_STATIC=
+        SPLE_TESTABLE_INLINE=
+        static_scope_file=
+    )
+
+    target_compile_definitions(${exe_name} PRIVATE ${TEST_COMPILE_DEFINITIONS})
+
+    target_compile_definitions(${COMPONENT_NAME} PRIVATE ${TEST_COMPILE_DEFINITIONS})
 
     target_link_options(${exe_name}
         PRIVATE -ggdb --coverage
@@ -542,19 +558,20 @@ macro(_spl_add_test_suite COMPONENT_NAME PROD_SRC TEST_SOURCES)
         DEPENDS $<TARGET_OBJECTS:${COMPONENT_NAME}>
     )
 
-    set(prop "$<TARGET_PROPERTY:${COMPONENT_NAME},INCLUDE_DIRECTORIES>")
+    set(component_inc_dirs "$<TARGET_PROPERTY:${COMPONENT_NAME},INCLUDE_DIRECTORIES>")
+    set(component_comp_defs "$<TARGET_PROPERTY:${COMPONENT_NAME},COMPILE_DEFINITIONS>")
     add_custom_command(
         OUTPUT ${MOCK_SRC}
         BYPRODUCTS mockup_${component_name}.h
         WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-        COMMAND python -m hammocking --suffix _${COMPONENT_NAME} --sources ${PROD_SRC} --plink ${CMAKE_CURRENT_BINARY_DIR}/${PROD_PARTIAL_LINK} --outdir ${CMAKE_CURRENT_BINARY_DIR} "$<$<BOOL:${prop}>:-I$<JOIN:${prop},;-I>>" -x c
+        COMMAND python -m hammocking --suffix _${COMPONENT_NAME} --sources ${PROD_SRC} --plink ${CMAKE_CURRENT_BINARY_DIR}/${PROD_PARTIAL_LINK} --outdir ${CMAKE_CURRENT_BINARY_DIR} "$<$<BOOL:${component_inc_dirs}>:-I$<JOIN:${component_inc_dirs},;-I>>" "$<$<BOOL:${component_comp_defs}>:-D$<JOIN:${component_comp_defs},;-D>>" -x c
         COMMAND_EXPAND_LISTS
         VERBATIM
         DEPENDS
         ${PROD_PARTIAL_LINK}
     )
 
-    # Create JUnit report
+    # Create unit test results (junit.xml)
     set(TEST_OUT_JUNIT junit.xml)
     add_custom_command(
         OUTPUT ${TEST_OUT_JUNIT}
@@ -569,7 +586,7 @@ macro(_spl_add_test_suite COMPONENT_NAME PROD_SRC TEST_SOURCES)
 
     set(GLOBAL_COMPONENTS_COVERAGE_JSON_LIST "${GLOBAL_COMPONENTS_COVERAGE_JSON_LIST};${CMAKE_CURRENT_BINARY_DIR}/${COV_OUT_JSON}" CACHE INTERNAL "List of all ${COV_OUT_JSON} files")
 
-    # Create coverage report
+    # Create coverage results (coverage.json)
     add_custom_command(
         OUTPUT ${COV_OUT_JSON}
 
@@ -582,6 +599,7 @@ macro(_spl_add_test_suite COMPONENT_NAME PROD_SRC TEST_SOURCES)
         COMMENT "Generating component ${COMPONENT_NAME} code coverage json report ${COV_OUT_JSON} ..."
     )
 
+    # Create coverage html report
     set(COV_OUT_HTML reports/coverage/index.html)
     add_custom_command(
         OUTPUT ${COV_OUT_HTML}

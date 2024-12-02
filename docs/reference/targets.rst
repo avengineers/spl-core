@@ -12,6 +12,11 @@ docs
 
 Generates the variant documentation.
 
+unittests
+---------
+
+Runs all unit tests for the given variant.
+
 .. _component_cmake_targets:
 
 <component>_report
