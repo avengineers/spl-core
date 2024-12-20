@@ -3,6 +3,8 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import List
 
+import pytest
+
 from spl_core.test_utils.spl_build import SplBuild
 
 
@@ -57,6 +59,7 @@ class BaseVariantTestRunner(ABC):
         else:
             assert Path.joinpath(dir, artifact).exists(), f"Artifact {Path.joinpath(dir, artifact)} does not exist"  # noqa: S101
 
+    @pytest.mark.build
     def test_build(self) -> None:
         spl_build: SplBuild = SplBuild(variant=self.variant, build_kit="prod")
         assert 0 == spl_build.execute(target="all")  # noqa: S101
@@ -68,12 +71,14 @@ class BaseVariantTestRunner(ABC):
         if self.create_artifacts_json:
             spl_build.create_artifacts_json(self.expected_archive_artifacts)
 
-    def test_unittest(self) -> None:
+    @pytest.mark.unittests
+    def test_unittests(self) -> None:
         spl_build: SplBuild = SplBuild(variant=self.variant, build_kit="test")
         assert 0 == spl_build.execute(target="unittests")  # noqa: S101
         for artifact in self.expected_test_artifacts:
             self.assert_artifact_exists(dir=spl_build.build_dir, artifact=artifact)
 
+    @pytest.mark.reports
     def test_reports(self) -> None:
         spl_build: SplBuild = SplBuild(variant=self.variant, build_kit="test")
         assert 0 == spl_build.execute(target="all")  # noqa: S101

@@ -34,9 +34,9 @@ class Test_SomeVariant(BaseVariantTestRunner):
 
     @patch("pathlib.Path.exists", return_value=True)
     @patch("spl_core.test_utils.spl_build.SplBuild.execute")
-    def test_unittest(self, mock_execute: MagicMock, mock_exists: MagicMock) -> None:
+    def test_unittests(self, mock_execute: MagicMock, mock_exists: MagicMock) -> None:
         mock_execute.return_value = 0
-        super().test_unittest()
+        super().test_unittests()
         mock_execute.assert_called_once_with(target="unittests")
         mock_exists.assert_any_call()
 
