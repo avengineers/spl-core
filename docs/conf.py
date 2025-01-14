@@ -15,7 +15,7 @@ sys.path.insert(0, sources_path.as_posix())
 project = "SPL Core"
 copyright = "2024, RMT"
 author = "RMT"
-release = "6.2.0"
+release = "6.2.1-rc.1"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

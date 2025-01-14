@@ -2,6 +2,13 @@
 
 
 
+## v6.2.1-rc.1 (2025-01-14)
+
+### Fix
+
+* fix: test suite creation ignores additional test sources ([`b4b5a11`](https://github.com/avengineers/spl-core/commit/b4b5a1113d5cc447d7547f357c09489c0e52516e))
+
+
 ## v6.2.0 (2024-12-20)
 
 ### Feature
