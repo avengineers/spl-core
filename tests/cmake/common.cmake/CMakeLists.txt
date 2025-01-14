@@ -71,6 +71,36 @@ endif()
 # cleanup
 unset(SOURCES)
 
+# ## test: spl_add_test_source #########
+
+# given
+set(test_source_file test/some_test_source_file.c)
+set(other_test_source_file test/some_other_test_source_file.c)
+
+# when
+spl_add_test_source(${test_source_file})
+spl_add_test_source(${other_test_source_file})
+
+# then
+_spl_get_absolute_path(expected_test_source_file "${test_source_file}")
+_spl_get_absolute_path(expected_other_test_source_file "${other_test_source_file}")
+_spl_get_absolute_path(unexpected_test_source_file "not_expected.c")
+
+if(NOT expected_test_source_file IN_LIST TEST_SOURCES)
+    message(FATAL_ERROR "Failing Test case: ${expected_test_source_file} not found inside ${TEST_SOURCES}.")
+endif()
+
+if(NOT expected_other_test_source_file IN_LIST TEST_SOURCES)
+    message(FATAL_ERROR "Failing Test case: ${expected_other_test_source_file} not found inside ${TEST_SOURCES}.")
+endif()
+
+if(unexpected_test_source_file IN_LIST TEST_SOURCES)
+    message(FATAL_ERROR "Failing Test case: ${unexpected_test_source_file} not found inside ${TEST_SOURCES}.")
+endif()
+
+# cleanup
+unset(TEST_SOURCES)
+
 # ## test: spl_add_component ###############
 
 # given
