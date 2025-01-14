@@ -1,8 +1,11 @@
 import subprocess
 
+import pytest
+
 from tests.utils import SplKickstartProjectIntegrationTestBase
 
 
+@pytest.mark.integration
 class TestBuild(SplKickstartProjectIntegrationTestBase):
     def test_build_prod(self):
         files_always_touched_by_build = {

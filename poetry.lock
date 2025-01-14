@@ -2187,17 +2187,17 @@ diagrams = ["jinja2", "railroad-diagrams"]
 
 [[package]]
 name = "pypeline-runner"
-version = "0.3.1"
+version = "1.3.0"
 description = "Configure and execute pipelines with Python (similar to GitHub workflows or Jenkins pipelines)."
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "pypeline_runner-0.3.1-py3-none-any.whl", hash = "sha256:759b31ce5493104cfaa8d4d4b85076d1bc33f0968589e4109763020d5f22607c"},
-    {file = "pypeline_runner-0.3.1.tar.gz", hash = "sha256:c3ddcc6b7bdf3a498574bff7f38a8ed545da179b97b95392bce1d3d586c56e1d"},
+    {file = "pypeline_runner-1.3.0-py3-none-any.whl", hash = "sha256:81993238175018bf90e4ad4286b33891ae290321f5b14208c41427056ce441cd"},
+    {file = "pypeline_runner-1.3.0.tar.gz", hash = "sha256:2e1a1442c74cab23cd0d061f39c0d5b68acdbf4978ad33de47edf582d2c19d16"},
 ]
 
 [package.dependencies]
-py-app-dev = ">=2.2,<3.0"
+py-app-dev = ">=2.3.3,<3.0.0"
 pyyaml = ">=6.0,<7.0"
 typer = {version = ">=0.12,<0.13", extras = ["all"]}
 
@@ -3313,4 +3313,4 @@ dev = ["black (>=19.3b0)", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "b91f2a8be11770c5eed08cfec4bf899048246a0a68d7c98c043f402e30c5fc3b"
+content-hash = "eab80d4be8770e39aed52a3874e54affe5c11b826043d08c69f31dd3e137705d"

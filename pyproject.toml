@@ -60,7 +60,7 @@ mashumaro = "*"
 loguru = "*"
 flake8 = "*"
 pipenv = "*"
-pypeline-runner = "^0.3"
+pypeline-runner = "^1.3"
 python-semantic-release = "^9.16.1"
 
 [tool.semantic_release]
@@ -89,6 +89,10 @@ addopts = " -vv --capture=tee-sys --junitxml=out/test-report.xml"
 pythonpath = ["src", "tests"]
 testpaths = ["tests"]
 junit_logging = "all"
+markers = [
+    "integration: mark a test as an integration test",
+    "unit: mark a test as a unit test",
+]
 
 [tool.coverage.run]
 branch = true

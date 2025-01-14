@@ -35,6 +35,7 @@
         "cookiecutter",
         "kconfig",
         "kconfiglib",
+        "pypeline",
         "SPLE"
     ]
 }

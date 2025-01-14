@@ -2,9 +2,11 @@ import subprocess
 import textwrap
 import xml.etree.ElementTree as ET
 
+import pytest
 from utils import SplProjectIntegrationTestBase
 
 
+@pytest.mark.integration
 class TestSplFeatures(SplProjectIntegrationTestBase):
     def test_unittests(self):
         variant = "Variant1"

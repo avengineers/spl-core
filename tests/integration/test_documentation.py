@@ -1,6 +1,9 @@
+import pytest
+
 from tests.utils import SplKickstartProjectIntegrationTestBase
 
 
+@pytest.mark.integration
 class TestDocumentation(SplKickstartProjectIntegrationTestBase):
     def test_build_docs(self):
         variant = "GermanVariant"
