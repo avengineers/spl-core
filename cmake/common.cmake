@@ -205,7 +205,7 @@ macro(spl_create_component)
     elseif(BUILD_KIT STREQUAL test)
         # Create component unittests target
         if(TEST_SOURCES)
-            _spl_add_test_suite(${component_name} "${SOURCES}" ${TEST_SOURCES})
+            _spl_add_test_suite(${component_name} "${SOURCES}" "${TEST_SOURCES}")
         endif()
 
         set(_component_dir ${CMAKE_CURRENT_LIST_DIR})
