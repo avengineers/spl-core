@@ -13,6 +13,12 @@ on:
                 required: true
                 default: 'develop'
 
+            prerelease_token:
+                description: 'The prerelease token can be used when multiple users want to create release candidates.
+                              One can define an own unique token to avoid conflicts: rc+<id>. For example: rc+xyz'
+                required: false
+                default: 'rc'
+
 concurrency:
     group: ${{ github.head_ref || github.run_id }}
     cancel-in-progress: true
@@ -79,18 +85,23 @@ jobs:
               id: determine_release
               run: |
                   if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-                      echo "release_options=--prerelease" >> $GITHUB_ENV
+                      echo "semantic_release_root_options=" >> $GITHUB_ENV
+                      echo "prerelease=true" >> $GITHUB_ENV
                   elif [ "${{ github.ref_name }}" = "develop" ]; then
-                      echo "release_options=" >> $GITHUB_ENV
+                      echo "semantic_release_root_options=" >> $GITHUB_ENV
+                      echo "prerelease=false" >> $GITHUB_ENV
                   else
-                      echo "release_options=--noop" >> $GITHUB_ENV
+                      echo "semantic_release_root_options=--noop" >> $GITHUB_ENV
+                      echo "prerelease=false" >> $GITHUB_ENV
                   fi
 
             - name: Release
-              uses: python-semantic-release/python-semantic-release@v9.1.1
+              uses: python-semantic-release/python-semantic-release@v9.16.1
               id: release
               with:
-                  root_options: ${{ env.release_options }}
+                  root_options: ${{ env.semantic_release_root_options }}
+                  prerelease_token: ${{ github.event.inputs.prerelease_token }}
+                  prerelease: ${{ env.prerelease }}
                   github_token: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Publish package distributions to PyPI
