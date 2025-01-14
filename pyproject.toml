@@ -14,9 +14,7 @@ classifiers = [
     "Operating System :: OS Independent",
     "Topic :: Software Development :: Libraries",
 ]
-packages = [
-    { include = "spl_core", from = "src" },
-]
+packages = [{ include = "spl_core", from = "src" }]
 
 [tool.poetry.scripts]
 please = "spl_core.main:main"
@@ -28,11 +26,11 @@ please = "spl_core.main:main"
 [tool.poetry.dependencies]
 python = ">=3.10,<3.12"
 py-app-dev = "^2.1"
-cookiecutter = {version="==2.1.1"}
+cookiecutter = "==2.1.1"
 gcovr = "*"
 hammocking = "*"
 kconfiglib = "*"
-typer = {extras = ["all"], version = "^0.12.3"}
+typer = "^0.12.3"
 doxysphinx = "^3.3.7"
 sphinx = "^7.3.5"
 sphinx-rtd-theme = "^2.0.0"
@@ -63,6 +61,7 @@ loguru = "*"
 flake8 = "*"
 pipenv = "*"
 pypeline-runner = "^0.3"
+python-semantic-release = "^9.16.1"
 
 [tool.semantic_release]
 version_toml = ["pyproject.toml:tool.poetry.version"]
@@ -73,10 +72,7 @@ version_variables = [
 build_command = "pip install poetry && poetry build"
 
 [tool.semantic_release.changelog]
-exclude_commit_patterns = [
-    "chore*",
-    "ci*",
-]
+exclude_commit_patterns = ["chore*", "ci*"]
 
 [tool.semantic_release.changelog.environment]
 keep_trailing_newline = true
@@ -132,20 +128,10 @@ lint.select = [
     "I",   # isort
     "RUF", # ruff specific
 ]
-exclude = [
-    "bootstrap.py",
-    "src/spl_core/kickstart/templates/project/conf.py"
-]
+exclude = ["bootstrap.py", "src/spl_core/kickstart/templates/project/conf.py"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*" = [
-    "D100",
-    "D101",
-    "D102",
-    "D103",
-    "D104",
-    "S101",
-]
+"tests/**/*" = ["D100", "D101", "D102", "D103", "D104", "S101"]
 "setup.py" = ["D100"]
 "conftest.py" = ["D100"]
 "docs/conf.py" = ["D100"]
@@ -163,10 +149,7 @@ no_implicit_optional = true
 show_error_codes = true
 warn_unreachable = true
 warn_unused_ignores = true
-exclude = [
-    'docs/.*',
-    'setup.py',
-]
+exclude = ['docs/.*', 'setup.py']
 
 [[tool.mypy.overrides]]
 module = "tests.*"

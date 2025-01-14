@@ -9,9 +9,9 @@ on:
     workflow_dispatch:
         inputs:
             target_branch:
-                description: 'The branch to release from'
+                description: "The branch to release from"
                 required: true
-                default: 'develop'
+                default: "develop"
 
             prerelease_token:
                 description: 'The prerelease token can be used when multiple users want to create release candidates.
@@ -31,10 +31,14 @@ jobs:
             - uses: actions/checkout@v4
               with:
                   fetch-depth: 0
+                  ref: ${{ github.event.inputs.target_branch || github.head_ref || github.ref_name }}
+
             - uses: actions/setup-python@v5
               with:
                   python-version: 3.x
+
             - uses: pre-commit/action@v3.0.1
+
             # Make sure commit messages follow the conventional commits convention:
             # https://www.conventionalcommits.org
             - uses: wagoid/commitlint-github-action@v5
@@ -45,10 +49,11 @@ jobs:
         needs:
             - lint
         steps:
-            - name: Checkout
-              uses: actions/checkout@v4
+            - uses: actions/checkout@v4
               with:
                   fetch-depth: 0
+                  ref: ${{ github.event.inputs.target_branch || github.head_ref || github.ref_name }}
+
             - name: install tools, build and test
               env:
                   # Workaround to force usage of scoop apps installed in USERPROFILE.
@@ -56,6 +61,7 @@ jobs:
               run: |
                   .\build.ps1
               shell: powershell
+
             - name: Publish Test Results
               uses: EnricoMi/publish-unit-test-result-action/windows@v2
               if: always()
