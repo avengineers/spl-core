@@ -14,10 +14,11 @@ on:
                 default: "develop"
 
             prerelease_token:
-                description: 'The prerelease token can be used when multiple users want to create release candidates.
-                              One can define an own unique token to avoid conflicts: rc+<id>. For example: rc+xyz'
+                description:
+                    "The prerelease token can be used when multiple users want to create release candidates.
+                    One can define an own unique token to avoid conflicts: rcN.dev, where N is a digit. For example: rc1.dev"
                 required: false
-                default: 'rc'
+                default: "rc"
 
 concurrency:
     group: ${{ github.head_ref || github.run_id }}
@@ -93,12 +94,15 @@ jobs:
                   if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
                       echo "semantic_release_root_options=" >> $GITHUB_ENV
                       echo "prerelease=true" >> $GITHUB_ENV
+                      echo "publish_release=true" >> $GITHUB_ENV
                   elif [ "${{ github.ref_name }}" = "develop" ]; then
                       echo "semantic_release_root_options=" >> $GITHUB_ENV
                       echo "prerelease=false" >> $GITHUB_ENV
+                      echo "publish_release=true" >> $GITHUB_ENV
                   else
                       echo "semantic_release_root_options=--noop" >> $GITHUB_ENV
                       echo "prerelease=false" >> $GITHUB_ENV
+                      echo "publish_release=false" >> $GITHUB_ENV
                   fi
 
             - name: Release
@@ -112,10 +116,10 @@ jobs:
 
             - name: Publish package distributions to PyPI
               uses: pypa/gh-action-pypi-publish@release/v1
-              if: steps.release.outputs.released == 'true'
+              if: env.publish_release == 'true'
 
             - name: Publish package distributions to GitHub Releases
               uses: python-semantic-release/upload-to-gh-release@main
-              if: steps.release.outputs.released == 'true'
+              if: env.publish_release == 'true'
               with:
                   github_token: ${{ secrets.GITHUB_TOKEN }}
