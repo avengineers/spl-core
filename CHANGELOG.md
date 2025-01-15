@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v6.3.1 (2025-01-15)
+
+### Bug Fixes
+
+- Test suite creation ignores additional test sources
+  ([`ec98319`](https://github.com/avengineers/spl-core/commit/ec98319eb69a1680edc6c558da7a0dc555111bd1))
+
+
 ## v6.3.0 (2025-01-15)
 
 ### Bug Fixes
