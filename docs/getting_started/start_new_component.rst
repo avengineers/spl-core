@@ -1,3 +1,5 @@
+.. _start_new_component:
+
 How to Start Working on a :ref:`Component <glossary_component>`
 ###############################################################
 

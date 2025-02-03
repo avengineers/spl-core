@@ -3,6 +3,7 @@
 CMake Macros
 ============
 
+.. _cmake-macro-spl-add-component:
 
 spl_add_component
 -----------------

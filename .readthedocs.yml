@@ -12,7 +12,7 @@ build:
     jobs:
         post_create_environment:
             # Install poetry
-            - python -m pip install poetry
+            - python -m pip install poetry~=1.8
         post_install:
             # Install dependencies, reusing RTD virtualenv
             - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH poetry install
