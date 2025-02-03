@@ -1,3 +1,5 @@
+.. _hello_world:
+
 Tutorial: "Hello World"
 =======================
 
@@ -264,12 +266,15 @@ Write the following line in the ``variants/lang/de/parts.cmake`` file:
    spl_add_component(src/main)
 
 
+.. _make_main_component_configurable:
+
 Make the ``main`` Component Configurable
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We now need to make the ``main`` component configurable and define configurations for the two variants ``variants/lang/en`` and ``variants/lang/de``.
 
 To make the ``main`` component configurable, we need to create a `KConfig <https://www.kernel.org/doc/html/latest/kbuild/kconfig-language.html#kconfig-syntax>`_ model file in the ``src/main/`` directory:
+Please note that this file has no specific file ending. It is simply called ``KConfig``.
 
 .. code-block:: KConfig
    :linenos:
@@ -345,6 +350,11 @@ Add the following code to the ``src/main/src/main.c`` file:
        return 0;
    }
 
+In order to properly handle the ``kconfiglib`` while generating and building, we also have to install SPL Core's Python package:
+
+.. code-block:: powershell
+
+   pip install spl-core
 
 To generate the build files including ``autoconf.h`` for variant ``lang/de`` execute:
 
