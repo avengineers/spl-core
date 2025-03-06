@@ -124,7 +124,7 @@ def create_cli_for_spl_project(project_dir: Path) -> CommandLineExecutor:
     The SPL-Core repository is used as a Python dependency and forces the usage of the project directory virtual environment.
     """
     env = os.environ.copy()
-    env["SPLCORE_PATH"] = this_repository_root_dir().as_posix()
+    env["SPLCORE_PATH"] = this_repository_root_dir().joinpath("src/spl_core").as_posix()
     # Force the usage of the project directory virtual environment
     env["PIPENV_IGNORE_VIRTUALENVS"] = "1"
     # Make sure the project directory virtual environment is used

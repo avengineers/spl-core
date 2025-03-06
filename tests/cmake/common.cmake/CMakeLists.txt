@@ -5,7 +5,7 @@ set(VARIANT mytestvariant)
 set(BUILD_KIT prod)
 
 # ## IUT ####################################
-include(${CMAKE_CURRENT_LIST_DIR}/../../../cmake/common.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/../../../src/spl_core/common.cmake)
 
 # ## test: _spl_slash_to_underscore #########
 # given
