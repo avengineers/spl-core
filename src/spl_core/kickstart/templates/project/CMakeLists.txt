@@ -22,7 +22,7 @@ include(FetchContent)
 # Include spl-core
 if(DEFINED ENV{SPLCORE_PATH})
     message(WARNING "SPLCORE_PATH defined! Use fixed SPL-CORE version from: $ENV{SPLCORE_PATH}")
-    include($ENV{SPLCORE_PATH}/cmake/spl.cmake)
+    include($ENV{SPLCORE_PATH}/spl.cmake)
 else()
     # Fetch spl-core
     FetchContent_Declare(

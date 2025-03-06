@@ -16,7 +16,7 @@ set(LINKER_BYPRODUCTS_EXTENSIONS "hex")
 set(LINKER_BYPRODUCT_HEX bibi.hex tina.map amadeus.mdf)
 
 # when
-include(${CMAKE_CURRENT_LIST_DIR}/../../../cmake/spl.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/../../../src/spl_core/spl.cmake)
 
 # expect
 if(NOT LINK_TARGET_NAME STREQUAL "link")

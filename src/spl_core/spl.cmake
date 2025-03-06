@@ -1,8 +1,8 @@
 # Define the SPL Core root directory to be used to refer to files
 # relative to the SPL Core installation directory.
-set(SPL_CORE_ROOT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/..)
-set(SPL_CORE_CMAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
-set(SPL_CORE_PYTHON_DIRECTORY ${SPL_CORE_ROOT_DIRECTORY}/src/spl_core)
+set(SPL_CORE_ROOT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
+set(SPL_CORE_CMAKE_DIRECTORY ${SPL_CORE_ROOT_DIRECTORY})
+set(SPL_CORE_PYTHON_DIRECTORY ${SPL_CORE_ROOT_DIRECTORY})
 
 # Always create a compile_commands.json file for C/C++ intellisense / CMake Tools extension
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -23,7 +23,7 @@ foreach(ENVVAR IN LISTS ENVVARS)
 endforeach()
 
 # Include common CMake functions and macros
-include(${CMAKE_CURRENT_LIST_DIR}/common.cmake)
+include(${SPL_CORE_CMAKE_DIRECTORY}/common.cmake)
 
 # Include and run KConfig
 include(${SPL_CORE_CMAKE_DIRECTORY}/kconfig.cmake)
