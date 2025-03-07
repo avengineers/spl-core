@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v6.4.0 (2025-03-07)
+
+### Documentation
+
+- Update variant documentation
+  ([`980bee1`](https://github.com/avengineers/spl-core/commit/980bee1315ac6789e41e1c286cc190b56a361efa))
+
+### Features
+
+- Move cmake files into src/spl_core
+  ([`9f89f09`](https://github.com/avengineers/spl-core/commit/9f89f0971bddd1ef75174d7fc6b66fc7d4d005dc))
+
+
 ## v6.3.1 (2025-01-15)
 
 ### Bug Fixes
