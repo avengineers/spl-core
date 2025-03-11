@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v6.4.1 (2025-03-11)
+
+### Bug Fixes
+
+- Hammocking does not fail when nm fails
+  ([`6d4cf70`](https://github.com/avengineers/spl-core/commit/6d4cf7094f7ea6190437ed82331f4c57c1ea2e42))
+
+
 ## v6.4.0 (2025-03-07)
 
 ### Documentation
