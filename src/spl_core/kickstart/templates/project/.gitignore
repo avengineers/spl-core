@@ -1,6 +1,3 @@
-# Python virtual environment
-.venv
-
 # Binary output dir, not recommended to push binary results to Git.
 /build
 
@@ -14,20 +11,23 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Python virtual environment
+/.venv
+
 # Any log directory
 **/[Ll][Oo][Gg]/*
 
 # Any backup file of text editors
 *.bak
 
-# Any log file
-*.log
-
 # Backup files of KConfig
 *.old
 
 # Generated IDEA project files
 .idea
+
+# Any log file created
+*.log
 
 # bootstrap files are downloaded during installation
 /.bootstrap

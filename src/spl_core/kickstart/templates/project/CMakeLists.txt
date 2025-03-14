@@ -10,7 +10,7 @@ include(${CMAKE_SOURCE_DIR}/variants/${VARIANT}/config.cmake)
 if(BUILD_KIT STREQUAL prod)
     project(${VARIANT} C ASM)
 else()
-    # In case of test the project is a C++ project due to GTest usage
+    # C++ project due to GTest usage
     project(${VARIANT} C ASM CXX)
 endif()
 
@@ -24,21 +24,13 @@ if(DEFINED ENV{SPLCORE_PATH})
     message(WARNING "SPLCORE_PATH defined! Use fixed SPL-CORE version from: $ENV{SPLCORE_PATH}")
     include($ENV{SPLCORE_PATH}/spl.cmake)
 else()
-    # Fetch spl-core
-    FetchContent_Declare(
-        spl-core
-        GIT_REPOSITORY https://github.com/avengineers/spl-core.git
-        GIT_TAG develop
-    )
-    FetchContent_MakeAvailable(spl-core)
-
     # Include spl-core
-    include(${spl-core_SOURCE_DIR}/cmake/spl.cmake)
+    include(".venv/Lib/site-packages/spl_core/spl.cmake")
 endif()
 
 include(${CMAKE_SOURCE_DIR}/variants/${VARIANT}/parts.cmake)
 
-# add all components' include directories to the include paths of each component
+# add all components' include paths to all components
 foreach(component_name ${COMPONENT_NAMES})
     if(TARGET ${component_name})
         target_include_directories(${component_name} PUBLIC ${target_include_directories__INCLUDES})

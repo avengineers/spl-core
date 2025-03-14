@@ -1,6 +1,17 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
 [packages]
-pytest = "8.1.1"
-spl-core = "*"
+spl-core = ">=6.5"
+pytest = ">=8.3"
+pytest-env = ">=1.1.5"
+pipenv = ">=2024.0.3"
+testfixtures = ">=8.3"
+pip-system-certs = ">=4.0"
 
 [requires]
 python_version = "3.11"
+
+[dev-packages]
