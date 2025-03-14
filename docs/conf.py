@@ -13,7 +13,7 @@ sys.path.insert(0, sources_path.as_posix())
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "SPL Core"
-copyright = "2024, RMT"
+copyright = "2025, RMT"
 author = "RMT"
 release = "6.5.0"
 
