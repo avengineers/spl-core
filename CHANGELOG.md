@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v6.5.0 (2025-03-14)
+
+### Features
+
+- Move KConfig to src/spl_core/config
+  ([`1a514ae`](https://github.com/avengineers/spl-core/commit/1a514ae30bcbe6b5c11fdd3bce2937d89e07adb3))
+
+
 ## v6.4.1 (2025-03-11)
 
 ### Bug Fixes
