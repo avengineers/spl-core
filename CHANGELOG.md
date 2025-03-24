@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.0.0 (2025-03-24)
+
+### Features
+
+- Use gcc14 condition coverage feature
+  ([`fe33477`](https://github.com/avengineers/spl-core/commit/fe3347797dba1ee6ee96e1eb575334f4054001ba))
+
+
 ## v6.5.0 (2025-03-14)
 
 ### Features
