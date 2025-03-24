@@ -528,7 +528,7 @@ macro(_spl_add_test_suite COMPONENT_NAME PROD_SRC TEST_SOURCES)
     target_compile_options(${exe_name} PRIVATE ${TEST_COMPILE_OPTIONS})
 
     # Coverage data is only generated for the component's sources
-    target_compile_options(${COMPONENT_NAME} PRIVATE --coverage ${TEST_COMPILE_OPTIONS})
+    target_compile_options(${COMPONENT_NAME} PRIVATE --coverage -fcondition-coverage ${TEST_COMPILE_OPTIONS})
 
     # Define list of test specific compile options for all sources
     # SPLE_UNIT_TESTING: add possibility to configure the code for unit testing
@@ -547,7 +547,7 @@ macro(_spl_add_test_suite COMPONENT_NAME PROD_SRC TEST_SOURCES)
     target_compile_definitions(${COMPONENT_NAME} PRIVATE ${TEST_COMPILE_DEFINITIONS})
 
     target_link_options(${exe_name}
-        PRIVATE -ggdb --coverage
+        PRIVATE -ggdb --coverage -fcondition-coverage
     )
 
     add_custom_command(
