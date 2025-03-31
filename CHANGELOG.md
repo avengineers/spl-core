@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.1.0 (2025-03-31)
+
+### Features
+
+- Support build types
+  ([`b5e702b`](https://github.com/avengineers/spl-core/commit/b5e702bbee6cd0d2de61eb1e2efa548aae2e9811))
+
+
 ## v7.0.0 (2025-03-24)
 
 ### Features
