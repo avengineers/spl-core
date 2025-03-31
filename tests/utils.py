@@ -67,7 +67,9 @@ class WorkspaceArtifacts:
     def kconfig_model_file(self) -> Path:
         return self.project_root_dir.joinpath("KConfig")
 
-    def get_build_dir(self, variant: Variant | str, build_kit: str) -> Path:
+    def get_build_dir(self, variant: Variant | str, build_kit: str, build_type: Optional[str] = None) -> Path:
+        if build_type:
+            return self.project_root_dir.joinpath(f"build/{variant}/{build_kit}/{build_type}")
         return self.project_root_dir.joinpath(f"build/{variant}/{build_kit}")
 
     def get_variant_dir(self, variant: Variant | str) -> Path:

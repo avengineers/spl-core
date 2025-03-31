@@ -1,7 +1,7 @@
 import re
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import pytest
 
@@ -60,8 +60,8 @@ class BaseVariantTestRunner(ABC):
             assert Path.joinpath(dir, artifact).exists(), f"Artifact {Path.joinpath(dir, artifact)} does not exist"  # noqa: S101
 
     @pytest.mark.build
-    def test_build(self) -> None:
-        spl_build: SplBuild = SplBuild(variant=self.variant, build_kit="prod")
+    def test_build(self, build_type: Optional[str] = None) -> None:
+        spl_build: SplBuild = SplBuild(variant=self.variant, build_kit="prod", build_type=build_type)
         assert 0 == spl_build.execute(target="all")  # noqa: S101
         for artifact in self.expected_build_artifacts:
             self.assert_artifact_exists(dir=spl_build.build_dir, artifact=artifact)
@@ -72,15 +72,15 @@ class BaseVariantTestRunner(ABC):
             spl_build.create_artifacts_json(self.expected_archive_artifacts)
 
     @pytest.mark.unittests
-    def test_unittests(self) -> None:
-        spl_build: SplBuild = SplBuild(variant=self.variant, build_kit="test")
+    def test_unittests(self, build_type: Optional[str] = None) -> None:
+        spl_build: SplBuild = SplBuild(variant=self.variant, build_kit="test", build_type=build_type)
         assert 0 == spl_build.execute(target="unittests")  # noqa: S101
         for artifact in self.expected_test_artifacts:
             self.assert_artifact_exists(dir=spl_build.build_dir, artifact=artifact)
 
     @pytest.mark.reports
-    def test_reports(self) -> None:
-        spl_build: SplBuild = SplBuild(variant=self.variant, build_kit="test")
+    def test_reports(self, build_type: Optional[str] = None) -> None:
+        spl_build: SplBuild = SplBuild(variant=self.variant, build_kit="test", build_type=build_type)
         assert 0 == spl_build.execute(target="all")  # noqa: S101
         for artifact in self.expected_variant_report_artifacts:
             self.assert_artifact_exists(dir=spl_build.build_dir, artifact=artifact)
