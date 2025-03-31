@@ -41,17 +41,19 @@ class ArtifactsCollection:
 class SplBuild:
     """Class for building an SPL repository."""
 
-    def __init__(self, variant: str, build_kit: str):
+    def __init__(self, variant: str, build_kit: str, build_type: Optional[str] = None) -> None:
         """
         Initialize a SplBuild instance.
 
         Args:
             variant (str): The build variant.
             build_kit (str): The build kit.
+            build_type (str, optional): The build type. Defaults to None.
 
         """
         self.variant = variant
         self.build_kit = build_kit
+        self.build_type = build_type
 
     @property
     def build_dir(self) -> Path:
@@ -62,6 +64,8 @@ class SplBuild:
             Path: The build directory path.
 
         """
+        if self.build_type:
+            return Path(f"build/{self.variant}/{self.build_kit}/{self.build_type}")
         return Path(f"build/{self.variant}/{self.build_kit}")
 
     @time_it()
@@ -91,6 +95,8 @@ class SplBuild:
                 target,
                 "-reconfigure",
             ]
+            if self.build_type:
+                cmd.extend(["-buildType", self.build_type])
             cmd.extend(additional_args)
             result = CommandLineExecutor().execute(cmd)
             return_code = result.returncode
@@ -155,6 +161,8 @@ class SplBuild:
             "build_kit": self.build_kit,
             "artifacts": [str(artifact.archive_path.as_posix()) for artifact in artifacts_collection.archive_artifacts],
         }
+        if self.build_type:
+            json_content["build_type"] = self.build_type
         json_path = self.build_dir / "artifacts.json"
 
         json_path.write_text(json.dumps(json_content, indent=4))
