@@ -684,9 +684,10 @@ macro(spl_run_conan)
 endmacro(spl_run_conan)
 
 macro(_spl_set_ninja_wrapper_as_cmake_make)
-    # if CMAKE_BUILD_TYPE is not empty, NINJA_WRAPPER should be placed in the build directory with build type
-    if(CMAKE_BUILD_TYPE)
-        set(NINJA_WRAPPER ${CMAKE_SOURCE_DIR}/build/${VARIANT}/${BUILD_KIT}/${CMAKE_BUILD_TYPE}/ninja_wrapper.bat)
+    # if BUILD_TYPE is not empty, NINJA_WRAPPER should be placed in the build directory with build type
+
+    if(BUILD_TYPE)
+        set(NINJA_WRAPPER ${CMAKE_SOURCE_DIR}/build/${VARIANT}/${BUILD_KIT}/${BUILD_TYPE}/ninja_wrapper.bat)
     else()
         set(NINJA_WRAPPER ${CMAKE_SOURCE_DIR}/build/${VARIANT}/${BUILD_KIT}/ninja_wrapper.bat)
     endif()
