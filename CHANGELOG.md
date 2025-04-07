@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.1.1-rc.1 (2025-04-07)
+
+### Bug Fixes
+
+- Change CMAKE_BUILD_TYPE to BUILD_TYPE
+  ([`24043f0`](https://github.com/avengineers/spl-core/commit/24043f0e8f648d62437ead892301f9444dac5665))
+
+
 ## v7.1.0 (2025-03-31)
 
 ### Features
