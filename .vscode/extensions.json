@@ -7,7 +7,6 @@
         "visualstudioexptteam.vscodeintellicode",
         "josetr.cmake-language-support-vscode",
         "ms-vscode.cmake-tools",
-        "twxs.cmake",
         "cheshirekow.cmake-format",
         "charliermarsh.ruff"
     ]
