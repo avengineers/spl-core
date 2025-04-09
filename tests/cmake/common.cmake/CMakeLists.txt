@@ -1,6 +1,6 @@
 # boilerplate to get CMake running
 cmake_minimum_required(VERSION 3.22.0)
-project(test-common-cmake C ASM)
+project(test-common-cmake C ASM CXX)
 set(VARIANT mytestvariant)
 set(BUILD_KIT prod)
 
@@ -147,3 +147,78 @@ _spl_create_build_info_file()
 # cleanup
 unset(SOURCES)
 unset(COMPONENT_NAMES)
+
+# ## test: _spl_set_test_compile_and_link_options #########
+message(STATUS "CMAKE_C_COMPILER_ID: ${CMAKE_C_COMPILER_ID}")
+message(STATUS "CMAKE_C_COMPILER_VERSION: ${CMAKE_C_COMPILER_VERSION}")
+message(STATUS "CMAKE_CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
+message(STATUS "CMAKE_CXX_COMPILER_VERSION: ${CMAKE_CXX_COMPILER_VERSION}")
+
+# Act
+_spl_set_test_compile_and_link_options("GNU" "13.1.0")
+
+# Assert
+if(NOT "-ggdb" IN_LIST TEST_COMPILE_OPTIONS)
+    message(FATAL_ERROR "Failing Test case: -ggdb not found inside ${TEST_COMPILE_OPTIONS}.")
+endif()
+
+if(NOT "-ggdb" IN_LIST COMPONENT_TEST_COMPILE_OPTIONS)
+    message(FATAL_ERROR "Failing Test case: -ggdb not found inside ${COMPONENT_TEST_COMPILE_OPTIONS}.")
+endif()
+
+if("-fcondition-coverage" IN_LIST COMPONENT_TEST_COMPILE_OPTIONS)
+    message(FATAL_ERROR "Failing Test case: -fcondition-coverage found inside ${COMPONENT_TEST_COMPILE_OPTIONS}.")
+endif()
+
+if(NOT "-ggdb" IN_LIST TEST_LINK_OPTIONS)
+    message(FATAL_ERROR "Failing Test case: -ggdb not found inside ${TEST_LINK_OPTIONS}.")
+endif()
+
+if("-fcondition-coverage" IN_LIST TEST_LINK_OPTIONS)
+    message(FATAL_ERROR "Failing Test case: -fcondition-coverage found inside ${TEST_LINK_OPTIONS}.")
+endif()
+
+# Act
+_spl_set_test_compile_and_link_options("GNU" "14.1.0")
+
+# Assert
+if("-fcondition-coverage" IN_LIST COMPONENT_TEST_COMPILE_OPTIONS)
+    message(FATAL_ERROR "Failing Test case: -fcondition-coverage found inside ${COMPONENT_TEST_COMPILE_OPTIONS}.")
+endif()
+
+if("-fcondition-coverage" IN_LIST TEST_LINK_OPTIONS)
+    message(FATAL_ERROR "Failing Test case: -fcondition-coverage found inside ${TEST_LINK_OPTIONS}.")
+endif()
+
+# Act
+_spl_set_test_compile_and_link_options("GNU" "14.2.0")
+
+# Assert
+if(NOT "-fcondition-coverage" IN_LIST COMPONENT_TEST_COMPILE_OPTIONS)
+    message(FATAL_ERROR "Failing Test case: -fcondition-coverage not found inside ${COMPONENT_TEST_COMPILE_OPTIONS}.")
+endif()
+
+if(NOT "-fcondition-coverage" IN_LIST TEST_LINK_OPTIONS)
+    message(FATAL_ERROR "Failing Test case: -fcondition-coverage not found inside ${TEST_LINK_OPTIONS}.")
+endif()
+
+# Act
+_spl_set_test_compile_and_link_options("GNU" "14.2.1")
+
+# Assert
+if("-fcondition-coverage" IN_LIST TEST_COMPILE_OPTIONS)
+    message(FATAL_ERROR "Failing Test case: -fcondition-coverage found inside ${TEST_COMPILE_OPTIONS}.")
+endif()
+
+if(NOT "-fcondition-coverage" IN_LIST COMPONENT_TEST_COMPILE_OPTIONS)
+    message(FATAL_ERROR "Failing Test case: -fcondition-coverage not found inside ${COMPONENT_TEST_COMPILE_OPTIONS}.")
+endif()
+
+if(NOT "-fcondition-coverage" IN_LIST TEST_LINK_OPTIONS)
+    message(FATAL_ERROR "Failing Test case: -fcondition-coverage not found inside ${TEST_LINK_OPTIONS}.")
+endif()
+
+# Act
+# The next macro call fails. This is an explorative test to show that compiler id "BIBI" is not supported.
+# Mocking of method "message()" sadly does not work.
+# _spl_set_test_compile_and_link_options("BIBI" "1.2.3")
