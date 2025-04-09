@@ -505,30 +505,18 @@ function(_spl_coverage_create_overall_report)
     endif(_SPL_COVERAGE_CREATE_OVERALL_REPORT_IS_NECESSARY)
 endfunction(_spl_coverage_create_overall_report)
 
-macro(_spl_add_test_suite COMPONENT_NAME PROD_SRC TEST_SOURCES)
-    _spl_set_coverage_create_overall_report_is_necessary()
-
-    set(exe_name ${COMPONENT_NAME}_test)
-    set(PROD_PARTIAL_LINK prod_partial_${COMPONENT_NAME}.obj)
-    set(MOCK_SRC mockup_${COMPONENT_NAME}.cc)
-
-    add_executable(${exe_name}
-        ${TEST_SOURCES}
-        ${MOCK_SRC}
-    )
-
-    # Create the component library
-    add_library(${COMPONENT_NAME} OBJECT ${SOURCES})
+macro(_spl_set_test_compile_and_link_options compilerId compilerVersion)
+    if(NOT ${compilerId} STREQUAL "GNU")
+        message(FATAL_ERROR "Unsupported compiler: ${compilerId} ${compilerVersion}")
+    endif()
 
     # Define list of test specific compile options for all sources
     # -ggdb: Produce debugging information to be able to set breakpoints.
     # -save-temps: save temporary files like preprocessed ones for debugging purposes
     set(TEST_COMPILE_OPTIONS -ggdb -save-temps)
 
-    target_compile_options(${exe_name} PRIVATE ${TEST_COMPILE_OPTIONS})
-
     # Coverage data is only generated for the component's sources
-    target_compile_options(${COMPONENT_NAME} PRIVATE --coverage -fcondition-coverage ${TEST_COMPILE_OPTIONS})
+    set(COMPONENT_TEST_COMPILE_OPTIONS --coverage ${TEST_COMPILE_OPTIONS})
 
     # Define list of test specific compile options for all sources
     # SPLE_UNIT_TESTING: add possibility to configure the code for unit testing
@@ -542,13 +530,42 @@ macro(_spl_add_test_suite COMPONENT_NAME PROD_SRC TEST_SOURCES)
         static_scope_file=
     )
 
+    set(TEST_LINK_OPTIONS -ggdb --coverage)
+
+    if(${compilerVersion} VERSION_GREATER_EQUAL 14.2)
+        # -fcondition-coverage: generate coverage data for conditionals
+        list(APPEND COMPONENT_TEST_COMPILE_OPTIONS -fcondition-coverage)
+        list(APPEND TEST_LINK_OPTIONS -fcondition-coverage)
+        message(STATUS "Condition coverage is enabled.")
+    else()
+        message(STATUS "Condition coverage is not supported by this compiler version.")
+    endif()
+endmacro(_spl_set_test_compile_and_link_options)
+
+macro(_spl_add_test_suite COMPONENT_NAME PROD_SRC TEST_SOURCES)
+    _spl_set_coverage_create_overall_report_is_necessary()
+
+    set(exe_name ${COMPONENT_NAME}_test)
+    set(PROD_PARTIAL_LINK prod_partial_${COMPONENT_NAME}.obj)
+    set(MOCK_SRC mockup_${COMPONENT_NAME}.cc)
+
+    _spl_set_test_compile_and_link_options(${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION})
+
+    add_executable(${exe_name}
+        ${TEST_SOURCES}
+        ${MOCK_SRC}
+    )
+
+    target_compile_options(${exe_name} PRIVATE ${TEST_COMPILE_OPTIONS})
     target_compile_definitions(${exe_name} PRIVATE ${TEST_COMPILE_DEFINITIONS})
+    target_link_options(${exe_name} PRIVATE ${TEST_LINK_OPTIONS})
+
+    # Create the component library for its productive sources
+    add_library(${COMPONENT_NAME} OBJECT ${SOURCES})
+
+    target_compile_options(${COMPONENT_NAME} PRIVATE ${COMPONENT_TEST_COMPILE_OPTIONS})
 
     target_compile_definitions(${COMPONENT_NAME} PRIVATE ${TEST_COMPILE_DEFINITIONS})
-
-    target_link_options(${exe_name}
-        PRIVATE -ggdb --coverage -fcondition-coverage
-    )
 
     add_custom_command(
         OUTPUT ${PROD_PARTIAL_LINK}
@@ -626,7 +643,7 @@ macro(_spl_add_test_suite COMPONENT_NAME PROD_SRC TEST_SOURCES)
     )
 
     gtest_discover_tests(${exe_name})
-endmacro()
+endmacro(_spl_add_test_suite)
 
 macro(spl_add_conan_requires requirement)
     list(APPEND CONAN__REQUIRES ${requirement})
@@ -690,6 +707,7 @@ macro(_spl_set_ninja_wrapper_as_cmake_make)
     else()
         set(NINJA_WRAPPER ${CMAKE_SOURCE_DIR}/build/${VARIANT}/${BUILD_KIT}/ninja_wrapper.bat)
     endif()
+
     file(WRITE ${NINJA_WRAPPER}
         "@echo off
 @call %~dp0%/activate_run.bat
