@@ -1,6 +1,20 @@
 # CHANGELOG
 
 
+## v7.2.0 (2025-04-09)
+
+### Bug Fixes
+
+- Add condition coverage options only when supported by CXX compiler
+  ([#177](https://github.com/avengineers/spl-core/pull/177),
+  [`631cfb1`](https://github.com/avengineers/spl-core/commit/631cfb14a695e46b0860cff2fdb75a3514793cf0))
+
+### Features
+
+- Update dependencies ([#177](https://github.com/avengineers/spl-core/pull/177),
+  [`9823a8f`](https://github.com/avengineers/spl-core/commit/9823a8fe18e399bd5965fa7461cd3724dd8d6bd6))
+
+
 ## v7.1.0 (2025-03-31)
 
 ### Features
