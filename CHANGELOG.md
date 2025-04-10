@@ -1,6 +1,16 @@
 # CHANGELOG
 
 
+## v7.2.1 (2025-04-10)
+
+### Bug Fixes
+
+- Dependabot security finding
+  ([`ad2e7e7`](https://github.com/avengineers/spl-core/commit/ad2e7e72450b737f431d83d30fb84aab7f90861e))
+
+remove black dependency and reformat with ruff
+
+
 ## v7.2.0 (2025-04-09)
 
 ### Bug Fixes
