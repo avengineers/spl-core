@@ -40,6 +40,6 @@
     "git.repositoryScanMaxDepth": 3,
     "git-graph.maxDepthOfRepoSearch": 3,
     "[python]": {
-        "editor.defaultFormatter": "ms-python.black-formatter"
+        "editor.defaultFormatter": "charliermarsh.ruff"
     }
 }
