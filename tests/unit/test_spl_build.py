@@ -14,6 +14,7 @@ def spl_build(tmp_path_factory):
     os.chdir(tmp_path_factory.mktemp("spl_build"))
     return SplBuild(variant="my_var", build_kit="defaultKit")
 
+
 def test_build_dir(spl_build: SplBuild) -> None:
     """
     Test that the build directory is constructed correctly.
@@ -98,10 +99,8 @@ def test_create_artifacts_archive_inside_spl_build(spl_build: SplBuild) -> None:
         file_list = zip_ref.namelist()
         assert file_list == expected_artifacts
 
-    assert dict(json.loads(archive_json.read_text())) == {'variant': 'my_var',
-                                                          'build_kit': 'defaultKit',
-                                                          'artifacts': expected_artifacts
-                                                          }
+    assert dict(json.loads(archive_json.read_text())) == {"variant": "my_var", "build_kit": "defaultKit", "artifacts": expected_artifacts}
+
 
 def test_create_artifacts_archive_outside_spl_build(spl_build: SplBuild, tmp_path: Path) -> None:
     """
@@ -125,7 +124,4 @@ def test_create_artifacts_archive_outside_spl_build(spl_build: SplBuild, tmp_pat
         file_list = zip_ref.namelist()
         assert file_list == expected_artifacts
 
-    assert dict(json.loads(archive_json.read_text())) == {'variant': 'my_var',
-                                                          'build_kit': 'defaultKit',
-                                                          'artifacts': expected_artifacts
-                                                          }
+    assert dict(json.loads(archive_json.read_text())) == {"variant": "my_var", "build_kit": "defaultKit", "artifacts": expected_artifacts}

@@ -4,12 +4,8 @@ from pathlib import Path
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Script with command line options")
-    parser.add_argument(
-        "--working-dir", help="Working directory", required=True
-    )  # Make the option mandatory
-    parser.add_argument(
-        "--wipe-all-gcda", action="store_true", help="Wipe all gcda files recursively"
-    )
+    parser.add_argument("--working-dir", help="Working directory", required=True)  # Make the option mandatory
+    parser.add_argument("--wipe-all-gcda", action="store_true", help="Wipe all gcda files recursively")
     parser.add_argument(
         "--wipe-orphaned-gcno",
         action="store_true",
