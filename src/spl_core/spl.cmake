@@ -16,7 +16,7 @@ string(REPLACE "/" "_" BINARY_BASENAME ${VARIANT})
 # Set SPL relevant variables as environment variables.
 # Can easily be extended in CMakeLists.txt of project.
 # Also used for KConfig variable expansion.
-list(APPEND ENVVARS FLAVOR SUBSYSTEM VARIANT BUILD_KIT CMAKE_BUILD_TYPE BINARY_BASENAME CMAKE_SOURCE_DIR)
+list(APPEND ENVVARS FLAVOR SUBSYSTEM VARIANT BUILD_KIT BUILD_TYPE BINARY_BASENAME CMAKE_SOURCE_DIR)
 
 foreach(ENVVAR IN LISTS ENVVARS)
     set(ENV{${ENVVAR}} "${${ENVVAR}}")
