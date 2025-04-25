@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v7.2.3 (2025-04-25)
+
+### Bug Fixes
+
+- Use bootstrap 1.17.0 to fix pipenv trouble on Windows 2022 runner image
+  ([#188](https://github.com/avengineers/spl-core/pull/188),
+  [`45c30b1`](https://github.com/avengineers/spl-core/commit/45c30b1106db7f0866ddab619b9958599ecb1748))
+
+
 ## v7.2.2 (2025-04-11)
 
 ### Bug Fixes
