@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.2.4 (2025-04-25)
+
+### Bug Fixes
+
+- Update googletest version to 1.16.0
+  ([`2fc62f0`](https://github.com/avengineers/spl-core/commit/2fc62f084ba1030796c3c47bd19bc915ea5315c0))
+
+
 ## v7.2.3 (2025-04-25)
 
 ### Bug Fixes
