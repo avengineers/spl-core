@@ -1,0 +1,4 @@
+{
+    "python_version": "3.11",
+    "python_package_manager": "pipenv>=2024.0.3"
+}

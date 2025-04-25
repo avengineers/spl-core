@@ -1,31 +1,26 @@
 ﻿<#
 .DESCRIPTION
-  Wrapper for installing dependencies and building the product.
-
-.Notes
-  On Windows, it may be required to call this script with the proper execution policy.
-You can do this by issuing the following PowerShell command:
-
-PS C:\> powershell -ExecutionPolicy Bypass -File .\build.ps1
-
-For more information on Execution Policies:
-https://go.microsoft.com/fwlink/?LinkID=135170
+    Wrapper for installing dependencies, running and testing the project
 #>
 
 param(
     [Parameter(Mandatory = $false, HelpMessage = 'Install all dependencies required to build. (Switch, default: false)')]
     [switch]$install = $false,
+    [Parameter(Mandatory = $false, HelpMessage = 'Install Visual Studio Code. (Switch, default: false)')]
+    [switch]$installVSCode = $false,
     [Parameter(Mandatory = $false, HelpMessage = 'Build the target.')]
     [switch]$build = $false,
+    [Parameter(Mandatory = $false, HelpMessage = 'Command to be executed (String)')]
+    [string]$command = "",
     [Parameter(Mandatory = $false, HelpMessage = 'Clean build, wipe out all build artifacts. (Switch, default: false)')]
     [switch]$clean = $false,
-    [Parameter(Mandatory = $false, HelpMessage = 'Build kit to be used. (String, default: "prod")')]
+    [Parameter(Mandatory = $false, HelpMessage = 'Build kit to be used. (String: "prod" or "test", default: "prod")')]
     [string]$buildKit = "prod",
     [Parameter(Mandatory = $false, HelpMessage = 'Target to be built. (String, default: "all")')]
     [string]$target = "all",
-    [Parameter(Mandatory = $false, HelpMessage = 'Variants (of the product) to be built (List of strings, leave empty to be asked or "all" for automatic build of all variants)')]
+    [Parameter(Mandatory = $false, HelpMessage = 'Variants (of the product) to be built. (List of strings, leave empty to be asked or "all" for automatic build of all variants)')]
     [string[]]$variants = $null,
-    [Parameter(Mandatory = $false, HelpMessage = 'filter for selftests; define in pytest syntax: https://docs.pytest.org/en/6.2.x/usage.html; e.g. "Disco or test_CustA__Disco.py"')]
+    [Parameter(Mandatory = $false, HelpMessage = 'filter for self tests, e.g. "Disco or test_Disco.py" (see https://docs.pytest.org/en/stable/usage.html).')]
     [string]$filter = "",
     [Parameter(Mandatory = $false, HelpMessage = 'Additional build arguments for Ninja (e.g., "-d explain -d keepdepfile" for debugging purposes)')]
     [string]$ninjaArgs = "",
@@ -94,19 +89,11 @@ function Get-ReleaseBranchPytestFilter {
 
     $filter = ''
     if ($targetBranch -and ($targetBranch -match 'release/([^/]+/[^/]+)(.*)')) {
-        $filter = $Matches[1]
+        $filter = $Matches[1].Replace('/', ' and ')
     }
 
     return $filter
 }
-
-function Invoke-Bootstrap {
-    # Download bootstrap scripts from external repository
-    Invoke-RestMethod https://raw.githubusercontent.com/avengineers/bootstrap-installer/v1.5.0/install.ps1 | Invoke-Expression
-    # Execute bootstrap script
-    . .\.bootstrap\bootstrap.ps1
-}
-
 
 # Build with given parameters
 Function Invoke-Build {
@@ -162,7 +149,7 @@ Function Invoke-Build {
         }
 
         # Finally run pytest
-        Invoke-CommandLine -CommandLine "python -m pipenv run python -m pytest test --junitxml=$pytestJunitXml $filterCmd"
+        Invoke-CommandLine -CommandLine ".venv\Scripts\pipenv run python -m pytest test --junitxml=$pytestJunitXml $filterCmd"
     }
     else {
         if ((-Not $variants) -or ($variants -eq 'all')) {
@@ -223,14 +210,23 @@ Function Invoke-Build {
             if ($buildKit -eq "test") {
                 $additionalConfig += " -DCMAKE_TOOLCHAIN_FILE='tools/toolchains/gcc/toolchain.cmake'"
             }
-            Invoke-CommandLine -CommandLine "python -m pipenv run cmake -B '$buildFolder' -G Ninja -DVARIANT='$variant' $additionalConfig"
+            Invoke-CommandLine -CommandLine ".venv\Scripts\pipenv run cmake -B '$buildFolder' -G Ninja -DVARIANT='$variant' $additionalConfig"
 
             # CMake clean all dead artifacts. Required when running incremented builds to delete obsolete artifacts.
-            Invoke-CommandLine -CommandLine "python -m pipenv run cmake --build '$buildFolder' --target $target -- -t cleandead"
+            Invoke-CommandLine -CommandLine ".venv\Scripts\pipenv run cmake --build '$buildFolder' --target $target -- -t cleandead"
             # CMake build
-            Invoke-CommandLine -CommandLine "python -m pipenv run cmake --build '$buildFolder' --target $target -- $ninjaArgs"
+            Invoke-CommandLine -CommandLine ".venv\Scripts\pipenv run cmake --build '$buildFolder' --target $target -- $ninjaArgs"
         }
     }
+}
+
+function Invoke-Bootstrap {
+    # Download bootstrap scripts from external repository
+    Invoke-RestMethod -Uri https://raw.githubusercontent.com/avengineers/bootstrap-installer/v1.17.0/install.ps1 | Invoke-Expression
+    # Execute bootstrap script
+    . .\.bootstrap\bootstrap.ps1
+    # For incremental build: clean up virtual environment from old dependencies
+    Invoke-CommandLine ".venv\Scripts\pipenv clean"
 }
 
 ## start of script
