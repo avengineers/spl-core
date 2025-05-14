@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.2.5 (2025-05-14)
+
+### Bug Fixes
+
+- Update to latest hammocking 6.0
+  ([`2ba4f40`](https://github.com/avengineers/spl-core/commit/2ba4f40a1582e338f679a95ff4d3ecd421855d1f))
+
+
 ## v7.2.4 (2025-04-25)
 
 ### Bug Fixes
