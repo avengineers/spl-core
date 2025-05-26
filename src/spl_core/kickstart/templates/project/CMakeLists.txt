@@ -33,7 +33,7 @@ else()
     FetchContent_MakeAvailable(spl-core)
 
     # Include spl-core
-    include(${spl-core_SOURCE_DIR}/cmake/spl.cmake)
+    include(${spl-core_SOURCE_DIR}/src/spl_core/spl.cmake)
 endif()
 
 include(${CMAKE_SOURCE_DIR}/variants/${VARIANT}/parts.cmake)

@@ -217,7 +217,7 @@ For this purpose, we replace the content of the ``CMakeLists.txt`` file located 
       GIT_TAG develop
    )
    FetchContent_MakeAvailable(spl-core)
-   include(${spl-core_SOURCE_DIR}/cmake/spl.cmake)
+   include(${spl-core_SOURCE_DIR}/src/spl_core/spl.cmake)
 
    # Include the variant specific parts
    include(${CMAKE_SOURCE_DIR}/variants/${VARIANT}/parts.cmake)

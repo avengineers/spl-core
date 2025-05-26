@@ -64,7 +64,7 @@ You can achieve this by adding the following line to the ``CMakeLists.txt`` file
       GIT_TAG develop
     )
     FetchContent_MakeAvailable(spl-core)
-    include(${spl-core_SOURCE_DIR}/cmake/spl.cmake)
+    include(${spl-core_SOURCE_DIR}/src/spl_core/spl.cmake)
 
     # Include the variant specific parts
     include(${CMAKE_SOURCE_DIR}/variants/${VARIANT}/parts.cmake)
