@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.2.6 (2025-05-26)
+
+### Bug Fixes
+
+- Change path to spl.cmake
+  ([`03ab693`](https://github.com/avengineers/spl-core/commit/03ab69356553eea87f931bb699f6100684b17947))
+
+
 ## v7.2.5 (2025-05-14)
 
 ### Bug Fixes
