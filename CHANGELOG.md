@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.3.0-rc.1 (2025-05-27)
+
+### Features
+
+- Update interface handling
+  ([`2b14aa9`](https://github.com/avengineers/spl-core/commit/2b14aa91f4d4bb4f69e9fb10cdc7d426003b0ef7))
+
+
 ## v7.2.6 (2025-05-26)
 
 ### Bug Fixes
