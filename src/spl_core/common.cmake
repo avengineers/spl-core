@@ -183,9 +183,9 @@ macro(spl_create_component)
 \"reports_output_dir\": \"\"
 }")
 
-    list(APPEND target_include_directories__INCLUDES ${CMAKE_CURRENT_LIST_DIR}/src)
-    list(APPEND target_include_directories__INCLUDES ${CMAKE_CURRENT_BINARY_DIR})
-
+    # handle include directories with global variable
+    #list(APPEND target_include_directories__INCLUDES ${CMAKE_CURRENT_LIST_DIR}/src)
+    #list(APPEND target_include_directories__INCLUDES ${CMAKE_CURRENT_BINARY_DIR})
     list(APPEND target_include_directories__INCLUDES ${INCLUDES})
     list(REMOVE_DUPLICATES target_include_directories__INCLUDES)
     set(target_include_directories__INCLUDES ${target_include_directories__INCLUDES} PARENT_SCOPE)
@@ -354,6 +354,10 @@ Code Coverage
             set(COMPONENTS_SPHINX_INCLUDE_PATTERNS ${COMPONENTS_SPHINX_INCLUDE_PATTERNS} PARENT_SCOPE)
         endif(EXISTS ${_component_doc_file})
     endif(BUILD_KIT STREQUAL prod)
+
+    # handle include directories with spl_macros
+    spl_add_provided_interfaces("${CMAKE_CURRENT_LIST_DIR}/src")
+    spl_add_provided_interfaces("${CMAKE_CURRENT_BINARY_DIR}")
 
     # Collect all component info for later usage (e.g., in an extension)
     list(APPEND COMPONENTS_INFO ${_component_info})
@@ -739,4 +743,72 @@ macro(_spl_create_build_info_file)
     ${formatted_json_build_info}
     ]
 }")
+endmacro()
+
+macro(spl_add_provided_interfaces list_of_directories)
+    # Collect all provided interfaces for later usage (e.g., in an extension)
+    if(TARGET ${component_name})
+        get_target_property(provided_interfaces ${component_name} PROVIDED_INTERFACES)
+        if(provided_interfaces STREQUAL "provided_interfaces-NOTFOUND")
+            set_target_properties(${component_name} PROPERTIES PROVIDED_INTERFACES "${list_of_directories}")
+        else()
+            list(APPEND provided_interfaces ${list_of_directories})
+            set_target_properties(${component_name} PROPERTIES PROVIDED_INTERFACES "${provided_interfaces}")
+        endif()
+    endif()
+    list(APPEND target_include_directories__INCLUDES ${list_of_directories})
+    list(REMOVE_DUPLICATES target_include_directories__INCLUDES)
+    set(target_include_directories__INCLUDES ${target_include_directories__INCLUDES} PARENT_SCOPE)
+endmacro()
+
+macro(spl_add_required_interfaces list_of_interfaces)
+    if(TARGET ${component_name})
+        get_target_property(required_interfaces ${component_name} REQUIRED_INTERFACES)
+        if(required_interfaces STREQUAL "required_interfaces-NOTFOUND")
+            set_target_properties(${component_name} PROPERTIES REQUIRED_INTERFACES "${list_of_interfaces}")
+        else()
+            list(APPEND required_interfaces ${list_of_interfaces})
+            set_target_properties(${component_name} PROPERTIES REQUIRED_INTERFACES "${required_interfaces}")
+        endif()
+    endif()
+endmacro()
+
+macro(spl_resolve_interfaces)
+    foreach(component_name ${COMPONENT_NAMES})
+        if(TARGET ${component_name})
+            # get provided interfaces
+            get_target_property(COMP_PROVIDED_INTERFACES ${component_name} PROVIDED_INTERFACES)
+            if(NOT COMP_PROVIDED_INTERFACES STREQUAL "COMP_PROVIDED_INTERFACES-NOTFOUND")
+                target_include_directories(${component_name} PUBLIC ${COMP_PROVIDED_INTERFACES})
+            endif()
+
+            # get required interfaces
+            set(COMP_REQUIRED_INTERFACES "")
+            get_target_property(REQUIRED_INTERFACES ${component_name} REQUIRED_INTERFACES)
+            if(NOT REQUIRED_INTERFACES STREQUAL "REQUIRED_INTERFACES-NOTFOUND")
+                foreach(interface ${REQUIRED_INTERFACES})
+                    if (TARGET ${interface})
+                        # if the interface is a target, we can get the provided interfaces
+                        get_target_property(IF_PROVIDED_INTERFACES ${interface} PROVIDED_INTERFACES)
+                        list(APPEND COMP_REQUIRED_INTERFACES ${IF_PROVIDED_INTERFACES})
+                    else()
+                        # if the interface is not a target, we assume it is a path to an include directory
+                        _spl_get_absolute_path(absolute_interface ${interface})
+                        if(EXISTS "${absolute_interface}" AND IS_DIRECTORY "${absolute_interface}")
+                            list(APPEND COMP_REQUIRED_INTERFACES ${absolute_interface})
+                            # support the old way of handling includes
+                            list(APPEND target_include_directories__INCLUDES ${absolute_interface})
+                        else()
+                            message(WARNING "Required interface ${interface} not found for component ${component_name}.")
+                        endif()
+                    endif()
+                endforeach()
+                list(REMOVE_DUPLICATES target_include_directories__INCLUDES)
+            else()
+                set(COMP_REQUIRED_INTERFACES ${target_include_directories__INCLUDES})
+            endif()
+            # add the include directories to the component
+            target_include_directories(${component_name} PUBLIC ${COMP_REQUIRED_INTERFACES})
+        endif()
+    endforeach()
 endmacro()
