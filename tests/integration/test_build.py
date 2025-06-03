@@ -18,6 +18,9 @@ class TestBuild(SplKickstartProjectIntegrationTestBase):
             "build.json",
             # This file is touched every time Ninja is run
             ".ninja_log",
+            # Pypeline generated setup files
+            "env_setup.ps1",
+            "env_setup.bat",
         }
         variant = "EnglishVariant"
 
@@ -25,7 +28,7 @@ class TestBuild(SplKickstartProjectIntegrationTestBase):
         result = self.spl_project.build(variant, "link")
         assert result.returncode == 0, "Execution shall not fail."
 
-        build_dir = self.spl_project.artifacts.get_build_dir(variant, "prod")
+        build_dir = self.spl_project.artifacts.get_build_dir(variant, "prod", "Debug")
         "Expected configuration output"
         assert build_dir.joinpath("kconfig/autoconf.h").exists()
         assert build_dir.joinpath("build.ninja").exists()

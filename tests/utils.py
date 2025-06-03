@@ -139,10 +139,11 @@ def setup_new_spl_project(project_dir: Path, no_application: bool = False) -> Pa
     The current SPL-Core repository is installed as a Python dependency."""
     KickstartProject(project_dir=project_dir, force=False, no_application=no_application).run()
 
-    # Replace the SPL-Core dependency in the Pipfile
-    pipfile = project_dir.joinpath("pipfile")
-    new_dependency = f'spl-core = {{path = "{this_repository_root_dir().as_posix()}"}}'
-    pipfile.write_text(pipfile.read_text().replace('spl-core = "*"', new_dependency))
+    # Replace the SPL-Core dependency in the pyproject.toml
+    pyproject_toml = project_dir.joinpath("pyproject.toml")
+    # "spl-core @ file:///C:/D/git/_oss_/spl-core",
+    new_dependency = f"spl-core @ file:///{this_repository_root_dir().as_posix()}"
+    pyproject_toml.write_text(pyproject_toml.read_text().replace("spl-core>=7,<8", new_dependency))
 
     return project_dir
 

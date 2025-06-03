@@ -2,7 +2,6 @@
     "recommendations": [
         "mhutchie.git-graph",
         "ms-vscode.cmake-tools",
-        "twxs.cmake",
         "ms-vscode.cpptools",
         "ms-vscode.cpptools-themes",
         "visualstudioexptteam.intellicode-api-usage-examples",
@@ -15,6 +14,8 @@
         "felipecaputo.git-project-manager",
         "ms-vscode.powershell",
         "waderyan.gitblame",
-        "sandcastle.vscode-open"
+        "sandcastle.vscode-open",
+        "josetr.cmake-language-support-vscode",
+        "ibm.output-colorizer"
     ]
 }
