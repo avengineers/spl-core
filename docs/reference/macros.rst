@@ -239,3 +239,55 @@ Creating a component using the `spl_create_component` macro:
   spl_create_component(LONG_NAME "LED Driver" LIBRARY_TYPE STATIC)
 
 Please note that this macro performs various tasks related to the component's setup, including documentation and testing, depending on the build configuration (buildKit).
+
+.. _spl_add_provided_interface:
+
+spl_add_provided_interface
+--------------------------
+
+This macro is intended to define include directories that are required when compiling the component or other components that depend on it.
+
+.. code-block:: cmake
+
+ spl_add_provided_interface(<directory>)
+
+The arguments are:
+
+``<directory>``
+ A directory relative to the components path.
+
+Example:
+
+.. code-block:: cmake
+
+ spl_add_provided_interface(include/driver)
+
+This example registers the "include/driver" directory as a provided interface for the current component, which means that any component depending on this one will have access to the headers in this directory during compilation.
+
+.. note::
+  The component's directory and ``src`` directory are automatically added as provided interfaces,
+  so you do not need to register them explicitly.
+
+.. _spl_add_required_interface:
+
+spl_add_required_interface
+--------------------------
+
+This macro is intended to register required components in order to ensure that the current component has access to the necessary interfaces provided by other components.
+
+.. code-block:: cmake
+
+ spl_add_required_interface(<component>>)
+
+The arguments are:
+
+``<component>``
+ A component name or path required by the current component.
+
+Example:
+
+.. code-block:: cmake
+
+ spl_add_required_interface(src/driver)
+
+This example registers the "src/driver" component as a required interface for the current component, ensuring that the current component can access the headers provided by the "src/driver" component during compilation.

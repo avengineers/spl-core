@@ -76,6 +76,16 @@ macro(spl_add_test_source fileName)
     list(APPEND TEST_SOURCES ${to_be_appended})
 endmacro()
 
+macro(spl_add_provided_interface directory)
+    _spl_get_absolute_path(to_be_appended ${directory})
+    list(APPEND PROVIDED_INTERFACES ${to_be_appended})
+endmacro()
+
+macro(spl_add_required_interface component)
+    _spl_slash_to_underscore(component_name ${component})
+    list(APPEND REQUIRED_INTERFACES ${component_name})
+endmacro()
+
 macro(_spl_get_google_test)
     # GoogleTest requires at least C++14
     set(CMAKE_CXX_STANDARD 14)
@@ -182,14 +192,6 @@ macro(spl_create_component)
 \"has_reports\": \"\",
 \"reports_output_dir\": \"\"
 }")
-
-    list(APPEND target_include_directories__INCLUDES ${CMAKE_CURRENT_LIST_DIR}/src)
-    list(APPEND target_include_directories__INCLUDES ${CMAKE_CURRENT_BINARY_DIR})
-
-    list(APPEND target_include_directories__INCLUDES ${INCLUDES})
-    list(REMOVE_DUPLICATES target_include_directories__INCLUDES)
-    set(target_include_directories__INCLUDES ${target_include_directories__INCLUDES} PARENT_SCOPE)
-
     if(BUILD_KIT STREQUAL prod)
         if(SOURCES)
             # Create the component library
@@ -354,6 +356,31 @@ Code Coverage
             set(COMPONENTS_SPHINX_INCLUDE_PATTERNS ${COMPONENTS_SPHINX_INCLUDE_PATTERNS} PARENT_SCOPE)
         endif(EXISTS ${_component_doc_file})
     endif(BUILD_KIT STREQUAL prod)
+
+    # Implicitly add default include directories to provided interfaces
+    list(APPEND PROVIDED_INTERFACES ${CMAKE_CURRENT_LIST_DIR}/src)
+    list(APPEND PROVIDED_INTERFACES ${CMAKE_CURRENT_BINARY_DIR})
+    # Get rid of duplicates, in case the default directories where explicitly defined
+    list(REMOVE_DUPLICATES PROVIDED_INTERFACES)
+
+    # Make sure the component provided interfaces are added to the global include directories. Required for backward compatibility.
+    foreach(interfaceDir IN LISTS PROVIDED_INTERFACES)
+        spl_add_include(${interfaceDir})
+    endforeach()
+
+    list(APPEND target_include_directories__INCLUDES ${INCLUDES})
+    list(REMOVE_DUPLICATES target_include_directories__INCLUDES)
+    set(target_include_directories__INCLUDES ${target_include_directories__INCLUDES} PARENT_SCOPE)
+
+    # Define the target public interfaces to be used instead of the global include directories.
+    if(TARGET ${component_name})
+        foreach(interfaceDir IN LISTS PROVIDED_INTERFACES)
+            target_include_directories(${component_name} PUBLIC ${interfaceDir})
+        endforeach()
+        foreach(component IN LISTS REQUIRED_INTERFACES)
+            target_link_libraries(${component_name} PUBLIC ${component})
+        endforeach()
+    endif()
 
     # Collect all component info for later usage (e.g., in an extension)
     list(APPEND COMPONENTS_INFO ${_component_info})

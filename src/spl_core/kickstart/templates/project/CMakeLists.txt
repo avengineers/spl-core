@@ -28,10 +28,3 @@ else()
 endif()
 
 include(${CMAKE_SOURCE_DIR}/variants/${VARIANT}/parts.cmake)
-
-# add all components' include directories to the include paths of each component
-foreach(component_name ${COMPONENT_NAMES})
-    if(TARGET ${component_name})
-        target_include_directories(${component_name} PUBLIC ${target_include_directories__INCLUDES})
-    endif()
-endforeach()
