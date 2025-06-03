@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.3.1 (2025-06-03)
+
+### Bug Fixes
+
+- Provided directories are missing for build kit test
+  ([`8240698`](https://github.com/avengineers/spl-core/commit/82406981ff91e340bacd74331499d5b5c82091de))
+
+
 ## v7.3.0 (2025-06-03)
 
 ### Features
