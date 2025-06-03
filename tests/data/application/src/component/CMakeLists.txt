@@ -1,3 +1,4 @@
 spl_add_source(src/component.c)
 spl_add_test_source(test/test_component.cc)
+spl_add_required_interface(src/component_b)
 spl_create_component(LONG_NAME "Component")

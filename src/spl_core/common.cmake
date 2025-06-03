@@ -192,11 +192,12 @@ macro(spl_create_component)
 \"has_reports\": \"\",
 \"reports_output_dir\": \"\"
 }")
+    if(SOURCES)
+        # Create the component library
+        add_library(${component_name} ${CREATE_COMPONENT_LIBRARY_TYPE} ${SOURCES})
+    endif()
     if(BUILD_KIT STREQUAL prod)
         if(SOURCES)
-            # Create the component library
-            add_library(${component_name} ${CREATE_COMPONENT_LIBRARY_TYPE} ${SOURCES})
-
             # Define list of productive specific compile options for component's sources
             target_compile_definitions(${component_name} PRIVATE
                 SPLE_TESTABLE_STATIC=static
@@ -586,9 +587,6 @@ macro(_spl_add_test_suite COMPONENT_NAME PROD_SRC TEST_SOURCES)
     target_compile_options(${exe_name} PRIVATE ${TEST_COMPILE_OPTIONS})
     target_compile_definitions(${exe_name} PRIVATE ${TEST_COMPILE_DEFINITIONS})
     target_link_options(${exe_name} PRIVATE ${TEST_LINK_OPTIONS})
-
-    # Create the component library for its productive sources
-    add_library(${COMPONENT_NAME} OBJECT ${SOURCES})
 
     target_compile_options(${COMPONENT_NAME} PRIVATE ${COMPONENT_TEST_COMPILE_OPTIONS})
 

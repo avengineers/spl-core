@@ -32,6 +32,8 @@ TEST(component, test_someInterfaceOfComponent)
     /* mock all external dependencies of component */
     CREATE_MOCK(mymock);
 
+    EXPECT_CALL(mymock, someInterfaceOfComponentB()).Times(1).WillOnce(Return(7));
+
     /* test interface */
     EXPECT_EQ(7, someInterfaceOfComponent());
 }
@@ -52,6 +54,8 @@ TEST(component, test_someInterfaceOfComponent2)
 {
     /* mock all external dependencies of component */
     CREATE_MOCK(mymock);
+
+    EXPECT_CALL(mymock, someInterfaceOfComponentB()).Times(1).WillOnce(Return(7));
 
     /* test interface */
     EXPECT_EQ(7, someInterfaceOfComponent());

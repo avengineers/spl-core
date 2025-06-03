@@ -126,6 +126,7 @@ class TestSplFeatures(SplProjectIntegrationTestBase):
                 """
                 spl_add_source(src/component.c COMPILE_OPTIONS "-DTHE_ANSWER=42")
 
+                spl_add_required_interface(src/component_b)
                 spl_add_test_source(test/test_component.cc)
 
                 spl_create_component()
@@ -149,6 +150,7 @@ class TestSplFeatures(SplProjectIntegrationTestBase):
                 """
                 spl_add_source(src/component.c COMPILE_OPTIONS "-DTHE_ANSWER=42" "-DTHE_OFFSET=3")
 
+                spl_add_required_interface(src/component_b)
                 spl_add_test_source(test/test_component.cc)
 
                 spl_create_component()
@@ -172,6 +174,7 @@ class TestSplFeatures(SplProjectIntegrationTestBase):
                 """
                 spl_add_source(src/component.c COMPILE_OPTIONS "-DTHE_OFFSET=3")
 
+                spl_add_required_interface(src/component_b)
                 spl_add_test_source(test/test_component.cc)
 
                 spl_create_component()
@@ -195,6 +198,7 @@ class TestSplFeatures(SplProjectIntegrationTestBase):
                 """
                 spl_add_source(src/component.c)
                 spl_add_compile_options("src/*.c" COMPILE_OPTIONS "-DTHE_ANSWER=8")
+                spl_add_required_interface(src/component_b)
                 spl_add_test_source(test/test_component.cc)
                 spl_create_component()
                 """
@@ -217,6 +221,7 @@ class TestSplFeatures(SplProjectIntegrationTestBase):
                 """
                 spl_add_source(src/component.c)
                 spl_add_compile_options("src/component.c" COMPILE_OPTIONS "-DTHE_ANSWER=65" "-DTHE_OFFSET=3")
+                spl_add_required_interface(src/component_b)
                 spl_add_test_source(test/test_component.cc)
                 spl_create_component()
                 """
@@ -258,7 +263,7 @@ class TestSplFeatures(SplProjectIntegrationTestBase):
             textwrap.dedent(
                 """
                 spl_add_source(src/component.c)
-
+                spl_add_required_interface(src/component_b)
                 spl_create_component(LIBRARY_TYPE STATIC)
                 """
             )
