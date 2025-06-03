@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.3.0 (2025-06-03)
+
+### Features
+
+- Add support for component provided and required interfaces
+  ([`3396f08`](https://github.com/avengineers/spl-core/commit/3396f0831ff852005ad22a374695bc84b24a3374))
+
+
 ## v7.2.6 (2025-05-26)
 
 ### Bug Fixes

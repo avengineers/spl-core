@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "spl-core"
-version = "7.2.6"
+version = "7.3.0"
 description = "Software Product Line Support for CMake"
 authors = ["Avengineers <karsten.guenther@kamg.de>"]
 license = "MIT"
