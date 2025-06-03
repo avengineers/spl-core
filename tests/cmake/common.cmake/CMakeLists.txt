@@ -101,6 +101,54 @@ endif()
 # cleanup
 unset(TEST_SOURCES)
 
+# ## test: spl_add_provided_interface #########
+# given
+set(provided_interface_dir src/provided/interface_dir)
+set(other_provided_interface_dir src/other/provided_interface_dir)
+
+# when
+spl_add_provided_interface(${provided_interface_dir})
+spl_add_provided_interface(${other_provided_interface_dir})
+
+# then
+_spl_get_absolute_path(expected_provided_interface_dir "${provided_interface_dir}")
+_spl_get_absolute_path(expected_other_provided_interface_dir "${other_provided_interface_dir}")
+
+if(NOT expected_provided_interface_dir IN_LIST PROVIDED_INTERFACES)
+    message(FATAL_ERROR "Failing Test case: ${expected_provided_interface_dir} not found inside ${PROVIDED_INTERFACES}.")
+endif()
+
+if(NOT expected_other_provided_interface_dir IN_LIST PROVIDED_INTERFACES)
+    message(FATAL_ERROR "Failing Test case: ${expected_other_provided_interface_dir} not found inside ${PROVIDED_INTERFACES}.")
+endif()
+
+# cleanup
+unset(PROVIDED_INTERFACES)
+
+# ## test: spl_add_required_interface #########
+# given
+set(required_component src/required_component)
+set(other_required_component src/other_required_component)
+
+# when
+spl_add_required_interface(${required_component})
+spl_add_required_interface(${other_required_component})
+
+# then
+_spl_slash_to_underscore(expected_required_component ${required_component})
+_spl_slash_to_underscore(expected_other_required_component ${other_required_component})
+
+if(NOT expected_required_component IN_LIST REQUIRED_INTERFACES)
+    message(FATAL_ERROR "Failing Test case: ${expected_required_component} not found inside ${REQUIRED_INTERFACES}.")
+endif()
+
+if(NOT expected_other_required_component IN_LIST REQUIRED_INTERFACES)
+    message(FATAL_ERROR "Failing Test case: ${expected_other_required_component} not found inside ${REQUIRED_INTERFACES}.")
+endif()
+
+# cleanup
+unset(REQUIRED_INTERFACES)
+
 # ## test: spl_add_component ###############
 
 # given

@@ -386,7 +386,11 @@ The :ref:`spl_create_component <spl_create_component>` macro must be called at t
     One must not explicitly add the ``index.rst`` file to the component.
     If a component has a ``index.rst`` file, it will be automatically added to the documentation and the component report CMake target will be created.
 
-To add the component to variant one needs to include the component build system file in the variant ``parts.cmake`` file.
+If you want to specify provided and required interfaces for your component,
+you can use the :ref:`spl_add_provided_interface <spl_add_provided_interface>`
+and :ref:`spl_add_required_interface <spl_add_required_interface>` macros.
+
+To add the component to a variant one needs to include the component build system file in the variant ``parts.cmake`` file.
 
 .. code-block:: CMake
 
