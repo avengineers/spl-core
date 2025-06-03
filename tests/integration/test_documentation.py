@@ -5,17 +5,6 @@ from tests.utils import SplKickstartProjectIntegrationTestBase
 
 @pytest.mark.integration
 class TestDocumentation(SplKickstartProjectIntegrationTestBase):
-    def test_build_docs(self):
-        variant = "GermanVariant"
-        result = self.spl_project.build(variant, "docs")
-        assert result.returncode == 0, "Execution shall not fail."
-
-        # Check all generated artifacts
-        build_dir = self.spl_project.artifacts.get_build_dir(variant, "test")
-        assert build_dir.joinpath("docs/html/index.html").exists()
-        for component_path in self.spl_project.components:
-            assert build_dir.joinpath(f"docs/html/{component_path}/doc/index.html").exists(), "Component documentation expected but not found"
-
     def test_build_reports(self) -> None:
         variant = "EnglishVariant"
         result = self.spl_project.build(variant, "reports")

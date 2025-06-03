@@ -28,7 +28,7 @@ class TestBuild(SplKickstartProjectIntegrationTestBase):
         result = self.spl_project.build(variant, "link")
         assert result.returncode == 0, "Execution shall not fail."
 
-        build_dir = self.spl_project.artifacts.get_build_dir(variant, "prod", "Debug")
+        build_dir = self.spl_project.artifacts.get_build_dir(variant, "prod")
         "Expected configuration output"
         assert build_dir.joinpath("kconfig/autoconf.h").exists()
         assert build_dir.joinpath("build.ninja").exists()
