@@ -815,14 +815,14 @@ test = ["coverage[toml]", "ddt (>=1.1.1,!=1.4.3)", "mock ; python_version < \"3.
 
 [[package]]
 name = "hammocking"
-version = "0.6.0"
+version = "0.8.0"
 description = "Create mocks for c-code automatically"
 optional = false
 python-versions = "<3.12,>=3.10"
 groups = ["main"]
 files = [
-    {file = "hammocking-0.6.0-py3-none-any.whl", hash = "sha256:641b49bb40419de421b32bfb73ee98d539755e284161b09df47f0aefd185c30f"},
-    {file = "hammocking-0.6.0.tar.gz", hash = "sha256:508fc1e3a2de3c32dcb36c4825d24035826e7c03afb5d0ce8bf3f956b1a7f292"},
+    {file = "hammocking-0.8.0-py3-none-any.whl", hash = "sha256:486904e77ee713ffb4cf617232502042a229e246e6811a463ad7c10381996c27"},
+    {file = "hammocking-0.8.0.tar.gz", hash = "sha256:5e8813c3ce4aa89195a5ddbd66c6fbb9fae2aeae9f91c7d6d8cc6a6b0c92ed45"},
 ]
 
 [package.dependencies]
@@ -3527,4 +3527,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.12"
-content-hash = "29073c8f1300ae8f70cbaa3bb0399938d7cf2b0793cee1f9505fedf191ae8d8c"
+content-hash = "ade44db0f7528cd1cfbbdc0825a8731d9cd3d744b276210e816c903d96200ebb"
