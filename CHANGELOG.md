@@ -1,6 +1,28 @@
 # CHANGELOG
 
 
+## v7.4.0 (2025-06-24)
+
+### Bug Fixes
+
+- Bootstrap fails due to pip-system-certs incompatible version
+  ([`296160f`](https://github.com/avengineers/spl-core/commit/296160fe7d1beeb2e29cc6de9e4026cd2dcc804d))
+
+- Checkout target branch in pull request instead of pr branch
+  ([`22c757c`](https://github.com/avengineers/spl-core/commit/22c757c59c7d1edbd866f450a20daef038d35c6f))
+
+- Components without tests are automatically build
+  ([`c538e8f`](https://github.com/avengineers/spl-core/commit/c538e8f7b911bd5986a8d593bff5b556a2177547))
+
+### Features
+
+- Add support for header only components
+  ([`79a75bb`](https://github.com/avengineers/spl-core/commit/79a75bb0cd17979be5f60f4b113fcd683d07fc64))
+
+- Support docs for components with index.md
+  ([`7e2f35f`](https://github.com/avengineers/spl-core/commit/7e2f35f9ebc19135536c60ed383fa8f5a258376a))
+
+
 ## v7.3.2 (2025-06-17)
 
 ### Bug Fixes
