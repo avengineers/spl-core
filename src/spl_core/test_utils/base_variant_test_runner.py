@@ -81,7 +81,7 @@ class BaseVariantTestRunner(ABC):
     @pytest.mark.reports
     def test_reports(self, build_type: Optional[str] = None) -> None:
         spl_build: SplBuild = SplBuild(variant=self.variant, build_kit="test", build_type=build_type)
-        assert 0 == spl_build.execute(target="all")  # noqa: S101
+        assert 0 == spl_build.execute(target="reports")  # noqa: S101
         for artifact in self.expected_variant_report_artifacts:
             self.assert_artifact_exists(dir=spl_build.build_dir, artifact=artifact)
         for component in self.component_paths:
