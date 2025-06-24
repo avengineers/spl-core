@@ -213,7 +213,6 @@ macro(spl_create_component)
 
         set(_component_dir ${CMAKE_CURRENT_LIST_DIR})
         set(_component_doc_dir ${_component_dir}/doc)
-        set(_component_doc_file ${_component_doc_dir}/index.rst)
         set(_component_test_junit_xml ${CMAKE_CURRENT_BINARY_DIR}/junit.xml)
         set(_component_coverage_json ${CMAKE_CURRENT_BINARY_DIR}/coverage.json)
         set(_component_docs_out_dir ${CMAKE_CURRENT_BINARY_DIR}/docs)
@@ -223,7 +222,7 @@ macro(spl_create_component)
         set(_sphinx_source_dir ${PROJECT_SOURCE_DIR})
 
         # Create component docs target if there is an index.rst file in the component's doc directory
-        if(EXISTS ${_component_doc_file})
+        if(EXISTS ${_component_doc_dir}/index.rst OR EXISTS ${_component_doc_dir}/index.md)
             file(RELATIVE_PATH _rel_component_docs_out_dir ${_sphinx_source_dir} ${_component_docs_out_dir})
             string(JSON _component_info SET "${_component_info}" docs_output_dir "\"${_rel_component_docs_out_dir}\"")
             string(JSON _component_info SET "${_component_info}" has_docs "\"True\"")
@@ -355,7 +354,7 @@ Code Coverage
             # Collect all component sphinx include pattern to be used in the variant targets (docs, reports)
             list(APPEND COMPONENTS_SPHINX_INCLUDE_PATTERNS "${_rel_component_doc_dir}/**" "${_rel_component_docs_out_dir}/**" "${_rel_component_reports_out_dir}/**")
             set(COMPONENTS_SPHINX_INCLUDE_PATTERNS ${COMPONENTS_SPHINX_INCLUDE_PATTERNS} PARENT_SCOPE)
-        endif(EXISTS ${_component_doc_file})
+        endif(EXISTS ${_component_doc_dir}/index.rst OR EXISTS ${_component_doc_dir}/index.md)
     endif(BUILD_KIT STREQUAL prod)
 
     # Implicitly add default include directories to provided interfaces
