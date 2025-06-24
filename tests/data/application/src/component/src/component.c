@@ -15,9 +15,9 @@
  * @endrst
  */
 
-int someInterfaceOfComponent()
+sint16 someInterfaceOfComponent()
 {
-    int result = someInterfaceOfComponentB();
+    sint16 result = someInterfaceOfComponentB();
 
 #ifdef THE_ANSWER
     result = THE_ANSWER;

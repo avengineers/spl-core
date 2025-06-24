@@ -192,10 +192,17 @@ macro(spl_create_component)
 \"has_reports\": \"\",
 \"reports_output_dir\": \"\"
 }")
-    if(SOURCES)
-        # Create the component library
+    set(_component_is_header_only FALSE)
+    # If prod and sources or test and test_sources define library. Else make it an interface and set the flag
+    if ((BUILD_KIT STREQUAL prod AND SOURCES) OR
+        (BUILD_KIT STREQUAL test AND TEST_SOURCES))
         add_library(${component_name} ${CREATE_COMPONENT_LIBRARY_TYPE} ${SOURCES})
+    else()
+        # Add header only component
+        set(_component_is_header_only TRUE)
+        add_library(${component_name} INTERFACE)
     endif()
+
     if(BUILD_KIT STREQUAL prod)
         if(SOURCES)
             # Define list of productive specific compile options for component's sources
@@ -375,10 +382,18 @@ Code Coverage
     # Define the target public interfaces to be used instead of the global include directories.
     if(TARGET ${component_name})
         foreach(interfaceDir IN LISTS PROVIDED_INTERFACES)
-            target_include_directories(${component_name} PUBLIC ${interfaceDir})
+            if (_component_is_header_only)
+                target_include_directories(${component_name} INTERFACE ${interfaceDir})
+            else()
+                target_include_directories(${component_name} PUBLIC ${interfaceDir})
+            endif()
         endforeach()
         foreach(component IN LISTS REQUIRED_INTERFACES)
-            target_link_libraries(${component_name} PUBLIC ${component})
+            if(_component_is_header_only)
+                target_link_libraries(${component_name} INTERFACE ${component})
+            else()
+                target_link_libraries(${component_name} PUBLIC ${component})
+            endif()
         endforeach()
     endif()
 
