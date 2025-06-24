@@ -45,7 +45,7 @@ class Test_SomeVariant(BaseVariantTestRunner):
     def test_reports(self, mock_execute: MagicMock, mock_exists: MagicMock) -> None:
         mock_execute.return_value = 0
         super().test_reports()
-        mock_execute.assert_called_once_with(target="all")
+        mock_execute.assert_called_once_with(target="reports")
         mock_exists.assert_any_call()
 
 
