@@ -32,7 +32,6 @@ jobs:
             - uses: actions/checkout@v4
               with:
                   fetch-depth: 0
-                  ref: ${{ github.event.inputs.target_branch || github.head_ref || github.ref_name }}
 
             - uses: actions/setup-python@v5
               with:
@@ -51,14 +50,8 @@ jobs:
             - lint
         steps:
             - uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0
-                  ref: ${{ github.event.inputs.target_branch || github.head_ref || github.ref_name }}
 
             - name: install tools, build and test
-              env:
-                  # Workaround to force usage of scoop apps installed in USERPROFILE.
-                  USER_PATH_FIRST: 1
               run: |
                   .\build.ps1
               shell: powershell
