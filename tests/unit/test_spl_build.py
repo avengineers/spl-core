@@ -1,6 +1,7 @@
 import json
 import os
 import zipfile
+from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -15,62 +16,98 @@ def spl_build(tmp_path_factory):
     return SplBuild(variant="my_var", build_kit="defaultKit")
 
 
-def test_build_dir(spl_build: SplBuild) -> None:
+@contextmanager
+def mock_command_execution(return_values=None, side_effects=None):
     """
-    Test that the build directory is constructed correctly.
+    Context manager for mocking CommandLineExecutor.execute with optional return values or side effects.
+
+    Args:
+        return_values: Single return value or list of return values for consecutive calls
+        side_effects: Side effects for the mock (alternative to return_values)
     """
-    assert spl_build.build_dir == Path("build/my_var/defaultKit")
+    with patch("spl_core.common.command_line_executor.CommandLineExecutor.execute") as mock:
+        if side_effects:
+            mock.side_effect = side_effects
+        elif return_values:
+            if isinstance(return_values, list):
+                mock.side_effect = return_values
+            else:
+                mock.return_value = return_values
+        else:
+            # Default to success case
+            mock.return_value = MagicMock(returncode=0)
+        yield mock
 
 
-@patch("spl_core.common.command_line_executor.CommandLineExecutor.execute")
-def test_execute_success(mock_execute: MagicMock, spl_build: SplBuild) -> None:
-    """
-    Test that execute returns 0 when the build succeeds.
-    """
-    mock_execute.return_value = MagicMock(returncode=0)
+@pytest.mark.parametrize(
+    "variant,build_kit,build_type,target,expected_path",
+    [
+        # Basic configurations without build_type
+        ("some_var", "someBuildKit", None, None, "build/some_var/someBuildKit"),
+        ("another/var", "anotherBuildKit", None, None, "build/another/var/anotherBuildKit"),
+        # With build_type (target parameter doesn't affect build_dir)
+        ("my/var", "myBuildKit", "my_type", "my_target", "build/my/var/myBuildKit/my_type"),
+        ("my/var", "myBuildKit", "my_type", None, "build/my/var/myBuildKit/my_type"),
+        # Without build_type (target parameter doesn't affect build_dir)
+        ("my/var", "myBuildKit", None, "my_target", "build/my/var/myBuildKit"),
+    ],
+)
+def test_build_dir(variant: str, build_kit: str, build_type: str | None, target: str | None, expected_path: str) -> None:
+    """Test build directory path generation for various configurations."""
+    spl_build = SplBuild(variant=variant, build_kit=build_kit, build_type=build_type, target=target)
+    assert spl_build.build_dir == Path(expected_path)
+
+
+def test_execute_success() -> None:
+    # Arrange
+    spl_build = SplBuild(variant="my_var", build_kit="my_build_kit")
 
     # Call the method
-    result = spl_build.execute(target="all")
+    with mock_command_execution() as mock_executor:
+        result = spl_build.execute(target="all")
 
-    # Assertions
-    mock_execute.assert_called_once()
-    assert result == 0
+        # Assertions
+        mock_executor.assert_called_once()
+        assert result == 0, "Expected execute to return 0 on success"
 
 
-@patch("time.sleep")
-@patch("spl_core.common.command_line_executor.CommandLineExecutor.execute")
-def test_execute_failure_due_to_license_issue(mock_execute: MagicMock, mock_sleep: MagicMock, spl_build: SplBuild) -> None:
-    """
-    Test that execute retries on specific license failure messages.
-    """
-    # Setup mock outputs to simulate license failure and then success
-    failure_output = MagicMock(returncode=1, stdout="No valid floating license")
-    success_output = MagicMock(returncode=0)
-    mock_execute.side_effect = [failure_output, success_output]
+def test_execute_with_target_from_constructor() -> None:
+    # Arrange
+    spl_build = SplBuild(variant="my_var", build_kit="my_build_kit", target="my_target")
 
     # Call the method
-    result = spl_build.execute(target="all")
+    with mock_command_execution() as mock_executor:
+        result = spl_build.execute()
 
-    # Assertions
-    assert mock_execute.call_count == 2
-    assert result == 0
-    assert mock_sleep.call_count == 1
+        # Assertions
+        mock_executor.assert_called_once_with(["build.bat", "-build", "-buildKit", "my_build_kit", "-variants", "my_var", "-target", "my_target", "-reconfigure"])
+        assert result == 0, "Expected execute to return 0 on success."
 
 
-@patch("spl_core.common.command_line_executor.CommandLineExecutor.execute")
-def test_execute_with_additional_args(mock_execute: MagicMock, spl_build: SplBuild) -> None:
-    """
-    Test that additional arguments are passed to the command line executor correctly.
-    """
-    # Setup mock
-    mock_execute.return_value = MagicMock(returncode=0)
+def test_execute_retry_on_license_issue(spl_build: SplBuild) -> None:
+    with patch("time.sleep") as mock_sleep:
+        # Setup mock outputs to simulate license failure and then success
+        failure_output = MagicMock(returncode=1, stdout="No valid floating license")
+        success_output = MagicMock(returncode=0)
 
-    # Call the method
-    additional_args = ["-j", "4"]
-    spl_build.execute(target="all", additional_args=additional_args)
+        with mock_command_execution(return_values=[failure_output, success_output]) as mock_executor:
+            # Call the method
+            result = spl_build.execute(target="all")
 
-    # Assertions
-    mock_execute.assert_called_once_with(["build.bat", "-buildKit", "defaultKit", "-variants", "my_var", "-target", "all", "-reconfigure", "-j", "4"])
+            # Assertions
+            assert mock_executor.call_count == 2
+            assert result == 0
+            assert mock_sleep.call_count == 1
+
+
+def test_execute_with_additional_args(spl_build: SplBuild) -> None:
+    with mock_command_execution() as mock_executor:
+        # Call the method
+        additional_args = ["-j", "4"]
+        spl_build.execute(target="all", additional_args=additional_args)
+
+        # Assertions
+        mock_executor.assert_called_once_with(["build.bat", "-build", "-buildKit", "defaultKit", "-variants", "my_var", "-target", "all", "-reconfigure", "-j", "4"])
 
 
 def test_create_artifacts_archive_inside_spl_build(spl_build: SplBuild) -> None:

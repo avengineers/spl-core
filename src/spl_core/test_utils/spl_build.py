@@ -39,54 +39,47 @@ class ArtifactsCollection:
 
 
 class SplBuild:
-    """Class for building an SPL repository."""
+    """
+    Class for building an SPL repository.
 
-    def __init__(self, variant: str, build_kit: str, build_type: Optional[str] = None) -> None:
-        """
-        Initialize a SplBuild instance.
+    Relies on build.bat in the root of the SPL repository.
+    """
 
-        Args:
-            variant (str): The build variant.
-            build_kit (str): The build kit.
-            build_type (str, optional): The build type. Defaults to None.
-
-        """
+    def __init__(self, variant: str, build_kit: str, build_type: Optional[str] = None, target: Optional[str] = None) -> None:
         self.variant = variant
         self.build_kit = build_kit
         self.build_type = build_type
+        self.target = target
 
     @property
     def build_dir(self) -> Path:
         """
-        Get the build directory.
-
-        Returns:
-            Path: The build directory path.
-
+        Output directory of all build artifacts.
         """
         if self.build_type:
             return Path(f"build/{self.variant}/{self.build_kit}/{self.build_type}")
         return Path(f"build/{self.variant}/{self.build_kit}")
 
     @time_it()
-    def execute(self, target: str, additional_args: Optional[List[str]] = None) -> int:
+    def execute(self, target: Optional[str] = None, additional_args: Optional[List[str]] = None) -> int:
         """
-        Build the target
+        Execute an SPL build (of a given target).
 
         Args:
-            target (str): The build target.
-            additional_args (List[str], optional): Additional arguments for building. Defaults to ["-build"].
+            target: The target to build, optional, defaults to value given in the constructor.
+            additional_args: Additional arguments to pass to the build command.
 
         Returns:
             int: 0 in case of success.
 
         """
-        if additional_args is None:
-            additional_args = ["-build"]
+        if target is None:
+            target = self.target if self.target else "all"
         return_code = -1
         while True:
             cmd = [
                 "build.bat",
+                "-build",
                 "-buildKit",
                 self.build_kit,
                 "-variants",
@@ -97,7 +90,8 @@ class SplBuild:
             ]
             if self.build_type:
                 cmd.extend(["-buildType", self.build_type])
-            cmd.extend(additional_args)
+            if additional_args:
+                cmd.extend(additional_args)
             result = CommandLineExecutor().execute(cmd)
             return_code = result.returncode
             if result.returncode:
