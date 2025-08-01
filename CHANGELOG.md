@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v7.5.0 (2025-08-01)
+
+### Features
+
+- Splbuild provides interfaces for build artifacts
+  ([`cc2dcdf`](https://github.com/avengineers/spl-core/commit/cc2dcdfdd815bfce5d7319aea674466131c6d1d0))
+
+### Refactoring
+
+- Enhance SplBuild class to support clean quality gate checks
+  ([`47a696e`](https://github.com/avengineers/spl-core/commit/47a696ec2c566153e62919a79fe1f4c12e87caee))
+
+
 ## v7.4.0 (2025-06-24)
 
 ### Bug Fixes
