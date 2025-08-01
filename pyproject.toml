@@ -138,6 +138,8 @@ exclude = ["bootstrap.py", "src/spl_core/kickstart/templates/project/conf.py"]
 "setup.py" = ["D100"]
 "conftest.py" = ["D100"]
 "docs/conf.py" = ["D100"]
+"**/test_*.py" = ["S101"]
+"src/spl_core/test_utils/base_variant_test_runner.py" = ["S101"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["spl_core", "tests"]

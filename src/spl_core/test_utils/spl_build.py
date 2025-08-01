@@ -3,7 +3,7 @@ import time
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional
+from typing import Callable, ClassVar, List, Optional
 
 from py_app_dev.core.logging import time_it
 
@@ -44,6 +44,35 @@ class SplBuild:
 
     Relies on build.bat in the root of the SPL repository.
     """
+
+    @dataclass
+    class BuildArtifacts:
+        artifacts: list[str]
+        # callable to resolve the path to the component artifacts specific to the build target
+        path_resolver: Callable[[Path, str], Path]
+
+    TARGET_VARIANT_BUILD_ARTIFACTS: ClassVar[dict[str, list[str]]] = {"prod/all": ["compile_commands.json"]}
+
+    TARGET_COMPONENT_BUILD_ARTIFACTS: ClassVar[dict[str, "SplBuild.BuildArtifacts"]] = {
+        "test/unittests": BuildArtifacts(
+            [
+                "coverage.json",
+                "junit.xml",
+                "reports/coverage/index.html",
+            ],
+            lambda build_dir, component_name: build_dir / component_name,
+        ),
+        "test/reports": BuildArtifacts(
+            [
+                "coverage.html",
+                "coverage/index.html",
+                "doxygen/html/index.html",
+                "unit_test_results.html",
+                "unit_test_spec.html",
+            ],
+            lambda build_dir, component_name: build_dir / "reports" / "html" / build_dir / component_name / "reports",
+        ),
+    }
 
     def __init__(self, variant: str, build_kit: str, build_type: Optional[str] = None, target: Optional[str] = None) -> None:
         self.variant = variant
@@ -106,6 +135,29 @@ class SplBuild:
             else:
                 break
         return return_code
+
+    def get_component_artifacts(self, component_name: str) -> list[Path]:
+        if not self.target:
+            return []
+        target_data = self.TARGET_COMPONENT_BUILD_ARTIFACTS.get(self.build_kit + "/" + self.target)
+        if not target_data:
+            return []
+
+        return [target_data.path_resolver(self.build_dir, component_name) / artifact for artifact in target_data.artifacts]
+
+    def get_components_artifacts(self, component_names: list[str]) -> list[Path]:
+        artifacts = []
+        for component_name in component_names:
+            artifacts.extend(self.get_component_artifacts(component_name))
+        return artifacts
+
+    def get_variant_artifacts(self) -> list[Path]:
+        if not self.target:
+            return []
+        target_data = self.TARGET_VARIANT_BUILD_ARTIFACTS.get(self.build_kit + "/" + self.target)
+        if not target_data:
+            return []
+        return [self.build_dir / artifact for artifact in target_data]
 
     def create_artifacts_archive(self, expected_artifacts: List[Path]) -> Path:
         """
