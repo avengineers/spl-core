@@ -85,6 +85,16 @@ jobs:
                   fetch-depth: 0
                   ref: ${{ github.event.inputs.target_branch || github.head_ref || github.ref_name }}
 
+            - uses: actions/setup-python@v5
+              with:
+                  python-version: 3.x
+
+            - name: Install Poetry
+              uses: snok/install-poetry@v1
+              with:
+                  virtualenvs-create: true
+                  virtualenvs-in-project: true
+
             - name: Determine Release Type
               id: determine_release
               run: |
@@ -113,10 +123,10 @@ jobs:
 
             - name: Publish package distributions to PyPI
               uses: pypa/gh-action-pypi-publish@release/v1
-              if: env.publish_release == 'true'
+              if: env.publish_release == 'true' && steps.release.outputs.released == 'true'
 
             - name: Publish package distributions to GitHub Releases
               uses: python-semantic-release/upload-to-gh-release@main
-              if: env.publish_release == 'true'
+              if: env.publish_release == 'true' && steps.release.outputs.released == 'true'
               with:
                   github_token: ${{ secrets.GITHUB_TOKEN }}
