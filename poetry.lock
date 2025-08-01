@@ -2538,19 +2538,18 @@ use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
 name = "requests-file"
-version = "1.5.1"
+version = "2.1.0"
 description = "File transport adapter for Requests"
 optional = false
 python-versions = "*"
 groups = ["main"]
 files = [
-    {file = "requests-file-1.5.1.tar.gz", hash = "sha256:07d74208d3389d01c38ab89ef403af0cfec63957d53a0081d8eca738d0247d8e"},
-    {file = "requests_file-1.5.1-py2.py3-none-any.whl", hash = "sha256:dfe5dae75c12481f68ba353183c53a65e6044c923e64c24b2209f6c7570ca953"},
+    {file = "requests_file-2.1.0-py2.py3-none-any.whl", hash = "sha256:cf270de5a4c5874e84599fc5778303d496c10ae5e870bfa378818f35d21bda5c"},
+    {file = "requests_file-2.1.0.tar.gz", hash = "sha256:0f549a3f3b0699415ac04d167e9cb39bccfb730cb832b4d20be3d9867356e658"},
 ]
 
 [package.dependencies]
 requests = ">=1.0.0"
-six = "*"
 
 [[package]]
 name = "requests-toolbelt"
@@ -3022,30 +3021,35 @@ theme-sbt = ["sphinx-book-theme (>=1.1,<2.0)"]
 
 [[package]]
 name = "sphinx-needs"
-version = "2.1.0"
+version = "5.1.0"
 description = "Sphinx needs extension for managing needs/requirements and specifications"
 optional = false
-python-versions = "<4,>=3.8"
+python-versions = "<4,>=3.9"
 groups = ["main"]
 files = [
-    {file = "sphinx_needs-2.1.0-py3-none-any.whl", hash = "sha256:4440864463ecaf01d68e8dd7cddb58461b3ca7fecfaf8a6b3b863c78b695c25d"},
-    {file = "sphinx_needs-2.1.0.tar.gz", hash = "sha256:b71ae36b3c14000ceedc42b1b230f214fececb227dbe4e282bc0b8ac7b7e76c8"},
+    {file = "sphinx_needs-5.1.0-py3-none-any.whl", hash = "sha256:7adf3763478e91171146918d8af4a22aa0fc062a73856f1ebeb6822a62cbe215"},
+    {file = "sphinx_needs-5.1.0.tar.gz", hash = "sha256:23a0ca1dfe733a0a58e884b59ce53a8b63a530f0ac87ae5ab0d40f05f853fbe7"},
 ]
 
 [package.dependencies]
 jsonschema = ">=3.2.0"
-requests = ">=2.25.1,<3.0.0"
-requests-file = ">=1.5.1,<2.0.0"
-sphinx = ">=5.0,<8"
-sphinx-data-viewer = ">=0.1.1,<0.2.0"
-sphinxcontrib-jquery = ">=4,<5"
+requests = ">=2.32,<3.0"
+requests-file = ">=2.1,<3.0"
+sphinx = ">=7.0,<9"
+sphinx-data-viewer = ">=0.1.5,<0.2.0"
+sphinxcontrib-jquery = ">=4.0,<5.0"
+tomli = {version = "*", markers = "python_version < \"3.11\""}
 
 [package.extras]
-benchmark = ["memray (>=1.3.1,<2.0.0)", "pytest-benchmark (>=4.0.0,<5.0.0)"]
-docs = ["matplotlib (>=3.3.0)", "pydantic (==2.4.2)", "sphinx-copybutton (>=0.5,<0.6)", "sphinx-design (>=0.5,<0.6)", "sphinx-immaterial (==0.11.7)", "sphinxcontrib-plantuml (>=0,<1)", "sphinxcontrib-programoutput (>=0.17,<0.18)"]
+benchmark = ["memray (>=1.3.1,<2.0.0)", "pytest-benchmark (>=5.0,<6.0)"]
+docs = ["matplotlib (>=3.3.0)", "sphinx-copybutton (>=0.5,<1.0)", "sphinx-design (>=0.6,<1.0)", "sphinxcontrib-plantuml (>=0.0,<1.0)", "sphinxcontrib-programoutput (>=0.17,<1.0)"]
 plotting = ["matplotlib (>=3.3.0)"]
-test = ["defusedxml (>=0.7.1,<0.8.0)", "lxml (>=4.6.5,<5.0.0)", "matplotlib (>=3.3.0)", "pytest (>=7,<8)", "pytest-cov (>=4,<5)", "pytest-xprocess (>=0.22.2,<0.23.0)", "responses (>=0.22.0,<0.23.0)", "sphinxcontrib-plantuml (>=0,<1)", "syrupy (>=3,<4)"]
+test = ["defusedxml (>=0.7.1,<0.8.0)", "lxml (>=4.6.5,<6.0)", "matplotlib (>=3.3.0)", "pytest (>=8.0,<9.0)", "pytest-cov (>=6.0,<7.0)", "pytest-xprocess (>=1.0,<2.0)", "responses (>=0.22.0,<0.23.0)", "sphinxcontrib-plantuml (>=0.0,<1.0)", "syrupy (>=4.0,<5.0)"]
 test-parallel = ["pytest-xdist"]
+theme-furo = ["furo (>=2024.8.6,<2024.9.0)"]
+theme-im = ["sphinx-immaterial (>=0.11.11,<0.12.0)"]
+theme-pds = ["pydata-sphinx-theme (>=0.15.2,<0.16.0)"]
+theme-rtd = ["sphinx_rtd_theme (>=3.0.2,<4)"]
 
 [[package]]
 name = "sphinx-new-tab-link"
@@ -3655,4 +3659,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.12"
-content-hash = "732e1037f14511183b94b8807d7745d88664521399e97cd94ba69e10f58ea049"
+content-hash = "96f2017f532ce4541efbaf0486c4a03c6be75fdd28f16e80bdf6df7ff507de96"
