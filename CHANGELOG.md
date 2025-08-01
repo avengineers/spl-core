@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.5.1 (2025-08-01)
+
+### Bug Fixes
+
+- Release job
+  ([`9792b6f`](https://github.com/avengineers/spl-core/commit/9792b6fe3feabb82b80e415b549b88c8c951bb0d))
+
+
 ## v7.5.0 (2025-08-01)
 
 ### Features
