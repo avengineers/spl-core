@@ -17,18 +17,15 @@ def spl_build(tmp_path_factory):
 
 
 @contextmanager
-def mock_command_execution(return_values=None, side_effects=None):
+def mock_command_execution(return_values=None):
     """
     Context manager for mocking CommandLineExecutor.execute with optional return values or side effects.
 
     Args:
         return_values: Single return value or list of return values for consecutive calls
-        side_effects: Side effects for the mock (alternative to return_values)
     """
     with patch("spl_core.common.command_line_executor.CommandLineExecutor.execute") as mock:
-        if side_effects:
-            mock.side_effect = side_effects
-        elif return_values:
+        if return_values:
             if isinstance(return_values, list):
                 mock.side_effect = return_values
             else:
@@ -162,3 +159,91 @@ def test_create_artifacts_archive_outside_spl_build(spl_build: SplBuild, tmp_pat
         assert file_list == expected_artifacts
 
     assert dict(json.loads(archive_json.read_text())) == {"variant": "my_var", "build_kit": "defaultKit", "artifacts": expected_artifacts}
+
+
+@pytest.mark.parametrize(
+    "build_kit,target,component_name,expected_artifacts",
+    [
+        # No target set
+        ("test", None, "some_component", []),
+        # Unknown build_kit/target combination
+        ("unknown", "unknown", "some_component", []),
+        # test/unittests target
+        (
+            "test",
+            "unittests",
+            "my_component",
+            [
+                Path("build/my_var/test/my_component/coverage.json"),
+                Path("build/my_var/test/my_component/junit.xml"),
+                Path("build/my_var/test/my_component/reports/coverage/index.html"),
+            ],
+        ),
+        # test/reports target
+        (
+            "test",
+            "reports",
+            "my_component",
+            [
+                Path("build/my_var/test/reports/html/build/my_var/test/my_component/reports/coverage.html"),
+                Path("build/my_var/test/reports/html/build/my_var/test/my_component/reports/coverage/index.html"),
+                Path("build/my_var/test/reports/html/build/my_var/test/my_component/reports/doxygen/html/index.html"),
+                Path("build/my_var/test/reports/html/build/my_var/test/my_component/reports/unit_test_results.html"),
+                Path("build/my_var/test/reports/html/build/my_var/test/my_component/reports/unit_test_spec.html"),
+            ],
+        ),
+    ],
+)
+def test_get_component_artifacts(build_kit: str, target: str | None, component_name: str, expected_artifacts: list[Path]) -> None:
+    spl_build = SplBuild(variant="my_var", build_kit=build_kit, target=target)
+
+    result = spl_build.get_component_artifacts(component_name)
+
+    assert result == expected_artifacts
+
+
+@pytest.mark.parametrize(
+    "build_kit,target,component_names,expected_count",
+    [
+        # Empty component list
+        ("test", "unittests", [], 0),
+        # Single component
+        ("test", "unittests", ["component1"], 3),
+        # Multiple components
+        ("test", "unittests", ["component1", "component2"], 6),
+        # No target set
+        ("test", None, ["component1", "component2"], 0),
+    ],
+)
+def test_get_components_artifacts(build_kit: str, target: str | None, component_names: list[str], expected_count: int) -> None:
+    spl_build = SplBuild(variant="my_var", build_kit=build_kit, target=target)
+
+    result = spl_build.get_components_artifacts(component_names)
+
+    assert len(result) == expected_count
+    if expected_count > 0:
+        # Verify that artifacts are correctly combined from multiple components
+        for component in component_names:
+            component_artifacts = spl_build.get_component_artifacts(component)
+            assert all(artifact in result for artifact in component_artifacts)
+
+
+@pytest.mark.parametrize(
+    "build_kit,target,build_type,expected_artifacts",
+    [
+        # No target set
+        ("prod", None, None, []),
+        # Unknown build_kit/target combination
+        ("unknown", "unknown", None, []),
+        # prod/all target without build_type
+        ("prod", "all", None, [Path("build/my_var/prod/compile_commands.json")]),
+        # prod/all target with build_type
+        ("prod", "all", "debug", [Path("build/my_var/prod/debug/compile_commands.json")]),
+    ],
+)
+def test_get_variant_artifacts(build_kit: str, target: str | None, build_type: str | None, expected_artifacts: list[Path]) -> None:
+    spl_build = SplBuild(variant="my_var", build_kit=build_kit, build_type=build_type, target=target)
+
+    result = spl_build.get_variant_artifacts()
+
+    assert result == expected_artifacts

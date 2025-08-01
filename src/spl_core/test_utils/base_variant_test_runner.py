@@ -55,14 +55,14 @@ class BaseVariantTestRunner(ABC):
 
     def assert_artifact_exists(self, dir: Path, artifact: Path) -> None:
         if artifact.is_absolute():
-            assert artifact.exists(), f"Artifact {artifact} does not exist"  # noqa: S101
+            assert artifact.exists(), f"Artifact {artifact} does not exist"
         else:
-            assert Path.joinpath(dir, artifact).exists(), f"Artifact {Path.joinpath(dir, artifact)} does not exist"  # noqa: S101
+            assert Path.joinpath(dir, artifact).exists(), f"Artifact {Path.joinpath(dir, artifact)} does not exist"
 
     @pytest.mark.build
     def test_build(self, build_type: Optional[str] = None) -> None:
         spl_build: SplBuild = SplBuild(variant=self.variant, build_kit="prod", build_type=build_type)
-        assert 0 == spl_build.execute(target="all")  # noqa: S101
+        assert 0 == spl_build.execute(target="all")
         for artifact in self.expected_build_artifacts:
             self.assert_artifact_exists(dir=spl_build.build_dir, artifact=artifact)
         if self.create_artifacts_archive:
@@ -74,16 +74,26 @@ class BaseVariantTestRunner(ABC):
     @pytest.mark.unittests
     def test_unittests(self, build_type: Optional[str] = None) -> None:
         spl_build: SplBuild = SplBuild(variant=self.variant, build_kit="test", build_type=build_type)
-        assert 0 == spl_build.execute(target="unittests")  # noqa: S101
+        assert 0 == spl_build.execute(target="unittests")
         for artifact in self.expected_test_artifacts:
             self.assert_artifact_exists(dir=spl_build.build_dir, artifact=artifact)
 
     @pytest.mark.reports
     def test_reports(self, build_type: Optional[str] = None) -> None:
         spl_build: SplBuild = SplBuild(variant=self.variant, build_kit="test", build_type=build_type)
-        assert 0 == spl_build.execute(target="reports")  # noqa: S101
+        assert 0 == spl_build.execute(target="reports")
         for artifact in self.expected_variant_report_artifacts:
             self.assert_artifact_exists(dir=spl_build.build_dir, artifact=artifact)
         for component in self.component_paths:
             for artifact in self.expected_component_report_artifacts:
-                self.assert_artifact_exists(dir=Path.joinpath(spl_build.build_dir, "reports", "html", spl_build.build_dir, component, "reports"), artifact=artifact)
+                self.assert_artifact_exists(
+                    dir=Path.joinpath(
+                        spl_build.build_dir,
+                        "reports",
+                        "html",
+                        spl_build.build_dir,
+                        component,
+                        "reports",
+                    ),
+                    artifact=artifact,
+                )
