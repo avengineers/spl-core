@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.6.0-rc1.dev.1 (2025-08-04)
+
+### Features
+
+- Add archive artifacts collection
+  ([`481c99c`](https://github.com/avengineers/spl-core/commit/481c99c6c212a8b9e40aa8a1ea31caa6720f2682))
+
+
 ## v7.5.1 (2025-08-01)
 
 ### Bug Fixes
