@@ -9,6 +9,11 @@ from spl_core.test_utils.spl_build import SplBuild
 
 
 class BaseVariantTestRunner(ABC):
+    """
+    Obsolete class for running tests on a specific variant of the SPL.
+    Instead use SplBuild directly in your test cases.
+    """
+
     @property
     def variant(self) -> str:
         return re.sub(r"^Test_", "", self.__class__.__name__).replace("__", "/")

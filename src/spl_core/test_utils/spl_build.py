@@ -12,11 +12,15 @@ from spl_core.common.command_line_executor import CommandLineExecutor
 
 @dataclass
 class ArchiveArtifact:
+    """Obsolete class for storing archive artifacts."""
+
     archive_path: Path
     absolute_path: Path
 
 
 class ArtifactsCollection:
+    """Obsolete class for collecting artifacts to be archived."""
+
     def __init__(self, artifacts: List[Path], build_dir: Path):
         self.archive_artifacts: List[ArchiveArtifact] = []
         for artifact in artifacts:
@@ -161,7 +165,7 @@ class SplBuild:
 
     def create_artifacts_archive(self, expected_artifacts: List[Path]) -> Path:
         """
-        Create a zip file containing the collected artifacts.
+        Obsolete method for creating an archive of artifacts.
 
         Args:
             expected_artifacts: List of Path of artifacts which should be archived
@@ -192,7 +196,7 @@ class SplBuild:
 
     def create_artifacts_json(self, expected_artifacts: List[Path]) -> Path:
         """
-        Create a JSON file listing the collected artifacts.
+        Obsolete method to create a JSON file listing the collected artifacts.
 
         Returns:
             Path: The path to the created JSON file.
