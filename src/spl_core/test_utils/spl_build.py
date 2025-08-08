@@ -6,8 +6,7 @@ from pathlib import Path
 from typing import Callable, ClassVar, List, Optional
 
 from py_app_dev.core.logging import time_it
-
-from spl_core.common.command_line_executor import CommandLineExecutor
+from py_app_dev.core.subprocess import SubprocessExecutor
 
 
 @dataclass
@@ -110,7 +109,7 @@ class SplBuild:
             target = self.target if self.target else "all"
         return_code = -1
         while True:
-            cmd = [
+            cmd: list[str | Path] = [
                 "build.bat",
                 "-build",
                 "-buildKit",
@@ -125,7 +124,11 @@ class SplBuild:
                 cmd.extend(["-buildType", self.build_type])
             if additional_args:
                 cmd.extend(additional_args)
-            result = CommandLineExecutor().execute(cmd)
+            # Cast to Union[str, List[Union[str, Path]]] to satisfy SubprocessExecutor type
+            result = SubprocessExecutor(command=cmd).execute(handle_errors=False)
+            if result is None:
+                return_code = -1
+                break
             return_code = result.returncode
             if result.returncode:
                 if result.stdout:

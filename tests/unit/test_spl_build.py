@@ -1,7 +1,6 @@
 import json
 import os
 import zipfile
-from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -16,24 +15,37 @@ def spl_build(tmp_path_factory):
     return SplBuild(variant="my_var", build_kit="defaultKit")
 
 
-@contextmanager
 def mock_command_execution(return_values=None):
     """
-    Context manager for mocking CommandLineExecutor.execute with optional return values or side effects.
+    Context manager for mocking SubprocessExecutor with optional return values or side effects.
 
     Args:
         return_values: Single return value or list of return values for consecutive calls
     """
-    with patch("spl_core.common.command_line_executor.CommandLineExecutor.execute") as mock:
-        if return_values:
-            if isinstance(return_values, list):
-                mock.side_effect = return_values
-            else:
-                mock.return_value = return_values
+    mock_subprocess_executor = patch("spl_core.test_utils.spl_build.SubprocessExecutor")
+    mock = mock_subprocess_executor.start()
+    mock_instance = MagicMock()
+
+    if return_values:
+        if isinstance(return_values, list):
+            mock_instance.execute.side_effect = return_values
         else:
-            # Default to success case
-            mock.return_value = MagicMock(returncode=0)
-        yield mock
+            mock_instance.execute.return_value = return_values
+    else:
+        # Default to success case
+        mock_instance.execute.return_value = MagicMock(returncode=0)
+
+    mock.return_value = mock_instance
+
+    class MockContext:
+        def __enter__(self):
+            # Return both the mock constructor and execute method for assertions
+            return mock, mock_instance.execute
+
+        def __exit__(self, *args):
+            mock_subprocess_executor.stop()
+
+    return MockContext()
 
 
 @pytest.mark.parametrize(
@@ -60,11 +72,12 @@ def test_execute_success() -> None:
     spl_build = SplBuild(variant="my_var", build_kit="my_build_kit")
 
     # Call the method
-    with mock_command_execution() as mock_executor:
+    with mock_command_execution() as (mock_constructor, mock_executor):
         result = spl_build.execute(target="all")
 
         # Assertions
-        mock_executor.assert_called_once()
+        mock_constructor.assert_called_once_with(command=["build.bat", "-build", "-buildKit", "my_build_kit", "-variants", "my_var", "-target", "all", "-reconfigure"])
+        mock_executor.assert_called_once_with(handle_errors=False)
         assert result == 0, "Expected execute to return 0 on success"
 
 
@@ -73,11 +86,12 @@ def test_execute_with_target_from_constructor() -> None:
     spl_build = SplBuild(variant="my_var", build_kit="my_build_kit", target="my_target")
 
     # Call the method
-    with mock_command_execution() as mock_executor:
+    with mock_command_execution() as (mock_constructor, mock_executor):
         result = spl_build.execute()
 
         # Assertions
-        mock_executor.assert_called_once_with(["build.bat", "-build", "-buildKit", "my_build_kit", "-variants", "my_var", "-target", "my_target", "-reconfigure"])
+        mock_constructor.assert_called_once_with(command=["build.bat", "-build", "-buildKit", "my_build_kit", "-variants", "my_var", "-target", "my_target", "-reconfigure"])
+        mock_executor.assert_called_once_with(handle_errors=False)
         assert result == 0, "Expected execute to return 0 on success."
 
 
@@ -87,24 +101,26 @@ def test_execute_retry_on_license_issue(spl_build: SplBuild) -> None:
         failure_output = MagicMock(returncode=1, stdout="No valid floating license")
         success_output = MagicMock(returncode=0)
 
-        with mock_command_execution(return_values=[failure_output, success_output]) as mock_executor:
+        with mock_command_execution(return_values=[failure_output, success_output]) as (mock_constructor, mock_executor):
             # Call the method
             result = spl_build.execute(target="all")
 
             # Assertions
+            mock_constructor.assert_called_with(command=["build.bat", "-build", "-buildKit", "defaultKit", "-variants", "my_var", "-target", "all", "-reconfigure"])
             assert mock_executor.call_count == 2
             assert result == 0
             assert mock_sleep.call_count == 1
 
 
 def test_execute_with_additional_args(spl_build: SplBuild) -> None:
-    with mock_command_execution() as mock_executor:
+    with mock_command_execution() as (mock_constructor, mock_executor):
         # Call the method
         additional_args = ["-j", "4"]
         spl_build.execute(target="all", additional_args=additional_args)
 
         # Assertions
-        mock_executor.assert_called_once_with(["build.bat", "-build", "-buildKit", "defaultKit", "-variants", "my_var", "-target", "all", "-reconfigure", "-j", "4"])
+        mock_constructor.assert_called_once_with(command=["build.bat", "-build", "-buildKit", "defaultKit", "-variants", "my_var", "-target", "all", "-reconfigure", "-j", "4"])
+        mock_executor.assert_called_once_with(handle_errors=False)
 
 
 def test_create_artifacts_archive_inside_spl_build(spl_build: SplBuild) -> None:
