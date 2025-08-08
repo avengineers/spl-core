@@ -7,9 +7,10 @@ import subprocess
 from contextlib import ContextDecorator
 from pathlib import Path
 from time import perf_counter
-from typing import Collection, Dict, List, Optional
+from typing import Any, Collection, Dict, List, Optional
 
-from spl_core.common.command_line_executor import CommandLineExecutor
+from py_app_dev.core.subprocess import SubprocessExecutor
+
 from spl_core.kickstart.create import KickstartProject, ProjectBuilder
 
 
@@ -120,20 +121,6 @@ def create_clean_test_dir(name: str = "tmp_test") -> TestDir:
     return TestDir(test_dir)
 
 
-def create_cli_for_spl_project(project_dir: Path) -> CommandLineExecutor:
-    """Creates a CommandLineExecutor for the given SPL project directory.
-
-    The SPL-Core repository is used as a Python dependency and forces the usage of the project directory virtual environment.
-    """
-    env = os.environ.copy()
-    env["SPLCORE_PATH"] = this_repository_root_dir().joinpath("src/spl_core").as_posix()
-    # Force the usage of the project directory virtual environment
-    env["PIPENV_IGNORE_VIRTUALENVS"] = "1"
-    # Make sure the project directory virtual environment is used
-    env["PATH"] = f"{project_dir.joinpath('.venv/Scripts').as_posix()}{os.pathsep}{env['PATH']}"
-    return CommandLineExecutor(cwd=project_dir, env=env)
-
-
 def setup_new_spl_project(project_dir: Path, no_application: bool = False) -> Path:
     """Creates a new SPL project in the given directory and returns the path to the project.
     The current SPL-Core repository is installed as a Python dependency."""
@@ -207,16 +194,21 @@ class IntegrationTestsSplProject:
         self.components = components
         self.artifacts = WorkspaceArtifacts(self.project_dir)
         self.directory_tracker = DirectoryTracker(self.project_dir)
-        self.cli = create_cli_for_spl_project(self.project_dir)
+        self.env = os.environ.copy()
+        self.env["SPLCORE_PATH"] = this_repository_root_dir().joinpath("src/spl_core").as_posix()
+        # Force the usage of the project directory virtual environment
+        self.env["PIPENV_IGNORE_VIRTUALENVS"] = "1"
+        # Make sure the project directory virtual environment is used
+        self.env["PATH"] = f"{project_dir.joinpath('.venv/Scripts').as_posix()}{os.pathsep}{self.env['PATH']}"
 
-    def bootstrap(self):
-        return self.cli.execute(f"{self.artifacts.build_script}" f" -install")
+    def bootstrap(self) -> subprocess.CompletedProcess[Any] | None:
+        return SubprocessExecutor(command=f"{self.artifacts.build_script} -install", env=self.env, cwd=self.project_dir).execute(handle_errors=False)
 
-    def build(self, variant: str | Variant, target: str) -> subprocess.CompletedProcess[str]:
-        return self.cli.execute(f"{self.artifacts.build_script}" f" -build -target {target} -variants {variant}")
+    def build(self, variant: str | Variant, target: str) -> subprocess.CompletedProcess[Any] | None:
+        return SubprocessExecutor(command=f"{self.artifacts.build_script} -build -target {target} -variants {variant}", env=self.env, cwd=self.project_dir).execute(handle_errors=False)
 
-    def selftests(self) -> subprocess.CompletedProcess[str]:
-        return self.cli.execute(f"{self.artifacts.build_script}" f" -build -target selftests")
+    def selftests(self) -> subprocess.CompletedProcess[Any] | None:
+        return SubprocessExecutor(command=f"{self.artifacts.build_script} -build -target selftests", env=self.env, cwd=self.project_dir).execute(handle_errors=False)
 
     def take_files_snapshot(self):
         self.directory_tracker.reset_status()
@@ -234,7 +226,7 @@ class SplProjectIntegrationTestBase:
     def setup_class(cls):
         cls.spl_project = cls.create_new_spl_project(cls.__name__)
         result = cls.spl_project.bootstrap()
-        assert result.returncode == 0, "Bootstrap the project shall not fail."
+        assert result is not None and result.returncode == 0, "Bootstrap the project shall not fail."
 
     @staticmethod
     def create_new_spl_project(out_dir_name: str) -> IntegrationTestsSplProject:

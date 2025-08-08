@@ -26,7 +26,7 @@ class TestBuild(SplKickstartProjectIntegrationTestBase):
 
         "Call IUT"
         result = self.spl_project.build(variant, "link")
-        assert result.returncode == 0, "Execution shall not fail."
+        assert result is not None and result.returncode == 0, "Execution shall not fail."
 
         build_dir = self.spl_project.artifacts.get_build_dir(variant, "prod")
         "Expected configuration output"
@@ -47,7 +47,7 @@ class TestBuild(SplKickstartProjectIntegrationTestBase):
 
         "Call IUT"
         result = self.spl_project.build(variant, "link")
-        assert result.returncode == 0, "Execution shall not fail."
+        assert result is not None and result.returncode == 0, "Execution shall not fail."
 
         "only one object is recompiled and the binary is linked again"
         workspace_status = self.spl_project.get_workspace_files_status()
@@ -66,7 +66,7 @@ class TestBuild(SplKickstartProjectIntegrationTestBase):
 
         "Call IUT"
         result = self.spl_project.build(variant, "link")
-        assert result.returncode == 0, "Execution shall not fail."
+        assert result is not None and result.returncode == 0, "Execution shall not fail."
 
         "No files were touched, so nothing was compiled again"
         workspace_status = self.spl_project.get_workspace_files_status()

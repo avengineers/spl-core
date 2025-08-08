@@ -8,7 +8,7 @@ class TestDocumentation(SplKickstartProjectIntegrationTestBase):
     def test_build_reports(self) -> None:
         variant = "EnglishVariant"
         result = self.spl_project.build(variant, "reports")
-        assert result.returncode == 0, "Execution shall not fail."
+        assert result is not None and result.returncode == 0, "Execution shall not fail."
 
         # Check all generated artifacts
         build_dir = self.spl_project.artifacts.get_build_dir(variant, "test")
