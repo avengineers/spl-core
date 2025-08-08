@@ -1,6 +1,5 @@
 import locale
 import subprocess
-import sys
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -29,7 +28,19 @@ class CommandLineExecutor:
         Returns:
         - A subprocess.CompletedProcess object representing the result of the command execution.
         """
-        command = " ".join([cmd] if isinstance(cmd, str) else cmd)
+        if isinstance(cmd, str):
+            command: str | list[str] = cmd
+            use_shell = True
+        else:
+            # Check if any argument contains quotes, which indicates shell processing is needed
+            has_quotes = any('"' in arg or "'" in arg for arg in cmd)
+            if has_quotes:
+                command = " ".join(cmd)
+                use_shell = True
+            else:
+                command = cmd
+                use_shell = False
+
         output = ""
         try:
             print("=" * 120)
@@ -44,7 +55,9 @@ class CommandLineExecutor:
                 text=True,
                 env=self.env,
                 universal_newlines=True,
-                encoding="cp850" if (locale.getlocale()[0] == "de_DE" and sys.platform == "win32") else "utf-8",
+                encoding=locale.getpreferredencoding(False),
+                errors="replace",
+                shell=use_shell,
             ) as process:
                 if process.stdout:
                     for line in process.stdout:
