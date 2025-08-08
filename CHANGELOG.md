@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.6.1 (2025-08-08)
+
+### Bug Fixes
+
+- Handle invalid characters in command line output
+  ([`354eb2f`](https://github.com/avengineers/spl-core/commit/354eb2fee2945f643d27ff04b9ebdd7ae7c9f3c0))
+
+
 ## v7.6.0 (2025-08-05)
 
 ### Features
