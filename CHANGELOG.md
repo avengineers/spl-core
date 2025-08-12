@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.7.0 (2025-08-12)
+
+### Features
+
+- Replace CommandLineExecutor usage with py-app-dev's SubprocessExecutor
+  ([`cfd4754`](https://github.com/avengineers/spl-core/commit/cfd47545095d90ce13f9b4fed72a97fe2dd13fd2))
+
+
 ## v7.6.1 (2025-08-08)
 
 ### Bug Fixes
