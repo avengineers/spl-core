@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.8.0-rc.1 (2025-08-21)
+
+### Features
+
+- Add a step to collet changes from a pr
+  ([`d91c5a2`](https://github.com/avengineers/spl-core/commit/d91c5a252ef18dbbeafd9ba68c33a0ce3178b7be))
+
+
 ## v7.7.0 (2025-08-12)
 
 ### Features
