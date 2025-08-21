@@ -46,6 +46,7 @@ myst-parser = ">=0.16"
 mlx-traceability = "^10.0"
 sphinx-book-theme = "^1.1"
 sphinx-design = ">=0.5,<0.7"
+pypeline-semantic-release = "^0.4.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=7,<9"
