@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.8.0 (2025-08-25)
+
+### Features
+
+- Add a step to collect changes from a pr
+  ([`dc5767c`](https://github.com/avengineers/spl-core/commit/dc5767c963d129f3dba1452cb9af0daea481fecd))
+
+
 ## v7.7.0 (2025-08-12)
 
 ### Features
