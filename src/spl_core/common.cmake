@@ -620,7 +620,7 @@ macro(_spl_add_test_suite COMPONENT_NAME PROD_SRC TEST_SOURCES)
         OUTPUT ${MOCK_SRC}
         BYPRODUCTS mockup_${component_name}.h
         WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-        COMMAND python -m hammocking --suffix _${COMPONENT_NAME} --sources ${PROD_SRC} --plink ${CMAKE_CURRENT_BINARY_DIR}/${PROD_PARTIAL_LINK} --outdir ${CMAKE_CURRENT_BINARY_DIR} "$<$<BOOL:${component_inc_dirs}>:-I$<JOIN:${component_inc_dirs},;-I>>" "$<$<BOOL:${component_comp_defs}>:-D$<JOIN:${component_comp_defs},;-D>>" -x c
+        COMMAND python -m hammocking --suffix _${COMPONENT_NAME} --sources ${PROD_SRC} --plink ${CMAKE_CURRENT_BINARY_DIR}/${PROD_PARTIAL_LINK} --outdir ${CMAKE_CURRENT_BINARY_DIR} "$<$<BOOL:${component_inc_dirs}>:-I$<JOIN:${component_inc_dirs},;-I>>" "$<$<BOOL:${component_comp_defs}>:-D$<JOIN:${component_comp_defs},;-D>>" ${COMPILER_SPECIFIC_INCLUDES} -x c
         COMMAND_EXPAND_LISTS
         VERBATIM
         DEPENDS
