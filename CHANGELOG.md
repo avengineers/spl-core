@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.9.0 (2025-08-27)
+
+### Features
+
+- Add support for compiler specific includes for hammocking
+  ([`4db6356`](https://github.com/avengineers/spl-core/commit/4db63567a251531b9b1b9aa069b14830d9c3ba69))
+
+
 ## v7.8.0 (2025-08-25)
 
 ### Features
