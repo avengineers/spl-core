@@ -10,31 +10,81 @@ macro(_spl_get_absolute_path out in)
     endif()
 endmacro()
 
+# SPL_ADD_COMPONENT
+#
+# Arguments:
+#
+# component_path - the path to the component's directory
+# [target_executable] - (optional) name of the target executable. This is the second argument of the macro.
+#
+# Needs to know:
+#
+# component_path - because it must call add_subdirectory to the component's directory
+# target_executable
+#   - required to determine the build directory for the component (one can not call add_subdirectory
+#     for the same component multiple times with the same build directory)
+#   - must be set to the "global" scope because it is required in spl_create_component to append it to the component name.
+#     spl_create_component gets to decide the component name and will make it "global" for this macro to read it back.
+#
 macro(spl_add_component component_path)
-    message(DEBUG "spl_add_component: component_path=${component_path}")
-    _spl_slash_to_underscore(component_name ${component_path})
-    add_subdirectory(${CMAKE_SOURCE_DIR}/${component_path})
+    set(target_executable "${ARGV1}")
+    message(DEBUG "spl_add_component: component_path=${component_path}, target_executable=${target_executable}")
 
-    if(TARGET ${component_name})
+    # Set global variables for spl_create_component
+    unset(GLOBAL__SPL_ADD_COMPONENT__TARGET_EXECUTABLE)
+    if("${target_executable}" STREQUAL "")
+        set(target_executable ${LINK_TARGET_NAME})
+        add_subdirectory(${CMAKE_SOURCE_DIR}/${component_path})
+    else()
+        set(GLOBAL__SPL_ADD_COMPONENT__TARGET_EXECUTABLE "${target_executable}")
+        add_subdirectory(${CMAKE_SOURCE_DIR}/${component_path} "${CMAKE_BINARY_DIR}/${target_executable}/${component_path}")
+    endif()
+    # Add the newly created component to the linked libraries
+    if(TARGET ${GLOBAL__SPL_CREATE_COMPONENT__NEW_COMPONENT_NAME})
         if(BUILD_KIT STREQUAL prod)
-            target_link_libraries(${LINK_TARGET_NAME} ${component_name})
+            target_link_libraries(${target_executable} ${GLOBAL__SPL_CREATE_COMPONENT__NEW_COMPONENT_NAME})
         endif()
     endif()
 endmacro()
 
+# SPL_ADD_NAMED_COMPONENT
+#
+# Arguments:
+#
+# component_name - the name of the component. (!) This macro expects that a CMake variable with this name holds the component path.
+#                  This means that ${${component_name}} is the component path.
+# [target_executable] - (optional) name of the target executable.
+#
+# Needs to know:
+#
+# component_path - because it must call add_subdirectory to the component's directory
+# target_executable
+#   - required to determine the build directory for the component (one can not call add_subdirectory
+#     for the same component multiple times without specifying the build directory)
+#   - must be set to the "global" scope because it is required in spl_create_component to append it to the component name
+#
 macro(spl_add_named_component component_name)
-    message(DEBUG "spl_add_named_component: component_name=${component_name}")
+    set(target_executable "${ARGV1}")
     set(component_path ${${component_name}})
+    if(NOT IS_ABSOLUTE ${component_path})
+        set(component_path ${CMAKE_SOURCE_DIR}/${component_path})
+    endif()
+    message(DEBUG "spl_add_named_component: component_name=${component_name}, component_path=${component_path}, target_executable=${target_executable}")
 
-    if(IS_ABSOLUTE ${component_path})
+    # Set global variables for spl_create_component
+    unset(GLOBAL__SPL_ADD_COMPONENT__TARGET_EXECUTABLE)
+    if("${target_executable}" STREQUAL "")
+        set(target_executable ${LINK_TARGET_NAME})
         add_subdirectory(${component_path})
     else()
-        add_subdirectory(${CMAKE_SOURCE_DIR}/${component_path})
+        set(GLOBAL__SPL_ADD_COMPONENT__TARGET_EXECUTABLE "${target_executable}")
+        add_subdirectory(${component_path} "${CMAKE_BINARY_DIR}/${target_executable}/${component_name}")
     endif()
 
-    if(TARGET ${component_name})
+    # Add the newly created component to the linked libraries
+    if(TARGET ${GLOBAL__SPL_CREATE_COMPONENT__NEW_COMPONENT_NAME})
         if(BUILD_KIT STREQUAL prod)
-            target_link_libraries(${LINK_TARGET_NAME} ${component_name})
+            target_link_libraries(${target_executable} ${GLOBAL__SPL_CREATE_COMPONENT__NEW_COMPONENT_NAME})
         endif()
     endif()
 endmacro()
@@ -121,6 +171,20 @@ macro(_spl_get_google_test)
     enable_testing()
 endmacro(_spl_get_google_test)
 
+# SPL_CREATE_COMPONENT
+#
+# Arguments (they are all optional):
+#
+# NAME        - Use this as component name instead of define it from the component path.
+# LONG_NAME   - A longer name of the component to be used in reports.
+# LIBRARY_TYPE - The type of library to create (e.g., STATIC, SHARED, OBJECT)
+#
+# Needs to know:
+# - target_executable - global variable set by the spl_add_component macros to make sure different component
+#                       names are used for different executables
+#
+# The component name will be made "global" such that the spl_add_compoent macro can add it to the executable
+#
 macro(spl_create_component)
     cmake_parse_arguments(CREATE_COMPONENT "" "NAME;LONG_NAME;LIBRARY_TYPE" "" ${ARGN})
 
@@ -132,11 +196,22 @@ macro(spl_create_component)
     # Determine the unique component name based on the relative path of the component
     file(RELATIVE_PATH component_path ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_LIST_DIR})
 
+    unset(GLOBAL__SPL_CREATE_COMPONENT__NEW_COMPONENT_NAME)
     if(NOT CREATE_COMPONENT_NAME)
+        # The component relative path to the project root dictates the component name
         _spl_slash_to_underscore(component_name ${component_path})
     else()
+        # Explicit name provided - use it as-is
         set(component_name ${CREATE_COMPONENT_NAME})
     endif()
+    # If there is a custom target executable, prefix the component name
+    if(GLOBAL__SPL_ADD_COMPONENT__TARGET_EXECUTABLE)
+        set(component_name ${GLOBAL__SPL_ADD_COMPONENT__TARGET_EXECUTABLE}_${component_name})
+    endif()
+    # Make the component name public
+    set(GLOBAL__SPL_CREATE_COMPONENT__NEW_COMPONENT_NAME ${component_name} PARENT_SCOPE)
+
+    message(DEBUG "spl_create_component: component_name=${component_name}")
 
     # Collect all productive sources for later usage (e.g., in an extension)
     list(APPEND PROD_SOURCES ${SOURCES})
@@ -193,8 +268,9 @@ macro(spl_create_component)
 \"reports_output_dir\": \"\"
 }")
     set(_component_is_header_only FALSE)
+
     # If prod and sources or test and test_sources define library. Else make it an interface and set the flag
-    if ((BUILD_KIT STREQUAL prod AND SOURCES) OR
+    if((BUILD_KIT STREQUAL prod AND SOURCES) OR
         (BUILD_KIT STREQUAL test AND TEST_SOURCES))
         add_library(${component_name} ${CREATE_COMPONENT_LIBRARY_TYPE} ${SOURCES})
     else()
@@ -367,6 +443,7 @@ Code Coverage
     # Implicitly add default include directories to provided interfaces
     list(APPEND PROVIDED_INTERFACES ${CMAKE_CURRENT_LIST_DIR}/src)
     list(APPEND PROVIDED_INTERFACES ${CMAKE_CURRENT_BINARY_DIR})
+
     # Get rid of duplicates, in case the default directories where explicitly defined
     list(REMOVE_DUPLICATES PROVIDED_INTERFACES)
 
@@ -382,12 +459,13 @@ Code Coverage
     # Define the target public interfaces to be used instead of the global include directories.
     if(TARGET ${component_name})
         foreach(interfaceDir IN LISTS PROVIDED_INTERFACES)
-            if (_component_is_header_only)
+            if(_component_is_header_only)
                 target_include_directories(${component_name} INTERFACE ${interfaceDir})
             else()
                 target_include_directories(${component_name} PUBLIC ${interfaceDir})
             endif()
         endforeach()
+
         foreach(component IN LISTS REQUIRED_INTERFACES)
             if(_component_is_header_only)
                 target_link_libraries(${component_name} INTERFACE ${component})
@@ -740,7 +818,7 @@ macro(spl_run_conan)
 endmacro(spl_run_conan)
 
 macro(_spl_set_ninja_wrapper_as_cmake_make)
-    set (NINJA_WRAPPER ${CMAKE_CURRENT_BINARY_DIR}/ninja_wrapper.bat)
+    set(NINJA_WRAPPER ${CMAKE_CURRENT_BINARY_DIR}/ninja_wrapper.bat)
     file(WRITE ${NINJA_WRAPPER}
         "@echo off
 @call %~dp0%/activate_run.bat
