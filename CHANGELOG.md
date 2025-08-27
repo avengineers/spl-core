@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.10.0 (2025-08-27)
+
+### Features
+
+- Add component to multiple executables
+  ([`fbaeae1`](https://github.com/avengineers/spl-core/commit/fbaeae156fdc883fc1d5145e2150d66f4258cebb))
+
+
 ## v7.9.0 (2025-08-27)
 
 ### Features
