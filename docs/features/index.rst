@@ -26,11 +26,12 @@ This step fetches the list of changed files inside a pull request (PR), which ca
 To use this step, you need to add it to your pypeline.yaml file as follows:
 
 .. code-block:: yaml
-  ...
-  - step: CheckCIContext
-    module: pypeline_semantic_release.steps
-  - step: CollectPRChanges
-    module: spl_core.steps.collect_pr_changes
-  ...
+
+   ...
+   - step: CheckCIContext
+     module: pypeline_semantic_release.steps
+   - step: CollectPRChanges
+     module: spl_core.steps.collect_pr_changes
+   ...
 
 It is mandatory that the CheckCIContext step is executed before the CollectPRChanges step.
