@@ -76,7 +76,7 @@ class TestCmake:
             "test_sources": []
         }},
         {{
-            "name": "another_external_component",
+            "name": "another_external_component_name",
             "long_name": "Another External Component with a nice and long name",
             "path": "{script_dir}/common.cmake/external_package/another_external_component",
             "sources": [
@@ -91,3 +91,6 @@ class TestCmake:
 
     def test_cmake_spl_cmake(self):
         assert 0 == self.run_cmake_unit_test("spl.cmake")
+
+    def test_cmake_multi_binary(self):
+        assert 0 == self.run_cmake_unit_test("multi_binary")

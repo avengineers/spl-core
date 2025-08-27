@@ -183,7 +183,8 @@ spl_add_named_component(some_external_component)
 spl_add_named_component(another_external_component)
 
 # then
-foreach(expected_component IN ITEMS some_external_component another_external_component)
+# Note: component names are now derived from the path when a create component NAME is specified
+foreach(expected_component IN ITEMS some_external_component another_external_component_name)
     if(NOT "${expected_component}" IN_LIST COMPONENT_NAMES)
         message(FATAL_ERROR "Failing Test case: ${expected_component} not found inside ${COMPONENT_NAMES}.")
     endif()

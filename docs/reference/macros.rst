@@ -12,7 +12,7 @@ Add a component to a variant.
 
 .. code-block:: cmake
 
- spl_add_component(<component_path>)
+ spl_add_component(<component_path> [<target_executable>])
 
 This macro is intended to be used in the variant's parts.cmake file to add a component to the variant.
 
@@ -21,7 +21,10 @@ The arguments are:
 ``<component_path>``
  The relative path from project root to the component's directory.
 
-Example:
+``<target_executable>`` *(optional)*
+ The name of the target executable that this component should be linked to. If not specified, the component will be linked to the default target defined by ``LINK_TARGET_NAME``. This parameter enables multi-binary support, allowing different components to be linked to different executable targets.
+
+Examples:
 
 Adding a component to the variant in its parts.cmake:
 
@@ -29,7 +32,15 @@ Adding a component to the variant in its parts.cmake:
 
  spl_add_component(src/led_driver)
 
-This example adds a component located in the "src/led_driver" directory to the variant.
+This example adds a component located in the "src/led_driver" directory to the variant using the default target.
+
+Adding a component to a specific target executable:
+
+.. code-block:: cmake
+
+ spl_add_component(src/led_driver app1)
+
+This example adds a component to be linked specifically to the ``app1`` executable target. The component name will be prefixed with the target name to ensure uniqueness (e.g., ``app1_src_led_driver``).
 
 
 spl_add_named_component
@@ -39,7 +50,7 @@ Add a named component to a variant.
 
 .. code-block:: cmake
 
- spl_add_named_component(<component_name>)
+ spl_add_named_component(<component_name> [<target_executable>])
 
 This macro is intended to be used in the variant's parts.cmake file to add a named component to the variant.
 
@@ -48,6 +59,9 @@ The arguments are:
 ``<component_name>``
  The name of a CMake variable that contains the path (either absolute or relative from project root) to the component's directory.
  The variable name becomes the name of the component in the build system.
+
+``<target_executable>`` *(optional)*
+ The name of the target executable that this component should be linked to. If not specified, the component will be linked to the default target defined by ``LINK_TARGET_NAME``. This parameter enables multi-binary support, allowing different components to be linked to different executable targets.
 
 Examples:
 
@@ -66,6 +80,15 @@ This example adds a named component to the variant using the variable ``LED_DRIV
  spl_add_named_component(LED_DRIVER_COMPONENT)
 
 This example adds a named component to the variant using the variable ``LED_DRIVER_COMPONENT`` that contains the absolute path to the component's directory.
+
+Adding a named component to a specific target executable:
+
+.. code-block:: cmake
+
+ set(LED_DRIVER_COMPONENT src/led_driver)
+ spl_add_named_component(LED_DRIVER_COMPONENT app2)
+
+This example adds a named component to be linked specifically to the ``app2`` executable target. The component name will be prefixed with the target name to ensure uniqueness (e.g., ``app2_LED_DRIVER_COMPONENT``).
 
 
 spl_add_include

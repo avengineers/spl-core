@@ -18,6 +18,35 @@ To support the :ref:`variant <glossary_variant>` development, SPL Core provides 
 
 TODO: add variant report description
 
+
+Multi-Binary Support
+--------------------
+
+To support variants with related multiple binaries, SPL Core provides the possibility to define
+multiple executables and specify to which executable to add a component.
+
+The use case can be building the application and its corresponding bootloader as two separate binaries
+for a variant.
+
+For this, one can specify the target executable when using the `spl_add_component()`
+and `spl_add_named_component()` macros.
+
+Example of defining multiple executables:
+
+.. code-block:: cmake
+  :caption: parts.cmake
+
+   # Components added to the default executable created automatically by spl_core
+   spl_add_component(src/compA)
+   spl_add_component(src/compB)
+
+   # Add new executable
+   add_executable(bootloader)
+   # Bootloader-specific components
+   spl_add_component(src/compA bootloader)
+   spl_add_component(src/boot  bootloader)
+
+
 Pypeline Steps
 --------------
 
