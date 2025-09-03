@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.11.0 (2025-09-03)
+
+### Features
+
+- Support archiving in quality checks
+  ([`e84c4a7`](https://github.com/avengineers/spl-core/commit/e84c4a734bfa7c77cdc6ca171c28931475bc3d50))
+
+
 ## v7.10.0 (2025-08-27)
 
 ### Features
