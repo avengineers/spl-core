@@ -32,12 +32,13 @@ Here are the main features supporting component documentation:
 
 In order to trace the documentation to the code or tests, you need to add a `sphinx-needs <https://www.sphinx-needs.com/>`_ element.
 
-.. code-block:: rst
+.. code-block:: md
 
-    .. spec:: Feature X
+    ```{spec} Feature X
         :id: SWDD_COMP-001
 
         The component shall implement feature X.
+    ```
 
 The ``spec`` keyword is used to tag the component specification. It shall have:
 
@@ -49,13 +50,14 @@ The ``spec`` keyword is used to tag the component specification. It shall have:
 
 All the configuration features from the project KConfig file are available in the documentation to be able to tailor it.
 
-.. code-block:: rst
+.. code-block:: md
 
     {% if config.FEATURE_Y %}
-    .. spec:: Feature Y
+    ```{spec} Feature Y
         :id: SWDD_COMP-002
 
         The component shall implement feature Y.
+    ```
     {% endif %}
 
 The ``if`` statement will include the specification only if the ``FEATURE_Y`` configuration is set to ``y``.
@@ -66,14 +68,15 @@ Diagrams can be created using `mermaid <https://mermaid-js.github.io/mermaid/>`_
 
 *Input:*
 
-.. code-block:: rst
+.. code-block:: md
 
-    .. mermaid::
+    ```{mermaid}
 
         stateDiagram-v2
             [*] --> STATE_OFF: Initial State
             STATE_OFF --> STATE_ON : Power State != OFF
             STATE_ON --> STATE_OFF : Power State == OFF
+    ```
 
 *Result:*
 
@@ -91,36 +94,34 @@ See the `mermaid <https://mermaid-js.github.io/mermaid/>`_ documentation for mor
 
 **Template**
 
-Here is a ``index.rst`` template for getting you started documenting a component:
+Here is a ``index.md`` template for getting you started documenting a component:
 
-.. code-block:: rst
+.. code-block:: md
     :linenos:
 
-    Software Detailed Design
-    ########################
+    # Software Detailed Design
 
-    Introduction
-    ************
+    ## Introduction
 
     This component is responsible for ...
 
-    Component Description
-    *********************
+    ### Component Description
 
-    .. spec:: Feature X
+    ```{spec} Feature X
         :id: SWDD_COMP-001
 
         The component shall implement feature X.
+    ```
 
-    Internal Behavior
-    *****************
+    ### Internal Behavior
 
-    .. spec::  State Machine
+    ```{spec} State Machine
         :id: SWDD_COMP-003
 
         The component main method is implemented as a state machine. The state machine is shown below.
+    ```
 
-    .. mermaid::
+    ```{mermaid}
 
         stateDiagram-v2
             [*] --> STATE_OFF: Initial State
@@ -131,6 +132,8 @@ Here is a ``index.rst`` template for getting you started documenting a component
             STATE_Y --> STATE_ON : Y Stopped
             STATE_Y --> STATE_OFF : Power State == OFF
     {% endif %}
+
+    ```
 
 .. _how_to_component_test_cases:
 
