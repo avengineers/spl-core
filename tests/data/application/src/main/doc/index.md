@@ -1,11 +1,13 @@
-Software Detailed Design
-========================
+# Software Detailed Design
 
-.. contents:: Table of Contents
-    :depth: 2
+```{toctree}
+:maxdepth: 2
+:caption: Table of Contents
+:class: toc
+```
 
-Introduction
-------------
+
+## Introduction
 
 This is the documentation for the ``Main`` component.
 
