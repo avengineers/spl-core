@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.11.1 (2025-10-07)
+
+### Bug Fixes
+
+- Cmake variant configuration
+  ([`7720476`](https://github.com/avengineers/spl-core/commit/772047627d3e0eae9fa4074d8885f01c484925a8))
+
+
 ## v7.11.0 (2025-09-03)
 
 ### Features
