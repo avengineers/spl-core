@@ -110,7 +110,8 @@ endfunction(_spl_hook_end_of_configure)
 set(_CONFIGURATION_TARGET configuration.stamp)
 add_custom_command(
     OUTPUT ${_CONFIGURATION_TARGET}
-    COMMAND set "KCONFIG_CONFIG=${CMAKE_SOURCE_DIR}/variants/${VARIANT}/config.txt" && cd ${CMAKE_SOURCE_DIR} && guiconfig
+    COMMAND ${CMAKE_COMMAND} -E env KCONFIG_CONFIG=${CMAKE_SOURCE_DIR}/variants/${VARIANT}/config.txt VARIANT=${VARIANT} guiconfig
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 
 add_custom_target(configuration DEPENDS ${_CONFIGURATION_TARGET})
