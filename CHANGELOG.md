@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.11.2 (2025-11-03)
+
+### Bug Fixes
+
+- Increase GTest discovery timeout
+  ([`f05bbca`](https://github.com/avengineers/spl-core/commit/f05bbca1d21c6b2b4bb00a29e628533dcf3cd722))
+
+
 ## v7.11.1 (2025-10-07)
 
 ### Bug Fixes
