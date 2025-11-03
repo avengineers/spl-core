@@ -759,7 +759,11 @@ macro(_spl_add_test_suite COMPONENT_NAME PROD_SRC TEST_SOURCES)
         pthread
     )
 
-    gtest_discover_tests(${exe_name})
+    gtest_discover_tests(
+        ${exe_name}
+        PROPERTIES
+            DISCOVERY_TIMEOUT 60
+    )
 endmacro(_spl_add_test_suite)
 
 macro(spl_add_conan_requires requirement)
