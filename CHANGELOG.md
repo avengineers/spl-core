@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.12.0 (2025-11-07)
+
+### Features
+
+- Add reports paths in docs
+  ([`5eaff6b`](https://github.com/avengineers/spl-core/commit/5eaff6b2a965b2eb9d1e0a025cfa1881e5f28b63))
+
+
 ## v7.11.2 (2025-11-03)
 
 ### Bug Fixes
