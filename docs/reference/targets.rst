@@ -7,15 +7,17 @@ reports
 
 Generates the overall variant report.
 
-docs
-----
-
-Generates the variant documentation.
+**Output path:** ``build/<Variant>/test/Debug/reports/html/index.html``
 
 unittests
 ---------
 
 Runs all unit tests for the given variant.
+
+**Output paths:**
+
+- Unit test results (JUnit XML): ``build/<Variant>/test/Debug/<component path>/junit.xml``
+- Coverage report: ``build/<Variant>/test/Debug/<component path>/reports/coverage/index.html``
 
 .. _component_cmake_targets:
 
@@ -24,12 +26,14 @@ Runs all unit tests for the given variant.
 
 Generate component report with full traceability between documentation, code and tests.
 
-<component>_docs
-----------------
-
-Generates the documentation for the given component.
+**Output path:** ``build/<Variant>/test/Debug/<component path>/reports/html/index.html``
 
 <component>_unittests
 ---------------------
 
 Runs the unit tests for the given component.
+
+**Output paths:**
+
+- Unit test results (JUnit XML): ``build/<Variant>/test/Debug/<component path>/junit.xml``
+- Coverage report: ``build/<Variant>/test/Debug/<component path>/reports/coverage/index.html``
