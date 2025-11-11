@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.12.1 (2025-11-11)
+
+### Bug Fixes
+
+- Bugfix in collect_pr_changes
+  ([`f453b50`](https://github.com/avengineers/spl-core/commit/f453b50887569341d5d58883c87739416e5f1d9b))
+
+
 ## v7.12.0 (2025-11-07)
 
 ### Features
