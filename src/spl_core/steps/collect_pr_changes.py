@@ -35,28 +35,57 @@ class CollectPRChanges(PipelineStep):
                 changed_files = self._get_changed_files(ci_context.target_branch, ci_context.current_branch)
                 output_file = self.get_outputs()[0]
                 output_file.parent.mkdir(parents=True, exist_ok=True)
-                output_file.write_text(json.dumps(
-                    PR_Changes(
-                        ci_system=ci_context.ci_system.name, target_branch=ci_context.target_branch, current_branch=ci_context.current_branch, commit_id=self._get_commit_id(ci_context), changed_files=changed_files
-                    ).to_dict(),
-                    indent=2
-                ))
+                output_file.write_text(
+                    json.dumps(
+                        PR_Changes(
+                            ci_system=ci_context.ci_system.name, target_branch=ci_context.target_branch, current_branch=ci_context.current_branch, commit_id=self._get_commit_id(ci_context), changed_files=changed_files
+                        ).to_dict(),
+                        indent=2,
+                    )
+                )
                 logger.info(f"PR changes saved to {output_file}")
 
     def _get_changed_files(self, target_branch: str, current_branch: str) -> List[str]:
         """Get list of changed files in the current branch/PR"""
-        try:
-            result = SubprocessExecutor(["git", "fetch", "origin", current_branch]).execute(handle_errors=False)
-            if result and result.returncode == 0:
-                result = SubprocessExecutor(["git", "diff", "--name-only", f"origin/{target_branch}...origin/{current_branch}"]).execute(handle_errors=False)
+        # Fetch both branches to ensure they exist locally
+        logger.info(f"Fetching branches: {target_branch} and {current_branch}")
 
-                if result and result.returncode == 0 and result.stdout.strip():
-                    files = [line.strip() for line in result.stdout.strip().split("\n") if line.strip()]
-                    return files
+        # Fetch the target branch
+        result = SubprocessExecutor(["git", "fetch", "origin", target_branch]).execute(handle_errors=False)
+        if not result or result.returncode != 0:
+            logger.warning(f"Failed to fetch target branch {target_branch}")
+            return []
 
-        except Exception as e:
-            logger.error(f"Git command failed: {e}")
-            return []  # Ensure a list is always returned
+        # Fetch the current branch
+        result = SubprocessExecutor(["git", "fetch", "origin", current_branch]).execute(handle_errors=False)
+        if not result or result.returncode != 0:
+            logger.warning(f"Failed to fetch current branch {current_branch}")
+            return []
+
+        # Try different git diff approaches in order of preference
+        diff_commands = [
+            ["git", "diff", "--name-only", f"origin/{target_branch}...origin/{current_branch}"],
+            ["git", "diff", "--name-only", f"origin/{target_branch}", f"origin/{current_branch}"],
+            ["git", "diff", "--name-only", f"{target_branch}...{current_branch}"],
+            ["git", "diff", "--name-only", f"{target_branch}", f"{current_branch}"],
+        ]
+
+        for cmd in diff_commands:
+            try:
+                logger.info(f"Trying command: {' '.join(cmd)}")
+                result = SubprocessExecutor(cmd).execute(handle_errors=False)
+
+                if result and result.returncode == 0:
+                    if result.stdout.strip():
+                        files = [line.strip() for line in result.stdout.strip().split("\n") if line.strip()]
+                        logger.info(f"Found {len(files)} changed files")
+                        return files
+                    else:
+                        logger.warning("No changed files found")
+                        return []
+            except Exception as e:
+                logger.warning(f"Command failed: {' '.join(cmd)} - {e}")
+                continue
         return []
 
     def get_inputs(self) -> List[Path]:

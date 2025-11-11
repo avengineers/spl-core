@@ -87,10 +87,11 @@ class TestCollectPRChanges:
 
         # Assert
         assert result == expected_result
-        assert mock_subprocess.call_count == 2
+        assert mock_subprocess.call_count == 3
         mock_subprocess.assert_any_call(["git", "fetch", "origin", "feature-branch"])
+        mock_subprocess.assert_any_call(["git", "fetch", "origin", "develop"])
         mock_subprocess.assert_any_call(["git", "diff", "--name-only", "origin/develop...origin/feature-branch"])
-        assert mock_subprocess_instance.execute.call_count == 2
+        assert mock_subprocess_instance.execute.call_count == 3
 
     @patch("spl_core.steps.collect_pr_changes.SubprocessExecutor")
     def test_get_changed_files_git_command_failure(self, mock_subprocess, collect_pr_changes):
@@ -118,7 +119,17 @@ class TestCollectPRChanges:
         # Arrange
         exception_msg = "Git command failed"
         mock_subprocess_instance = MagicMock()
-        mock_subprocess_instance.execute.side_effect = Exception(exception_msg)
+
+        def mock_subprocess_side_effect(*args, **kwargs):
+            mock_result = MagicMock()
+            mock_result.returncode = 0
+            mock_result.stdout = "Everything fine"
+            if mock_subprocess.call_count < 3:
+                return mock_result
+            else:
+                raise Exception(exception_msg)
+
+        mock_subprocess_instance.execute.side_effect = mock_subprocess_side_effect
         mock_subprocess.return_value = mock_subprocess_instance
 
         # Act
@@ -126,10 +137,17 @@ class TestCollectPRChanges:
 
         # Assert
         assert result == []
-        mock_logger.error.assert_called_once()  # Check that the error message contains the exception info
-        error_call_args = mock_logger.error.call_args[0][0]
+        assert mock_logger.warning.call_count == 4
+        error_call_args = mock_logger.warning.call_args[0][0]
         assert "Git command failed" in error_call_args
         assert exception_msg in error_call_args
+        assert mock_subprocess.call_count == 6
+        mock_subprocess.assert_any_call(["git", "fetch", "origin", "feature-branch"])
+        mock_subprocess.assert_any_call(["git", "fetch", "origin", "main"])
+        mock_subprocess.assert_any_call(["git", "diff", "--name-only", "origin/main...origin/feature-branch"])
+        mock_subprocess.assert_any_call(["git", "diff", "--name-only", "origin/main", "origin/feature-branch"])
+        mock_subprocess.assert_any_call(["git", "diff", "--name-only", "main...feature-branch"])
+        mock_subprocess.assert_any_call(["git", "diff", "--name-only", "main", "feature-branch"])
 
     @patch("spl_core.steps.collect_pr_changes.SubprocessExecutor")
     def test_get_changed_files_none_result(self, mock_subprocess, collect_pr_changes):
