@@ -80,19 +80,23 @@ def test_simple_archive_creation(test_dir, test_files):
 
 
 @pytest.mark.parametrize(
-    "jenkins_url,change_id,branch_name,tag_name,build_number,expected_branch,expected_build",
+    "jenkins_url,change_id,branch_name,tag_name,build_number,expected_branch,expected_build,expected_retention",
     [
-        # Local build case (no Jenkins environment)
-        (None, None, None, None, None, "local_branch", "local_build"),
-        # Jenkins regular branch build
-        ("http://jenkins.example.com", None, "feature/test-branch", None, "123", "feature/test-branch", "123"),
-        # Jenkins pull request build
-        ("http://jenkins.example.com", "456", "PR-456", None, "124", "PR-456", "124"),
-        # Jenkins tag build
-        ("http://jenkins.example.com", None, "v1.2.3", "v1.2.3", "125", "v1.2.3", "125"),
+        # Local build case (no Jenkins environment) - 28 days for other branches
+        (None, None, None, None, None, "local_branch", "local_build", 28),
+        # Jenkins regular branch build - 28 days for feature branches
+        ("http://jenkins.example.com", None, "feature/test-branch", None, "123", "feature/test-branch", "123", 28),
+        # Jenkins pull request build - 28 days for PRs
+        ("http://jenkins.example.com", "456", "PR-456", None, "124", "PR-456", "124", 28),
+        # Jenkins tag build - -1 (infinite) for tags
+        ("http://jenkins.example.com", None, "v1.2.3", "v1.2.3", "125", "v1.2.3", "125", -1),
+        # Jenkins develop branch build - 84 days for develop
+        ("http://jenkins.example.com", None, "develop", None, "126", "develop", "126", 84),
+        # Jenkins release branch build - -1 (infinite) for release branches
+        ("http://jenkins.example.com", None, "release/1.0.0", None, "127", "release/1.0.0", "127", -1),
     ],
 )
-def test_multiple_archives_with_target_repos(test_dir, test_files, monkeypatch, jenkins_url, change_id, branch_name, tag_name, build_number, expected_branch, expected_build):
+def test_multiple_archives_with_target_repos(test_dir, test_files, monkeypatch, jenkins_url, change_id, branch_name, tag_name, build_number, expected_branch, expected_build, expected_retention):
     """Test creating 3 archives with random file combinations, target repos, and rt-upload JSON."""
     # Arrange - Set up environment variables
     # Clear all Jenkins-related env vars first
@@ -175,6 +179,7 @@ def test_multiple_archives_with_target_repos(test_dir, test_files, monkeypatch, 
                 "recursive": "false",
                 "flat": "false",
                 "regexp": "false",
+                "props": f"retention_period={expected_retention}",
             },
             {
                 "pattern": "configuration.7z",
@@ -182,9 +187,34 @@ def test_multiple_archives_with_target_repos(test_dir, test_files, monkeypatch, 
                 "recursive": "false",
                 "flat": "false",
                 "regexp": "false",
+                "props": f"retention_period={expected_retention}",
             },
         ]
     }
 
     # Compare the actual JSON with expected JSON
     assert rt_upload_data == expected_json, f"rt-upload.json content mismatch. Expected: {expected_json}, Got: {rt_upload_data}"
+
+
+@pytest.mark.parametrize(
+    "branch_name,is_tag,expected_retention",
+    [
+        ("develop", False, 84),  # develop branch -> 84 days (PI length)
+        ("release/1.0.0", False, -1),  # release branch -> infinite
+        ("release/2.5.3", False, -1),  # another release branch -> infinite
+        ("main", False, 28),  # main branch -> 28 days
+        ("feature/new-feature", False, 28),  # feature branch -> 28 days
+        ("bugfix/fix-123", False, 28),  # bugfix branch -> 28 days
+        ("PR-123", False, 28),  # pull request -> 28 days
+        ("local_branch", False, 28),  # local branch -> 28 days
+        ("v1.0.0", True, -1),  # tag -> infinite
+        ("v2.5.3", True, -1),  # another tag -> infinite
+    ],
+)
+def testcalculate_retention_period(branch_name, is_tag, expected_retention):
+    """Test the retention period calculation logic for different branch names and tags."""
+    # Act
+    retention_period = ArtifactsArchiver.calculate_retention_period(branch_name, is_tag)
+
+    # Assert
+    assert retention_period == expected_retention, f"Retention period for {branch_name} (is_tag={is_tag}) should be {expected_retention}, got {retention_period}"

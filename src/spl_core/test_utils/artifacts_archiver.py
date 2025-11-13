@@ -189,6 +189,31 @@ class ArtifactsArchiver:
             created_archives[archive_name] = archive.create_archive()
         return created_archives
 
+    @staticmethod
+    def calculate_retention_period(branch_name: str, is_tag: bool) -> int:
+        """
+        Calculate the retention period in days based on branch name or tag.
+
+        Args:
+            branch_name: The name of the branch
+            is_tag: Whether this is a tag build
+
+        Returns:
+            Retention period in days:
+            - 84 days for "develop" branch
+            - -1 (infinite) for release branches (release/*)
+            - -1 (infinite) for tags
+            - 28 days for everything else (PRs, feature branches, etc.)
+        """
+        if is_tag:
+            return -1  # Infinite retention for tags
+        elif branch_name == "develop":
+            return 84  # Length of a PI (Program Increment)
+        elif branch_name.startswith("release/"):
+            return -1  # Infinite retention for release branches
+        else:
+            return 28  # 4 weeks for PRs, feature branches, and other branches
+
     def create_rt_upload_json(self, out_dir: Path) -> Path:
         """
         Create a single rt-upload.json file containing all archives.
@@ -207,6 +232,7 @@ class ArtifactsArchiver:
         change_id = None
         branch_name = "local_branch"
         build_number = "local_build"
+        is_tag = False
 
         # Adapt values when Jenkins environment is detected
         # TODO: check if an existing library can be used for CI context detection
@@ -222,12 +248,16 @@ class ArtifactsArchiver:
             elif tag_name:
                 # Tag build case
                 branch_name = tag_name
+                is_tag = True
             elif jenkins_branch_name:
                 # Regular branch case
                 branch_name = jenkins_branch_name
 
             if jenkins_build_number:
                 build_number = jenkins_build_number
+
+        # Calculate retention period based on branch/tag
+        retention_period = self.calculate_retention_period(branch_name, is_tag)
 
         # Create the files array for Artifactory upload format
         files_array = []
@@ -239,7 +269,7 @@ class ArtifactsArchiver:
                 # Construct the RT target path
                 rt_target = f"{target_repo}/{branch_name}/{build_number}/"
 
-                # Add this archive to the files array
+                # Add this archive to the files array with retention_period property
                 files_array.append(
                     {
                         "pattern": archive.archive_name,
@@ -247,6 +277,7 @@ class ArtifactsArchiver:
                         "recursive": "false",
                         "flat": "false",
                         "regexp": "false",
+                        "props": f"retention_period={retention_period}",
                     }
                 )
 
