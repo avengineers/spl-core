@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.13.0 (2025-11-13)
+
+### Features
+
+- Add retention period property
+  ([`13f7699`](https://github.com/avengineers/spl-core/commit/13f7699047071da6fc7948feca67a94c1b258ad8))
+
+
 ## v7.12.1 (2025-11-11)
 
 ### Bug Fixes
