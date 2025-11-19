@@ -866,14 +866,14 @@ files = [
 
 [[package]]
 name = "doxysphinx"
-version = "3.3.12"
+version = "3.3.14"
 description = "Integrates doxygen html documentation with sphinx."
 optional = false
 python-versions = "<3.13,>=3.9"
 groups = ["main"]
 files = [
-    {file = "doxysphinx-3.3.12-py3-none-any.whl", hash = "sha256:9f97ecd3c598f7bbe761e613d0611f549f24f38ed4b55db11332e6ec201f7d10"},
-    {file = "doxysphinx-3.3.12.tar.gz", hash = "sha256:d84829e32a30e50929f1ec15816784d5f7f60321d8ca5bfde7bd8965d1740ddf"},
+    {file = "doxysphinx-3.3.14-py3-none-any.whl", hash = "sha256:682a28d76bd7524a133615351d2b11072c9eb22158b5c9bc60285cf553f1ed84"},
+    {file = "doxysphinx-3.3.14.tar.gz", hash = "sha256:e6bb1ea452c8471c41a6ad53aed5b9eae50a247b823e0b40684050cc9b8feb7f"},
 ]
 
 [package.dependencies]
@@ -882,9 +882,7 @@ click-log = ">=0.4.0,<0.5.0"
 colorama = {version = ">=0.4.6,<0.5.0", markers = "sys_platform == \"windows\""}
 libsass = ">=0.22.0,<0.23.0"
 lxml = ">=4.9.2,<=5.2.1"
-matplotlib = ">=3.8.4,<4.0.0"
 mpire = ">=2.6.0,<3.0.0"
-numpy = ">=1.26.4,<2.0.0"
 pyjson5 = ">=1.6.2,<2.0.0"
 pyparsing = ">=3.0.9,<4.0.0"
 
@@ -1009,14 +1007,14 @@ woff = ["brotli (>=1.0.1) ; platform_python_implementation == \"CPython\"", "bro
 
 [[package]]
 name = "gcovr"
-version = "8.3"
+version = "8.4"
 description = "Generate C/C++ code coverage reports with gcov"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "gcovr-8.3-py3-none-any.whl", hash = "sha256:d613a90aeea967b4972fbff69587bf8995ee3cd80df2556983b73141f30642d2"},
-    {file = "gcovr-8.3.tar.gz", hash = "sha256:faa371f9c4a7f78c9800da655107d4f99f04b718d1c0d9f48cafdcbef0049079"},
+    {file = "gcovr-8.4-py3-none-any.whl", hash = "sha256:1016d013d6c55225b1f716a4325e16ad5d626ff05b20b8a12d542e2d9a82ac21"},
+    {file = "gcovr-8.4.tar.gz", hash = "sha256:8ea0cf23176b1029f28db679d712ca6477b3807097c3755c135bdc53b51cfa72"},
 ]
 
 [package.dependencies]
@@ -1025,6 +1023,9 @@ jinja2 = "*"
 lxml = "*"
 pygments = ">=2.13.0"
 tomli = {version = ">=1.1.0", markers = "python_version < \"3.11\""}
+
+[package.extras]
+dev = ["bandit[toml]", "build", "cmake", "coverage", "mypy", "nox", "pre-commit", "pygments (==2.19.2)", "pyinstaller (>=6.11.1,<6.12.0)", "pylint (<4.0.0)", "pytest", "pytest-cov", "pytest-timeout", "pywin32 ; sys_platform == \"win32\"", "requests", "ruff (>=0.12.3,<0.13.0)", "tomli (>=1.1.0) ; python_version < \"3.11\"", "twine", "wheel", "yamllint", "yaxmldiff"]
 
 [[package]]
 name = "gitdb"
@@ -1710,18 +1711,18 @@ files = [
 
 [[package]]
 name = "mashumaro"
-version = "3.16"
+version = "3.17"
 description = "Fast and well tested serialization library"
 optional = false
 python-versions = ">=3.9"
 groups = ["main", "dev"]
 files = [
-    {file = "mashumaro-3.16-py3-none-any.whl", hash = "sha256:d72782cdad5e164748ca883023bc5a214a80835cdca75826bf0bcbff827e0bd3"},
-    {file = "mashumaro-3.16.tar.gz", hash = "sha256:3844137cf053bbac30c4cbd0ee9984e839a5731a0ef96fd3dd9388359af3f2e1"},
+    {file = "mashumaro-3.17-py3-none-any.whl", hash = "sha256:3964e2c804f62de9e4c58fb985de71dcd716f9507cc18374b1bd5c4f1a1b879b"},
+    {file = "mashumaro-3.17.tar.gz", hash = "sha256:de1d8b1faffee58969c7f97e35963a92480a38d4c9858e92e0721efec12258ed"},
 ]
 
 [package.dependencies]
-typing-extensions = ">=4.1.0"
+typing_extensions = ">=4.14.0"
 
 [package.extras]
 msgpack = ["msgpack (>=0.5.6)"]
@@ -2207,14 +2208,14 @@ test = ["pytest", "pytest-xdist", "setuptools"]
 
 [[package]]
 name = "py-app-dev"
-version = "2.15.0"
+version = "2.18.0"
 description = "My application development modules."
 optional = false
 python-versions = "<4.0,>=3.10"
 groups = ["main"]
 files = [
-    {file = "py_app_dev-2.15.0-py3-none-any.whl", hash = "sha256:5b43b056d0d19c1fad348aaaea897834fd945862aaaa568c5ba970de951ca85a"},
-    {file = "py_app_dev-2.15.0.tar.gz", hash = "sha256:5afc945c4ad54e0c23207c5a751342db12ed651fd6fb0447cefa7c25e8114ee1"},
+    {file = "py_app_dev-2.18.0-py3-none-any.whl", hash = "sha256:47038e64878ed154aa3a1bb0a183ee3d9cbb6fa78d041198106548d40fece74a"},
+    {file = "py_app_dev-2.18.0.tar.gz", hash = "sha256:2e13a0758f0250a00f028744d20bfee23e3dffd9839e24abd2e6e5132f13d686"},
 ]
 
 [package.dependencies]
@@ -2745,14 +2746,14 @@ diagrams = ["jinja2", "railroad-diagrams"]
 
 [[package]]
 name = "pypeline-runner"
-version = "1.18.2"
+version = "1.19.1"
 description = "Configure and execute pipelines with Python (similar to GitHub workflows or Jenkins pipelines)."
 optional = false
 python-versions = "<4.0,>=3.10"
 groups = ["main"]
 files = [
-    {file = "pypeline_runner-1.18.2-py3-none-any.whl", hash = "sha256:3a2ed99ca06462809bd3709d81b6e65d5580a7fa51f4c69055b607275e158cf1"},
-    {file = "pypeline_runner-1.18.2.tar.gz", hash = "sha256:a3a6a0d816e5b5fd9525646f4225492780c4942f887c92e967bfb4d4e1355240"},
+    {file = "pypeline_runner-1.19.1-py3-none-any.whl", hash = "sha256:364b3addaa8616631c1c22caedf02ce92f69704ef79296fa16bac77de7c043fa"},
+    {file = "pypeline_runner-1.19.1.tar.gz", hash = "sha256:abe91c2c04cc8c1676634e6f3068797cc4a6b33783c1f6b831f8afa851f1f2df"},
 ]
 
 [package.dependencies]
@@ -3486,30 +3487,31 @@ files = [
 
 [[package]]
 name = "ruff"
-version = "0.12.7"
+version = "0.14.5"
 description = "An extremely fast Python linter and code formatter, written in Rust."
 optional = false
 python-versions = ">=3.7"
 groups = ["dev"]
 files = [
-    {file = "ruff-0.12.7-py3-none-linux_armv6l.whl", hash = "sha256:76e4f31529899b8c434c3c1dede98c4483b89590e15fb49f2d46183801565303"},
-    {file = "ruff-0.12.7-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:789b7a03e72507c54fb3ba6209e4bb36517b90f1a3569ea17084e3fd295500fb"},
-    {file = "ruff-0.12.7-py3-none-macosx_11_0_arm64.whl", hash = "sha256:2e1c2a3b8626339bb6369116e7030a4cf194ea48f49b64bb505732a7fce4f4e3"},
-    {file = "ruff-0.12.7-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:32dec41817623d388e645612ec70d5757a6d9c035f3744a52c7b195a57e03860"},
-    {file = "ruff-0.12.7-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:47ef751f722053a5df5fa48d412dbb54d41ab9b17875c6840a58ec63ff0c247c"},
-    {file = "ruff-0.12.7-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:a828a5fc25a3efd3e1ff7b241fd392686c9386f20e5ac90aa9234a5faa12c423"},
-    {file = "ruff-0.12.7-py3-none-manylinux_2_17_ppc64.manylinux2014_ppc64.whl", hash = "sha256:5726f59b171111fa6a69d82aef48f00b56598b03a22f0f4170664ff4d8298efb"},
-    {file = "ruff-0.12.7-py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:74e6f5c04c4dd4aba223f4fe6e7104f79e0eebf7d307e4f9b18c18362124bccd"},
-    {file = "ruff-0.12.7-py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:5d0bfe4e77fba61bf2ccadf8cf005d6133e3ce08793bbe870dd1c734f2699a3e"},
-    {file = "ruff-0.12.7-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:06bfb01e1623bf7f59ea749a841da56f8f653d641bfd046edee32ede7ff6c606"},
-    {file = "ruff-0.12.7-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:e41df94a957d50083fd09b916d6e89e497246698c3f3d5c681c8b3e7b9bb4ac8"},
-    {file = "ruff-0.12.7-py3-none-musllinux_1_2_armv7l.whl", hash = "sha256:4000623300563c709458d0ce170c3d0d788c23a058912f28bbadc6f905d67afa"},
-    {file = "ruff-0.12.7-py3-none-musllinux_1_2_i686.whl", hash = "sha256:69ffe0e5f9b2cf2b8e289a3f8945b402a1b19eff24ec389f45f23c42a3dd6fb5"},
-    {file = "ruff-0.12.7-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:a07a5c8ffa2611a52732bdc67bf88e243abd84fe2d7f6daef3826b59abbfeda4"},
-    {file = "ruff-0.12.7-py3-none-win32.whl", hash = "sha256:c928f1b2ec59fb77dfdf70e0419408898b63998789cc98197e15f560b9e77f77"},
-    {file = "ruff-0.12.7-py3-none-win_amd64.whl", hash = "sha256:9c18f3d707ee9edf89da76131956aba1270c6348bfee8f6c647de841eac7194f"},
-    {file = "ruff-0.12.7-py3-none-win_arm64.whl", hash = "sha256:dfce05101dbd11833a0776716d5d1578641b7fddb537fe7fa956ab85d1769b69"},
-    {file = "ruff-0.12.7.tar.gz", hash = "sha256:1fc3193f238bc2d7968772c82831a4ff69252f673be371fb49663f0068b7ec71"},
+    {file = "ruff-0.14.5-py3-none-linux_armv6l.whl", hash = "sha256:f3b8248123b586de44a8018bcc9fefe31d23dda57a34e6f0e1e53bd51fd63594"},
+    {file = "ruff-0.14.5-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:f7a75236570318c7a30edd7f5491945f0169de738d945ca8784500b517163a72"},
+    {file = "ruff-0.14.5-py3-none-macosx_11_0_arm64.whl", hash = "sha256:6d146132d1ee115f8802356a2dc9a634dbf58184c51bff21f313e8cd1c74899a"},
+    {file = "ruff-0.14.5-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e2380596653dcd20b057794d55681571a257a42327da8894b93bbd6111aa801f"},
+    {file = "ruff-0.14.5-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:2d1fa985a42b1f075a098fa1ab9d472b712bdb17ad87a8ec86e45e7fa6273e68"},
+    {file = "ruff-0.14.5-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:88f0770d42b7fa02bbefddde15d235ca3aa24e2f0137388cc15b2dcbb1f7c7a7"},
+    {file = "ruff-0.14.5-py3-none-manylinux_2_17_ppc64.manylinux2014_ppc64.whl", hash = "sha256:3676cb02b9061fee7294661071c4709fa21419ea9176087cb77e64410926eb78"},
+    {file = "ruff-0.14.5-py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:b595bedf6bc9cab647c4a173a61acf4f1ac5f2b545203ba82f30fcb10b0318fb"},
+    {file = "ruff-0.14.5-py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:f55382725ad0bdb2e8ee2babcbbfb16f124f5a59496a2f6a46f1d9d99d93e6e2"},
+    {file = "ruff-0.14.5-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7497d19dce23976bdaca24345ae131a1d38dcfe1b0850ad8e9e6e4fa321a6e19"},
+    {file = "ruff-0.14.5-py3-none-manylinux_2_31_riscv64.whl", hash = "sha256:410e781f1122d6be4f446981dd479470af86537fb0b8857f27a6e872f65a38e4"},
+    {file = "ruff-0.14.5-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:c01be527ef4c91a6d55e53b337bfe2c0f82af024cc1a33c44792d6844e2331e1"},
+    {file = "ruff-0.14.5-py3-none-musllinux_1_2_armv7l.whl", hash = "sha256:f66e9bb762e68d66e48550b59c74314168ebb46199886c5c5aa0b0fbcc81b151"},
+    {file = "ruff-0.14.5-py3-none-musllinux_1_2_i686.whl", hash = "sha256:d93be8f1fa01022337f1f8f3bcaa7ffee2d0b03f00922c45c2207954f351f465"},
+    {file = "ruff-0.14.5-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:c135d4b681f7401fe0e7312017e41aba9b3160861105726b76cfa14bc25aa367"},
+    {file = "ruff-0.14.5-py3-none-win32.whl", hash = "sha256:c83642e6fccfb6dea8b785eb9f456800dcd6a63f362238af5fc0c83d027dd08b"},
+    {file = "ruff-0.14.5-py3-none-win_amd64.whl", hash = "sha256:9d55d7af7166f143c94eae1db3312f9ea8f95a4defef1979ed516dbb38c27621"},
+    {file = "ruff-0.14.5-py3-none-win_arm64.whl", hash = "sha256:4b700459d4649e2594b31f20a9de33bc7c19976d4746d8d0798ad959621d64a4"},
+    {file = "ruff-0.14.5.tar.gz", hash = "sha256:8d3b48d7d8aad423d3137af7ab6c8b1e38e4de104800f0d596990f6ada1a9fc1"},
 ]
 
 [[package]]
@@ -3743,14 +3745,14 @@ test-parallel = ["pytest-xdist"]
 
 [[package]]
 name = "sphinx-new-tab-link"
-version = "0.8.0"
+version = "0.8.1"
 description = "Open external links in new tabs of the browser in Sphinx HTML documents"
 optional = false
-python-versions = ">=3.9"
+python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "sphinx_new_tab_link-0.8.0-py3-none-any.whl", hash = "sha256:c74b873d6c8a1ec089015dc414a75f6908e87f66ce4ab8d9f2c7268f13afc593"},
-    {file = "sphinx_new_tab_link-0.8.0.tar.gz", hash = "sha256:6c757d99f559224a04142c3971c8baa6ac90aca905f15b129d57eeca0ece9582"},
+    {file = "sphinx_new_tab_link-0.8.1-py3-none-any.whl", hash = "sha256:fd88be77deaab982b5fdd0be9ef63cfa93f14deab775ab423b6c856402a57ebd"},
+    {file = "sphinx_new_tab_link-0.8.1.tar.gz", hash = "sha256:f8b3b369b660824664fd51bacf126deb8f800364dae17b7142b5d0e17385f77f"},
 ]
 
 [package.dependencies]
@@ -3800,14 +3802,14 @@ dev = ["bump2version", "sphinxcontrib-httpdomain", "transifex-client", "wheel"]
 
 [[package]]
 name = "sphinx-test-reports"
-version = "1.2.0"
+version = "1.3.2"
 description = "Sphinx extension for showing test results and test environment information inside sphinx documentations"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "sphinx_test_reports-1.2.0-py3-none-any.whl", hash = "sha256:7c70a262b5cbd7363f4db122456275aefcaa8f3aae75b3e136c896a795df2e9b"},
-    {file = "sphinx_test_reports-1.2.0.tar.gz", hash = "sha256:d9269038602d5de29b1cfe87e8c0540fbbeb9acb92c031998643c49d05326c8b"},
+    {file = "sphinx_test_reports-1.3.2-py3-none-any.whl", hash = "sha256:8465deb5b8c822e23863443d87762355a585a13c2fc7480a6d019eaedd473bbc"},
+    {file = "sphinx_test_reports-1.3.2.tar.gz", hash = "sha256:02c73190e9c36426570cf85b5680afe73c02cf5400715e72a7e6d8ee4ee329e8"},
 ]
 
 [package.dependencies]
@@ -3816,7 +3818,8 @@ sphinx = ">4.0"
 sphinx-needs = ">=1.0.1"
 
 [package.extras]
-development = ["wheel"]
+docs = ["pillow", "sphinx (==7)", "sphinx-design", "sphinx-immaterial", "sphinx-needs (>=4)", "sphinxcontrib-plantuml"]
+test = ["nox (>=2025.2.9)", "pytest (>=7.0)", "pytest-cov", "pytest-xdist", "sphinx_design", "sphinxcontrib-plantuml"]
 
 [[package]]
 name = "sphinxcontrib-applehelp"
@@ -3961,13 +3964,13 @@ test = ["defusedxml", "myst-parser", "pytest", "ruff", "sphinx"]
 
 [[package]]
 name = "sphinxcontrib-plantuml"
-version = "0.30"
+version = "0.31"
 description = "Sphinx \"plantuml\" extension"
 optional = false
 python-versions = "*"
 groups = ["main"]
 files = [
-    {file = "sphinxcontrib-plantuml-0.30.tar.gz", hash = "sha256:2a1266ca43bddf44640ae44107003df4490de2b3c3154a0d627cfb63e9a169bf"},
+    {file = "sphinxcontrib_plantuml-0.31.tar.gz", hash = "sha256:fd74752f8ea070e641c3f8a402fccfa1d4a4056e0967b56033d2a76282d9f956"},
 ]
 
 [package.dependencies]
@@ -4368,4 +4371,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.12"
-content-hash = "4f1388468833240a3545b2fffbeaf6a842303930ce67de0fbc39d795022435bc"
+content-hash = "8f96ccfd89ab7b1ddac6a319bee9aee7f6a7bb97625b79f5515b44bc65a160a5"
