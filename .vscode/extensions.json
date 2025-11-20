@@ -4,10 +4,11 @@
         "kevinrose.vsc-python-indent",
         "njpwerner.autodocstring",
         "wholroyd.jinja",
-        "visualstudioexptteam.vscodeintellicode",
         "josetr.cmake-language-support-vscode",
         "ms-vscode.cmake-tools",
         "cheshirekow.cmake-format",
-        "charliermarsh.ruff"
+        "charliermarsh.ruff",
+        "github.copilot",
+        "github.copilot-chat"
     ]
 }
