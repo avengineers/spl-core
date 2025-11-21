@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.14.0-rc3.dev.1 (2025-11-21)
+
+### Features
+
+- Update deps, require Python 3.11, update VSCode extensions
+  ([`685ae46`](https://github.com/avengineers/spl-core/commit/685ae46626b5ee3eeeab942438c12507ec56d5c1))
+
+
 ## v7.13.0 (2025-11-13)
 
 ### Features
