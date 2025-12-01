@@ -1,6 +1,30 @@
 # CHANGELOG
 
 
+## v7.14.0-rc4.dev.2 (2025-12-01)
+
+### Bug Fixes
+
+- Ruff complains
+  ([`70c98d4`](https://github.com/avengineers/spl-core/commit/70c98d4f4512cc1a3436710c701b3923325176eb))
+
+
+## v7.14.0-rc4.dev.1 (2025-12-01)
+
+### Bug Fixes
+
+- Refactor build metadata retrieval and enhance error handling in update_artifacts_json
+  ([`014983e`](https://github.com/avengineers/spl-core/commit/014983e79ba5bb280ab54ca4945ceb8a16ece77f))
+
+### Features
+
+- Add create_artifacts_json and update_artifacts_json methods for metadata management
+  ([`cf64bb4`](https://github.com/avengineers/spl-core/commit/cf64bb4eae9bc064c1626d51e6cc4bca79bb5866))
+
+- Add tests for create/update artifacts JSON
+  ([`d5fa96c`](https://github.com/avengineers/spl-core/commit/d5fa96c098cc493c8a0ec0ad11f97794b8539300))
+
+
 ## v7.13.0 (2025-11-13)
 
 ### Features
