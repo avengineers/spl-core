@@ -1,6 +1,7 @@
 import json
 import os
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -122,6 +123,7 @@ class ArtifactsArchiver:
     def __init__(self) -> None:
         self.archives: Dict[str, ArtifactsArchive] = {}
         self._target_repos: Dict[str, str] = {}
+        # self._artifacts_metadata: Dict[str, Dict[str, Dict[str, str]]] = {}  # variant -> category -> artifacts
 
     def add_archive(self, out_dir: Path, archive_filename: str, target_repo: Optional[str] = None, archive_name: str = "default") -> ArtifactsArchive:
         """
@@ -291,6 +293,118 @@ class ArtifactsArchiver:
 
         return json_path
 
+    def create_artifacts_json(self, variant: str, out_dir: Path) -> Path:
+        """
+        Create an initial artifacts.json file with build metadata structure.
+
+        This function creates a fresh artifacts.json file with build metadata
+        but no artifacts. Use update_artifacts_json() to add artifact categories.
+        It uses Jenkins environment variables when available, otherwise falls back to default values.
+
+        Args:
+            variant: The variant name (e.g., "Disco")
+            out_dir: Directory where the artifacts.json file will be created
+
+        Returns:
+            Path to the created artifacts.json file
+
+        Raises:
+            ValueError: If variant is empty or None
+        """
+        # Input validation
+        if not variant or not variant.strip():
+            raise ValueError("Variant name cannot be empty or None")
+        # Set local defaults first
+        change_id = None
+        branch_name = "local_branch"
+        build_number = "local_build"
+        # is_tag = False
+
+        # Adapt values when Jenkins environment is detected
+        # TODO: check if an existing library can be used for CI context detection
+        if os.environ.get("JENKINS_URL"):
+            change_id = os.environ.get("CHANGE_ID")
+            jenkins_branch_name = os.environ.get("BRANCH_NAME")
+            jenkins_build_number = os.environ.get("BUILD_NUMBER")
+            tag_name = os.environ.get("TAG_NAME")
+
+            if change_id:
+                # Pull request case
+                branch_name = f"PR-{change_id}"
+            elif tag_name:
+                # Tag build case
+                branch_name = tag_name
+                # is_tag = True
+            elif jenkins_branch_name:
+                # Regular branch case
+                branch_name = jenkins_branch_name
+
+            if jenkins_build_number:
+                build_number = jenkins_build_number
+
+        # Create the initial artifacts.json structure
+        artifacts_data = {"variant": variant, "build_timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"), "build_number": build_number, "branch_name": branch_name, "artifacts": {}}
+
+        # Create the artifacts.json file
+        json_path = out_dir / "artifacts.json"
+        json_path.parent.mkdir(parents=True, exist_ok=True)
+
+        with open(json_path, "w") as f:
+            json.dump(artifacts_data, f, indent=2)
+
+        return json_path
+
+    def update_artifacts_json(self, category: str, artifacts: Dict[str, str], artifacts_json_path: Path) -> Path:
+        """
+        Add or update artifacts in a specific category for the artifacts.json file.
+
+        Args:
+            category: The artifact category (e.g., "test_reports", "sca_reports", "build_binaries")
+            artifacts: Dictionary mapping artifact names to their URLs/paths
+            artifacts_json_path: Path to the artifacts.json file to be updated
+
+        Returns:
+            Path to the updated artifacts.json file
+
+        Raises:
+            ValueError: If category is empty or artifacts dictionary is empty
+        """
+        # Input validation
+        if not category or not category.strip():
+            raise ValueError("Category name cannot be empty or None")
+        if not artifacts:
+            raise ValueError("Artifacts dictionary cannot be empty")
+
+        # Check if artifacts.json file exists
+        if not artifacts_json_path.exists():
+            print(f"Warning: artifacts.json file does not exist at {artifacts_json_path}. Please create it first using create_artifacts_json().")
+            return artifacts_json_path
+
+        # Read existing artifacts.json file
+        try:
+            with open(artifacts_json_path, "r") as f:
+                artifacts_data = json.load(f)
+        except (json.JSONDecodeError, OSError) as e:
+            print(f"Warning: Could not read existing artifacts.json: {e}. Skipping update.")
+            return artifacts_json_path
+
+        # Validate that the file has the expected structure
+        if not artifacts_data or "artifacts" not in artifacts_data:
+            print("Warning: artifacts.json file exists but has invalid structure. Expected 'artifacts' section not found.")
+            return artifacts_json_path
+
+        # Update the specific category with new artifacts
+        if category in artifacts_data["artifacts"]:
+            artifacts_data["artifacts"][category].update(artifacts)
+        else:
+            artifacts_data["artifacts"][category] = artifacts.copy()
+
+        # Write the updated data back to the file
+        with open(artifacts_json_path, "w") as f:
+            json.dump(artifacts_data, f, indent=2)
+
+        return artifacts_json_path
+
     def list_archives(self) -> List[str]:
         """
         Get a list of all archive names.
@@ -347,3 +461,14 @@ class ArtifactsArchiver:
 #
 # created_files = archiver.create_all_archives()
 # upload_json = archiver.create_rt_upload_json(Path("./build/output"))  # only includes archives with target repos
+#
+# ## Artifacts.json use case (variant-specific metadata):
+# archiver = ArtifactsArchiver()
+# variant = "Disco"
+# out_dir = Path("./build/output")
+#
+# # Create initial artifacts.json file first, then add categories
+# artifacts_json_path = archiver.create_artifacts_json(variant, out_dir)
+# archiver.update_artifacts_json("test_reports", test_reports, artifacts_json_path)
+# archiver.update_artifacts_json("sca_reports", sca_reports, artifacts_json_path)
+# archiver.update_artifacts_json("build_binaries", build_binaries, artifacts_json_path)
