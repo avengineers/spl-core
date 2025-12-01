@@ -1,8 +1,7 @@
 import json
-import re
 import shutil
 import tempfile
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -503,6 +502,7 @@ def test_update_artifacts_json_update_existing_category(sample_artifacts_json):
     assert len(updated_category) == 2, "Should have 2 artifacts after merge"
     assert "additional_report.html" in updated_category, "New artifact should be added"
     assert updated_category["initial_report.html"] == "https://example.com/updated.html", "Existing artifact should be updated"
+    assert initial_artifacts.get("initial_report.html") != updated_category["initial_report.html"], "Initial artifact URL should be changed"
 
 
 def test_update_artifacts_json_multiple_sequential_updates(sample_artifacts_json, sample_artifacts_dict):

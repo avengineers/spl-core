@@ -373,7 +373,7 @@ class ArtifactsArchiver:
 
         # Read existing artifacts.json file
         try:
-            with open(artifacts_json_path, "r") as f:
+            with open(artifacts_json_path) as f:
                 artifacts_data = json.load(f)
         except json.JSONDecodeError as e:
             raise ValueError(f"Could not parse artifacts.json: {e}") from e
