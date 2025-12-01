@@ -363,6 +363,12 @@ def test_create_artifacts_json_structure(test_dir, monkeypatch):
     assert data["branch_name"] == "local_branch", "Branch name should be 'local_branch' for local builds"
     assert data["artifacts"] == {}, "Artifacts dictionary should be empty initially"
 
+    # Verify timestamp format
+    timestamp = data["build_timestamp"]
+    assert timestamp.endswith("Z"), "Timestamp should end with 'Z' (Zulu time indicator)"
+    # Verify it's a valid ISO 8601 timestamp by parsing it (remove Z and parse)
+    datetime.fromisoformat(timestamp[:-1])
+
 
 def test_create_artifacts_json_creates_directories(test_dir, monkeypatch):
     """Test that create_artifacts_json creates parent directories if they don't exist."""
@@ -407,54 +413,41 @@ def test_update_artifacts_json_invalid_inputs(sample_artifacts_json, category, a
 
 
 def test_update_artifacts_json_file_not_exists(test_dir):
-    """Test that update_artifacts_json handles non-existent file gracefully."""
+    """Test that update_artifacts_json raises FileNotFoundError for non-existent file."""
     # Arrange
     archiver = ArtifactsArchiver()
     non_existent_path = test_dir / "non_existent.json"
     artifacts = {"test.html": "https://example.com/test.html"}
 
-    # Act
-    result_path = archiver.update_artifacts_json("test_category", artifacts, non_existent_path)
-
-    # Assert
-    assert result_path == non_existent_path, "Should return the input path"
-    assert not result_path.exists(), "File should not be created"
+    # Act & Assert
+    with pytest.raises(FileNotFoundError, match="artifacts.json file does not exist"):
+        archiver.update_artifacts_json("test_category", artifacts, non_existent_path)
 
 
 def test_update_artifacts_json_corrupted_json(test_dir):
-    """Test that update_artifacts_json handles corrupted JSON gracefully."""
+    """Test that update_artifacts_json raises ValueError for corrupted JSON."""
     # Arrange
     archiver = ArtifactsArchiver()
     corrupted_json_path = test_dir / "corrupted.json"
     corrupted_json_path.write_text("{invalid json content")
     artifacts = {"test.html": "https://example.com/test.html"}
 
-    # Act
-    result_path = archiver.update_artifacts_json("test_category", artifacts, corrupted_json_path)
-
-    # Assert
-    assert result_path == corrupted_json_path, "Should return the input path"
-    # File content should remain unchanged
-    assert corrupted_json_path.read_text() == "{invalid json content", "File should not be modified"
+    # Act & Assert
+    with pytest.raises(ValueError, match="Could not parse artifacts.json"):
+        archiver.update_artifacts_json("test_category", artifacts, corrupted_json_path)
 
 
 def test_update_artifacts_json_invalid_structure(test_dir):
-    """Test that update_artifacts_json handles invalid JSON structure gracefully."""
+    """Test that update_artifacts_json raises ValueError for invalid JSON structure."""
     # Arrange
     archiver = ArtifactsArchiver()
     invalid_structure_path = test_dir / "invalid_structure.json"
     invalid_structure_path.write_text(json.dumps({"variant": "Test", "no_artifacts_key": {}}))
     artifacts = {"test.html": "https://example.com/test.html"}
 
-    # Act
-    result_path = archiver.update_artifacts_json("test_category", artifacts, invalid_structure_path)
-
-    # Assert
-    assert result_path == invalid_structure_path, "Should return the input path"
-    # File content should remain unchanged
-    with open(invalid_structure_path) as f:
-        data = json.load(f)
-    assert "artifacts" not in data, "File should not be modified"
+    # Act & Assert
+    with pytest.raises(ValueError, match="invalid structure.*artifacts.*not found"):
+        archiver.update_artifacts_json("test_category", artifacts, invalid_structure_path)
 
 
 def test_update_artifacts_json_new_category(sample_artifacts_json):

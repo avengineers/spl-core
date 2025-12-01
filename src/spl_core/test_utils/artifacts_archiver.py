@@ -216,28 +216,24 @@ class ArtifactsArchiver:
         else:
             return 28  # 4 weeks for PRs, feature branches, and other branches
 
-    def create_rt_upload_json(self, out_dir: Path) -> Path:
+    @staticmethod
+    def _get_build_metadata() -> tuple[str, str, bool]:
         """
-        Create a single rt-upload.json file containing all archives.
+        Get build metadata from environment variables or defaults.
 
-        This function replicates the logic from the Jenkinsfile for determining the RT_TARGET
-        and creating the upload specification file. It uses Jenkins environment variables
-        when available, otherwise falls back to default values.
-
-        Args:
-            output_dir: Directory where the rt-upload.json file will be created
+        Detects Jenkins environment variables when available, otherwise falls back
+        to local development defaults.
 
         Returns:
-            Path to the created rt-upload.json file
+            Tuple of (branch_name, build_number, is_tag):
+            - branch_name: The branch or PR identifier
+            - build_number: The build number or "local_build"
+            - is_tag: Whether this is a tag build
         """
-        # Set local defaults first
-        change_id = None
         branch_name = "local_branch"
         build_number = "local_build"
         is_tag = False
 
-        # Adapt values when Jenkins environment is detected
-        # TODO: check if an existing library can be used for CI context detection
         if os.environ.get("JENKINS_URL"):
             change_id = os.environ.get("CHANGE_ID")
             jenkins_branch_name = os.environ.get("BRANCH_NAME")
@@ -257,6 +253,25 @@ class ArtifactsArchiver:
 
             if jenkins_build_number:
                 build_number = jenkins_build_number
+
+        return branch_name, build_number, is_tag
+
+    def create_rt_upload_json(self, out_dir: Path) -> Path:
+        """
+        Create a single rt-upload.json file containing all archives.
+
+        This function replicates the logic from the Jenkinsfile for determining the RT_TARGET
+        and creating the upload specification file. It uses Jenkins environment variables
+        when available, otherwise falls back to default values.
+
+        Args:
+            output_dir: Directory where the rt-upload.json file will be created
+
+        Returns:
+            Path to the created rt-upload.json file
+        """
+        # Get build metadata from environment or defaults
+        branch_name, build_number, is_tag = self._get_build_metadata()
 
         # Calculate retention period based on branch/tag
         retention_period = self.calculate_retention_period(branch_name, is_tag)
@@ -314,36 +329,12 @@ class ArtifactsArchiver:
         # Input validation
         if not variant or not variant.strip():
             raise ValueError("Variant name cannot be empty or None")
-        # Set local defaults first
-        change_id = None
-        branch_name = "local_branch"
-        build_number = "local_build"
-        # is_tag = False
 
-        # Adapt values when Jenkins environment is detected
-        # TODO: check if an existing library can be used for CI context detection
-        if os.environ.get("JENKINS_URL"):
-            change_id = os.environ.get("CHANGE_ID")
-            jenkins_branch_name = os.environ.get("BRANCH_NAME")
-            jenkins_build_number = os.environ.get("BUILD_NUMBER")
-            tag_name = os.environ.get("TAG_NAME")
-
-            if change_id:
-                # Pull request case
-                branch_name = f"PR-{change_id}"
-            elif tag_name:
-                # Tag build case
-                branch_name = tag_name
-                # is_tag = True
-            elif jenkins_branch_name:
-                # Regular branch case
-                branch_name = jenkins_branch_name
-
-            if jenkins_build_number:
-                build_number = jenkins_build_number
+        # Get build metadata from environment or defaults
+        branch_name, build_number, _ = self._get_build_metadata()
 
         # Create the initial artifacts.json structure
-        artifacts_data = {"variant": variant, "build_timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"), "build_number": build_number, "branch_name": branch_name, "artifacts": {}}
+        artifacts_data = {"variant": variant, "build_timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds") + "Z", "build_number": build_number, "branch_name": branch_name, "artifacts": {}}
 
         # Create the artifacts.json file
         json_path = out_dir / "artifacts.json"
@@ -367,7 +358,8 @@ class ArtifactsArchiver:
             Path to the updated artifacts.json file
 
         Raises:
-            ValueError: If category is empty or artifacts dictionary is empty
+            ValueError: If category is empty, artifacts dictionary is empty, or JSON structure is invalid
+            FileNotFoundError: If artifacts.json file does not exist
         """
         # Input validation
         if not category or not category.strip():
@@ -377,21 +369,20 @@ class ArtifactsArchiver:
 
         # Check if artifacts.json file exists
         if not artifacts_json_path.exists():
-            print(f"Warning: artifacts.json file does not exist at {artifacts_json_path}. Please create it first using create_artifacts_json().")
-            return artifacts_json_path
+            raise FileNotFoundError(f"artifacts.json file does not exist at {artifacts_json_path}. Please create it first using create_artifacts_json().")
 
         # Read existing artifacts.json file
         try:
             with open(artifacts_json_path, "r") as f:
                 artifacts_data = json.load(f)
-        except (json.JSONDecodeError, OSError) as e:
-            print(f"Warning: Could not read existing artifacts.json: {e}. Skipping update.")
-            return artifacts_json_path
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Could not parse artifacts.json: {e}") from e
+        except OSError as e:
+            raise ValueError(f"Could not read artifacts.json: {e}") from e
 
         # Validate that the file has the expected structure
         if not artifacts_data or "artifacts" not in artifacts_data:
-            print("Warning: artifacts.json file exists but has invalid structure. Expected 'artifacts' section not found.")
-            return artifacts_json_path
+            raise ValueError("artifacts.json file has invalid structure. Expected 'artifacts' section not found.")
 
         # Update the specific category with new artifacts
         if category in artifacts_data["artifacts"]:
