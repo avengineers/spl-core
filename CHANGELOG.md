@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.14.0-rc4.dev.3 (2025-12-03)
+
+### Bug Fixes
+
+- Add get_archive_url method to retrieve Artifactory URLs
+  ([`197b564`](https://github.com/avengineers/spl-core/commit/197b564fc9ecc1194937c735b8b503250661a0d3))
+
+
 ## v7.14.0-rc4.dev.2 (2025-12-01)
 
 ### Bug Fixes
