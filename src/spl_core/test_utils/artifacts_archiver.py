@@ -179,6 +179,34 @@ class ArtifactsArchiver:
 
         return self.archives[archive_name]
 
+    def get_archive_url(self, archive_name: str = "default") -> Optional[str]:
+        """
+        Get the Artifactory URL for a specific archive.
+
+        Args:
+            archive_name: Name of the archive (defaults to "default")
+
+        Returns:
+            The full Artifactory URL for the archive, or None if no target repo configured
+
+        Example:
+            "https://artifactory.marquardt.de/artifactory/spled-generic-snapshot-rietheim/develop/123/Disco.7z"
+        """
+        if archive_name not in self.archives:
+            return None
+
+        if archive_name not in self._target_repos:
+            return None
+
+        archive = self.archives[archive_name]
+        target_repo = self._target_repos[archive_name]
+        branch_name, build_number, _ = self._get_build_metadata()
+
+        # Construct the URL following the same pattern as create_rt_upload_json
+        archive_url = f"https://artifactory.marquardt.de/artifactory/{target_repo}/{branch_name}/{build_number}/{archive.archive_name}"
+
+        return archive_url
+
     def create_all_archives(self) -> Dict[str, Path]:
         """
         Create all registered archives.

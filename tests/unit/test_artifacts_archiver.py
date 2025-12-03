@@ -258,6 +258,176 @@ def testcalculate_retention_period(branch_name, is_tag, expected_retention):
 
 
 # =============================================================================
+# Tests for get_archive_url
+# =============================================================================
+
+
+def test_get_archive_url_default_archive_with_target_repo(test_dir, monkeypatch):
+    """Test get_archive_url for default archive with target repo."""
+    # Arrange
+    for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER"]:
+        monkeypatch.delenv(env_var, raising=False)
+
+    monkeypatch.setenv("JENKINS_URL", "http://jenkins.example.com")
+    monkeypatch.setenv("BRANCH_NAME", "develop")
+    monkeypatch.setenv("BUILD_NUMBER", "123")
+
+    archiver = ArtifactsArchiver()
+    archiver.add_archive(test_dir, "results.7z", target_repo="my-repo/results")
+
+    # Act
+    url = archiver.get_archive_url()
+
+    # Assert
+    expected_url = "https://artifactory.marquardt.de/artifactory/my-repo/results/develop/123/results.7z"
+    assert url == expected_url, f"Expected {expected_url}, got {url}"
+
+
+def test_get_archive_url_named_archive_with_target_repo(test_dir, monkeypatch):
+    """Test get_archive_url for a named archive with target repo."""
+    # Arrange
+    for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER"]:
+        monkeypatch.delenv(env_var, raising=False)
+
+    monkeypatch.setenv("JENKINS_URL", "http://jenkins.example.com")
+    monkeypatch.setenv("BRANCH_NAME", "feature/new-feature")
+    monkeypatch.setenv("BUILD_NUMBER", "456")
+
+    archiver = ArtifactsArchiver()
+    archiver.add_archive(test_dir, "coverage.7z", target_repo="spled-generic-snapshot-rietheim", archive_name="coverage_reports")
+
+    # Act
+    url = archiver.get_archive_url("coverage_reports")
+
+    # Assert
+    expected_url = "https://artifactory.marquardt.de/artifactory/spled-generic-snapshot-rietheim/feature/new-feature/456/coverage.7z"
+    assert url == expected_url, f"Expected {expected_url}, got {url}"
+
+
+def test_get_archive_url_without_target_repo(test_dir, monkeypatch):
+    """Test get_archive_url returns None when archive has no target repo."""
+    # Arrange
+    for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER"]:
+        monkeypatch.delenv(env_var, raising=False)
+
+    archiver = ArtifactsArchiver()
+    archiver.add_archive(test_dir, "docs.7z")  # No target repo
+
+    # Act
+    url = archiver.get_archive_url()
+
+    # Assert
+    assert url is None, "Should return None when no target repo is configured"
+
+
+def test_get_archive_url_nonexistent_archive(test_dir):
+    """Test get_archive_url returns None for non-existent archive."""
+    # Arrange
+    archiver = ArtifactsArchiver()
+    archiver.add_archive(test_dir, "results.7z", target_repo="my-repo/results")
+
+    # Act
+    url = archiver.get_archive_url("nonexistent_archive")
+
+    # Assert
+    assert url is None, "Should return None for non-existent archive"
+
+
+@pytest.mark.parametrize(
+    "jenkins_url,change_id,branch_name,tag_name,build_number,expected_branch,expected_build",
+    [
+        # Local build case (no Jenkins environment)
+        (None, None, None, None, None, "local_branch", "local_build"),
+        # Jenkins regular branch build
+        ("http://jenkins.example.com", None, "feature/test-branch", None, "123", "feature/test-branch", "123"),
+        # Jenkins pull request build
+        ("http://jenkins.example.com", "456", "PR-456", None, "124", "PR-456", "124"),
+        # Jenkins tag build
+        ("http://jenkins.example.com", None, "v1.2.3", "v1.2.3", "125", "v1.2.3", "125"),
+        # Jenkins develop branch build
+        ("http://jenkins.example.com", None, "develop", None, "126", "develop", "126"),
+        # Jenkins release branch build
+        ("http://jenkins.example.com", None, "release/1.0.0", None, "127", "release/1.0.0", "127"),
+    ],
+)
+def test_get_archive_url_environment_detection(test_dir, monkeypatch, jenkins_url, change_id, branch_name, tag_name, build_number, expected_branch, expected_build):
+    """Test that get_archive_url correctly uses environment variables for URL construction."""
+    # Arrange - Set up environment variables
+    for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER"]:
+        monkeypatch.delenv(env_var, raising=False)
+
+    if jenkins_url:
+        monkeypatch.setenv("JENKINS_URL", jenkins_url)
+    if change_id:
+        monkeypatch.setenv("CHANGE_ID", change_id)
+    if branch_name:
+        monkeypatch.setenv("BRANCH_NAME", branch_name)
+    if tag_name:
+        monkeypatch.setenv("TAG_NAME", tag_name)
+    if build_number:
+        monkeypatch.setenv("BUILD_NUMBER", build_number)
+
+    archiver = ArtifactsArchiver()
+    target_repo = "test-repo/artifacts"
+    archive_filename = "test.7z"
+    archiver.add_archive(test_dir, archive_filename, target_repo=target_repo)
+
+    # Act
+    url = archiver.get_archive_url()
+
+    # Assert
+    expected_url = f"https://artifactory.marquardt.de/artifactory/{target_repo}/{expected_branch}/{expected_build}/{archive_filename}"
+    assert url == expected_url, f"Expected {expected_url}, got {url}"
+
+
+def test_get_archive_url_multiple_archives(test_dir, monkeypatch):
+    """Test get_archive_url with multiple archives returns correct URLs for each."""
+    # Arrange
+    for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER"]:
+        monkeypatch.delenv(env_var, raising=False)
+
+    monkeypatch.setenv("JENKINS_URL", "http://jenkins.example.com")
+    monkeypatch.setenv("BRANCH_NAME", "develop")
+    monkeypatch.setenv("BUILD_NUMBER", "100")
+
+    archiver = ArtifactsArchiver()
+    archiver.add_archive(test_dir, "tests.7z", target_repo="repo1/tests", archive_name="test_archive")
+    archiver.add_archive(test_dir, "coverage.7z", target_repo="repo2/coverage", archive_name="coverage_archive")
+    archiver.add_archive(test_dir, "docs.7z", archive_name="docs_archive")  # No target repo
+
+    # Act
+    test_url = archiver.get_archive_url("test_archive")
+    coverage_url = archiver.get_archive_url("coverage_archive")
+    docs_url = archiver.get_archive_url("docs_archive")
+
+    # Assert
+    assert test_url == "https://artifactory.marquardt.de/artifactory/repo1/tests/develop/100/tests.7z"
+    assert coverage_url == "https://artifactory.marquardt.de/artifactory/repo2/coverage/develop/100/coverage.7z"
+    assert docs_url is None, "Archive without target repo should return None"
+
+
+def test_get_archive_url_special_characters_in_branch(test_dir, monkeypatch):
+    """Test get_archive_url handles special characters in branch names correctly."""
+    # Arrange
+    for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER"]:
+        monkeypatch.delenv(env_var, raising=False)
+
+    monkeypatch.setenv("JENKINS_URL", "http://jenkins.example.com")
+    monkeypatch.setenv("BRANCH_NAME", "feature/JIRA-123-special_fix")
+    monkeypatch.setenv("BUILD_NUMBER", "999")
+
+    archiver = ArtifactsArchiver()
+    archiver.add_archive(test_dir, "result.7z", target_repo="my-repo/results")
+
+    # Act
+    url = archiver.get_archive_url()
+
+    # Assert
+    expected_url = "https://artifactory.marquardt.de/artifactory/my-repo/results/feature/JIRA-123-special_fix/999/result.7z"
+    assert url == expected_url, f"Expected {expected_url}, got {url}"
+
+
+# =============================================================================
 # Tests for create_artifacts_json
 # =============================================================================
 
