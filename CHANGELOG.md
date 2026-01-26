@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.14.0 (2026-01-26)
+
+### Features
+
+- Add artifacts.json metadata support to ArtifactsArchiver
+  ([`4b1c3a9`](https://github.com/avengineers/spl-core/commit/4b1c3a9de229c8f45813a6ea4b49c3275f7508dc))
+
+
 ## v7.13.0 (2025-11-13)
 
 ### Features
