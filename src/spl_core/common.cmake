@@ -606,15 +606,36 @@ set(COV_OUT_JSON coverage.json)
 function(_spl_coverage_create_overall_report)
     if(_SPL_COVERAGE_CREATE_OVERALL_REPORT_IS_NECESSARY)
         set(COV_OUT_VARIANT_HTML reports/coverage/index.html)
+        set(COV_OUT_VARIANT_JSON variant-coverage.json)
+        set(JUNIT_OUT_VARIANT_XML variant-junit.xml)
+
+        # Generate variant-level merged coverage JSON
+        add_custom_command(
+            OUTPUT ${COV_OUT_VARIANT_JSON}
+            COMMAND gcovr --root ${CMAKE_SOURCE_DIR} --add-tracefile \"${CMAKE_CURRENT_BINARY_DIR}/**/${COV_OUT_JSON}\" --json --output ${COV_OUT_VARIANT_JSON}
+            DEPENDS ${GLOBAL_COMPONENTS_COVERAGE_JSON_LIST}
+            COMMENT "Generating variant-level merged coverage JSON ${COV_OUT_VARIANT_JSON} ..."
+        )
+
+        # Generate variant-level merged JUnit XML
+        add_custom_command(
+            OUTPUT ${JUNIT_OUT_VARIANT_XML}
+            COMMAND junit_merger --output ${JUNIT_OUT_VARIANT_XML} --inputs ${GLOBAL_COMPONENTS_JUNIT_XML_LIST}
+            DEPENDS ${GLOBAL_COMPONENTS_JUNIT_XML_LIST}
+            COMMENT "Generating variant-level merged JUnit XML ${JUNIT_OUT_VARIANT_XML} ..."
+        )
+
+        # Generate variant-level HTML coverage report
         add_custom_command(
             OUTPUT ${COV_OUT_VARIANT_HTML}
             COMMAND gcovr --root ${CMAKE_SOURCE_DIR} --add-tracefile \"${CMAKE_CURRENT_BINARY_DIR}/**/${COV_OUT_JSON}\" --html --html-details --output ${COV_OUT_VARIANT_HTML}
             DEPENDS ${GLOBAL_COMPONENTS_COVERAGE_JSON_LIST}
             COMMENT "Generating overall code coverage report ${COV_OUT_VARIANT_HTML} ..."
         )
+
         add_custom_target(
             unittests
-            DEPENDS coverage ${COV_OUT_VARIANT_HTML}
+            DEPENDS coverage ${COV_OUT_VARIANT_HTML} ${COV_OUT_VARIANT_JSON} ${JUNIT_OUT_VARIANT_XML}
         )
         add_custom_target(
             coverage_overall_report
@@ -718,6 +739,7 @@ macro(_spl_add_test_suite COMPONENT_NAME PROD_SRC TEST_SOURCES)
         DEPENDS ${exe_name}
     )
 
+    set(GLOBAL_COMPONENTS_JUNIT_XML_LIST "${GLOBAL_COMPONENTS_JUNIT_XML_LIST};${CMAKE_CURRENT_BINARY_DIR}/${TEST_OUT_JUNIT}" CACHE INTERNAL "List of all ${TEST_OUT_JUNIT} files")
     set(GLOBAL_COMPONENTS_COVERAGE_JSON_LIST "${GLOBAL_COMPONENTS_COVERAGE_JSON_LIST};${CMAKE_CURRENT_BINARY_DIR}/${COV_OUT_JSON}" CACHE INTERNAL "List of all ${COV_OUT_JSON} files")
 
     # Create coverage results (coverage.json)
