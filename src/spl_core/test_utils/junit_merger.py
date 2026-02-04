@@ -68,6 +68,12 @@ class JUnitMerger:
 
                 # Add all test suites from this file to the merged result
                 for suite in xml:
+                    # Make testsuite name unique by using parent directory if name is empty or generic
+                    if not suite.name or suite.name == "(empty)":
+                        parent_name = input_file.parent.name
+                        if not parent_name:
+                            raise JUnitMergerError(f"Cannot determine unique testsuite name for '{input_path}': testsuite name is empty and parent directory is root")
+                        suite.name = parent_name
                     merged_xml.add_testsuite(suite)
 
             except Exception as e:

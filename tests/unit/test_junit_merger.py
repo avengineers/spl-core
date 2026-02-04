@@ -79,6 +79,59 @@ def malformed_xml_file(temp_dir):
     return xml_path
 
 
+@pytest.fixture
+def single_testsuite_xml_file(temp_dir):
+    """Create JUnit XML file with single testsuite structure (like GoogleTest generates)"""
+    # Create component subdirectory to match production structure
+    component_dir = temp_dir / "component1"
+    component_dir.mkdir()
+    xml_path = component_dir / "junit.xml"
+
+    # Write XML manually to match GoogleTest output structure: single <testsuite> without <testsuites> wrapper
+    xml_content = """<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)" tests="3" failures="0" disabled="0" skipped="0" hostname="" time="0" timestamp="2026-02-04T09:37:47">
+    <testcase name="test_case_1" classname="component1.test_case_1" time="0.001" status="run">
+        <properties/>
+        <system-out>Test output 1</system-out>
+    </testcase>
+    <testcase name="test_case_2" classname="component1.test_case_2" time="0.002" status="run">
+        <properties/>
+        <system-out>Test output 2</system-out>
+    </testcase>
+    <testcase name="test_case_3" classname="component1.test_case_3" time="0.003" status="run">
+        <properties/>
+        <system-out>Test output 3</system-out>
+    </testcase>
+</testsuite>
+"""
+    xml_path.write_text(xml_content)
+    return xml_path
+
+
+@pytest.fixture
+def another_single_testsuite_xml_file(temp_dir):
+    """Create another JUnit XML file with single testsuite structure"""
+    # Create component subdirectory to match production structure
+    component_dir = temp_dir / "component2"
+    component_dir.mkdir()
+    xml_path = component_dir / "junit.xml"
+
+    xml_content = """<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)" tests="2" failures="0" disabled="0" skipped="0" hostname="" time="0" timestamp="2026-02-04T09:37:48">
+    <testcase name="test_foo" classname="component2.test_foo" time="0.001" status="run">
+        <properties/>
+        <system-out>Foo test output</system-out>
+    </testcase>
+    <testcase name="test_bar" classname="component2.test_bar" time="0.002" status="run">
+        <properties/>
+        <system-out>Bar test output</system-out>
+    </testcase>
+</testsuite>
+"""
+    xml_path.write_text(xml_content)
+    return xml_path
+
+
 def test_merge_junit_files_success(temp_dir, sample_junit_xml_1, sample_junit_xml_2):
     """Test successful merge of multiple JUnit XML files"""
     # Arrange
@@ -248,3 +301,57 @@ def test_merge_validates_output(temp_dir, sample_junit_xml_1, sample_junit_xml_2
     # Assert
     merged_xml = JUnitXml.fromfile(str(output_path))
     assert len(list(merged_xml)) > 0
+
+
+def test_merge_single_testsuite_files(temp_dir, single_testsuite_xml_file, another_single_testsuite_xml_file):
+    """Test merging files with single testsuite structure (GoogleTest format)"""
+    # Arrange
+    output_path = temp_dir / "variant-junit.xml"
+    input_files = [str(single_testsuite_xml_file), str(another_single_testsuite_xml_file)]
+    merger = JUnitMerger(input_files, str(output_path))
+
+    # Act
+    merger.merge()
+
+    # Assert
+    assert output_path.exists()
+    merged_xml = JUnitXml.fromfile(str(output_path))
+
+    # Should have 2 test suites
+    suites = list(merged_xml)
+    assert len(suites) == 2
+
+    # Verify suite names (should use parent directory names since original names are empty)
+    suite_names = [suite.name for suite in suites]
+    assert "component1" in suite_names
+    assert "component2" in suite_names
+
+    # Verify test counts
+    suite1 = next(s for s in suites if s.name == "component1")
+    suite2 = next(s for s in suites if s.name == "component2")
+    assert len(list(suite1)) == 3  # 3 testcases
+    assert len(list(suite2)) == 2  # 2 testcases
+
+
+def test_merge_mixed_testsuite_formats(temp_dir, sample_junit_xml_1, single_testsuite_xml_file):
+    """Test merging files with both multi-testsuite and single-testsuite formats"""
+    # Arrange
+    output_path = temp_dir / "variant-junit.xml"
+    input_files = [str(sample_junit_xml_1), str(single_testsuite_xml_file)]
+    merger = JUnitMerger(input_files, str(output_path))
+
+    # Act
+    merger.merge()
+
+    # Assert
+    assert output_path.exists()
+    merged_xml = JUnitXml.fromfile(str(output_path))
+
+    # Should have 2 test suites (one from each file)
+    suites = list(merged_xml)
+    assert len(suites) == 2
+
+    # Verify both suite names are present
+    suite_names = [suite.name for suite in suites]
+    assert "Component1TestSuite" in suite_names  # from multi-testsuite file
+    assert "component1" in suite_names  # from single-testsuite file (using parent directory)
