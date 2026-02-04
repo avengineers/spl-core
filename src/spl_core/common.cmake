@@ -609,6 +609,9 @@ function(_spl_coverage_create_overall_report)
         set(COV_OUT_VARIANT_JSON variant-coverage.json)
         set(JUNIT_OUT_VARIANT_XML variant-junit.xml)
 
+        # Sanitize variant name for use in test suite names (replace / with _)
+        _spl_slash_to_underscore(VARIANT_SANITIZED ${VARIANT})
+
         # Generate variant-level merged coverage JSON
         add_custom_command(
             OUTPUT ${COV_OUT_VARIANT_JSON}
@@ -620,7 +623,7 @@ function(_spl_coverage_create_overall_report)
         # Generate variant-level merged JUnit XML
         add_custom_command(
             OUTPUT ${JUNIT_OUT_VARIANT_XML}
-            COMMAND junit_merger --output ${JUNIT_OUT_VARIANT_XML} --inputs ${GLOBAL_COMPONENTS_JUNIT_XML_LIST}
+            COMMAND junit_merger --output ${JUNIT_OUT_VARIANT_XML} --variant ${VARIANT_SANITIZED} --inputs ${GLOBAL_COMPONENTS_JUNIT_XML_LIST}
             DEPENDS ${GLOBAL_COMPONENTS_JUNIT_XML_LIST}
             COMMENT "Generating variant-level merged JUnit XML ${JUNIT_OUT_VARIANT_XML} ..."
         )
@@ -739,8 +742,13 @@ macro(_spl_add_test_suite COMPONENT_NAME PROD_SRC TEST_SOURCES)
         DEPENDS ${exe_name}
     )
 
-    set(GLOBAL_COMPONENTS_JUNIT_XML_LIST "${GLOBAL_COMPONENTS_JUNIT_XML_LIST};${CMAKE_CURRENT_BINARY_DIR}/${TEST_OUT_JUNIT}" CACHE INTERNAL "List of all ${TEST_OUT_JUNIT} files")
-    set(GLOBAL_COMPONENTS_COVERAGE_JSON_LIST "${GLOBAL_COMPONENTS_COVERAGE_JSON_LIST};${CMAKE_CURRENT_BINARY_DIR}/${COV_OUT_JSON}" CACHE INTERNAL "List of all ${COV_OUT_JSON} files")
+    # Collect the generated junit.xml files for the overall report generation
+    list(APPEND GLOBAL_COMPONENTS_JUNIT_XML_LIST "${CMAKE_CURRENT_BINARY_DIR}/${TEST_OUT_JUNIT}")
+    set(GLOBAL_COMPONENTS_JUNIT_XML_LIST "${GLOBAL_COMPONENTS_JUNIT_XML_LIST}" PARENT_SCOPE)
+
+    # Collect the generated coverage.json files for the overall report generation
+    list(APPEND GLOBAL_COMPONENTS_COVERAGE_JSON_LIST "${CMAKE_CURRENT_BINARY_DIR}/${COV_OUT_JSON}")
+    set(GLOBAL_COMPONENTS_COVERAGE_JSON_LIST "${GLOBAL_COMPONENTS_COVERAGE_JSON_LIST}" PARENT_SCOPE)
 
     # Create coverage results (coverage.json)
     add_custom_command(

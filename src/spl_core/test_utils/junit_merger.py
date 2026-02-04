@@ -8,7 +8,7 @@ This enables CI/CD tooling to consume aggregated test results from all component
 import argparse
 import sys
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from junitparser import JUnitXml
 
@@ -27,13 +27,14 @@ class JUnitMerger:
     components into a unified JUnit XML file for CI/CD tooling.
     """
 
-    def __init__(self, input_files: List[str], output_file: str):
+    def __init__(self, input_files: List[str], output_file: str, variant: Optional[str] = None):
         """
         Initialize the JUnit merger.
 
         Args:
             input_files: List of paths to input JUnit XML files
             output_file: Path to output merged JUnit XML file
+            variant: Optional variant name to prefix test suite names (e.g., "my_variant")
 
         Raises:
             ValueError: If input_files list is empty
@@ -43,6 +44,7 @@ class JUnitMerger:
 
         self.input_files = input_files
         self.output_file = output_file
+        self.variant = variant
 
     def merge(self) -> None:
         """
@@ -74,6 +76,11 @@ class JUnitMerger:
                         if not parent_name:
                             raise JUnitMergerError(f"Cannot determine unique testsuite name for '{input_path}': testsuite name is empty and parent directory is root")
                         suite.name = parent_name
+
+                    # Prefix suite name with variant if provided
+                    if self.variant:
+                        suite.name = f"{self.variant}.{suite.name}"
+
                     merged_xml.add_testsuite(suite)
 
             except Exception as e:
@@ -110,11 +117,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Merge multiple JUnit XML files into a single variant-level file")
     parser.add_argument("--output", required=True, help="Path to output merged JUnit XML file")
     parser.add_argument("--inputs", nargs="+", required=True, help="Paths to input JUnit XML files to merge")
+    parser.add_argument("--variant", help="Optional variant name to prefix test suite names")
 
     args = parser.parse_args()
 
     try:
-        merger = JUnitMerger(args.inputs, args.output)
+        merger = JUnitMerger(args.inputs, args.output, variant=args.variant)
         merger.merge()
         print(f"Successfully merged {len(args.inputs)} JUnit XML file(s) into {args.output}")
         return 0

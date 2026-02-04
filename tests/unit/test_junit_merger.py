@@ -355,3 +355,109 @@ def test_merge_mixed_testsuite_formats(temp_dir, sample_junit_xml_1, single_test
     suite_names = [suite.name for suite in suites]
     assert "Component1TestSuite" in suite_names  # from multi-testsuite file
     assert "component1" in suite_names  # from single-testsuite file (using parent directory)
+
+
+def test_merge_with_variant_name(temp_dir, sample_junit_xml_1, sample_junit_xml_2):
+    """Test merge with variant name prefixes all suite names"""
+    # Arrange
+    output_path = temp_dir / "variant-junit.xml"
+    input_files = [str(sample_junit_xml_1), str(sample_junit_xml_2)]
+    variant_name = "my_variant"
+    merger = JUnitMerger(input_files, str(output_path), variant=variant_name)
+
+    # Act
+    merger.merge()
+
+    # Assert
+    assert output_path.exists()
+    merged_xml = JUnitXml.fromfile(str(output_path))
+
+    # All suite names should be prefixed with variant
+    suite_names = [suite.name for suite in merged_xml]
+    assert "my_variant.Component1TestSuite" in suite_names
+    assert "my_variant.Component2TestSuite" in suite_names
+    assert len(suite_names) == 2
+
+
+def test_merge_with_variant_name_with_underscores(temp_dir, sample_junit_xml_1):
+    """Test merge with variant name that has underscores (pre-sanitized)"""
+    # Arrange
+    output_path = temp_dir / "variant-junit.xml"
+    input_files = [str(sample_junit_xml_1)]
+    variant_name = "my_complex_variant"
+    merger = JUnitMerger(input_files, str(output_path), variant=variant_name)
+
+    # Act
+    merger.merge()
+
+    # Assert
+    assert output_path.exists()
+    merged_xml = JUnitXml.fromfile(str(output_path))
+
+    suite = next(iter(merged_xml))
+    assert suite.name == "my_complex_variant.Component1TestSuite"
+
+
+def test_merge_without_variant_backward_compatibility(temp_dir, sample_junit_xml_1, sample_junit_xml_2):
+    """Test that merge without variant argument works as before (backward compatibility)"""
+    # Arrange
+    output_path = temp_dir / "variant-junit.xml"
+    input_files = [str(sample_junit_xml_1), str(sample_junit_xml_2)]
+    merger = JUnitMerger(input_files, str(output_path))  # No variant argument
+
+    # Act
+    merger.merge()
+
+    # Assert
+    assert output_path.exists()
+    merged_xml = JUnitXml.fromfile(str(output_path))
+
+    # Suite names should NOT be prefixed
+    suite_names = [suite.name for suite in merged_xml]
+    assert "Component1TestSuite" in suite_names
+    assert "Component2TestSuite" in suite_names
+    assert len(suite_names) == 2
+
+
+def test_merge_with_variant_and_empty_suite_names(temp_dir, single_testsuite_xml_file, another_single_testsuite_xml_file):
+    """Test merge with variant when suite names are empty (should use parent dir + variant prefix)"""
+    # Arrange
+    output_path = temp_dir / "variant-junit.xml"
+    input_files = [str(single_testsuite_xml_file), str(another_single_testsuite_xml_file)]
+    variant_name = "production"
+    merger = JUnitMerger(input_files, str(output_path), variant=variant_name)
+
+    # Act
+    merger.merge()
+
+    # Assert
+    assert output_path.exists()
+    merged_xml = JUnitXml.fromfile(str(output_path))
+
+    # Suite names should be variant.component_name
+    suite_names = [suite.name for suite in merged_xml]
+    assert "production.component1" in suite_names
+    assert "production.component2" in suite_names
+    assert len(suite_names) == 2
+
+
+def test_main_cli_with_variant_argument(temp_dir, sample_junit_xml_1, sample_junit_xml_2, monkeypatch):
+    """Test CLI interface with variant argument"""
+    # Arrange
+    output_path = temp_dir / "variant-junit.xml"
+    variant_name = "test_variant"
+    test_args = ["junit_merger.py", "--output", str(output_path), "--variant", variant_name, "--inputs", str(sample_junit_xml_1), str(sample_junit_xml_2)]
+    monkeypatch.setattr("sys.argv", test_args)
+
+    # Act
+    exit_code = main()
+
+    # Assert
+    assert exit_code == 0
+    assert output_path.exists()
+
+    # Verify variant was applied
+    merged_xml = JUnitXml.fromfile(str(output_path))
+    suite_names = [suite.name for suite in merged_xml]
+    assert "test_variant.Component1TestSuite" in suite_names
+    assert "test_variant.Component2TestSuite" in suite_names
