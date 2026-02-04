@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.15.0-rc.2 (2026-02-04)
+
+### Bug Fixes
+
+- Enhance JUnitMerger to handle unique testsuite names
+  ([`131e6b4`](https://github.com/avengineers/spl-core/commit/131e6b490691bdca3a9fc4c3f235f83acdbda9b2))
+
+
 ## v7.15.0-rc.1 (2026-02-03)
 
 ### Features
