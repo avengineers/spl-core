@@ -517,3 +517,99 @@ def test_merge_removes_properties_and_system_out(temp_dir):
     assert passing_test is not None
     assert passing_test.classname == "Tests.test_pass"
     assert passing_test.time == 0.001
+
+
+def test_variant_prefixes_testcase_classnames(temp_dir, sample_junit_xml_1, sample_junit_xml_2):
+    """Test that variant name prefixes both suite names and testcase classnames"""
+    # Arrange
+    output_path = temp_dir / "variant-junit.xml"
+    input_files = [str(sample_junit_xml_1), str(sample_junit_xml_2)]
+    variant_name = "MyVariant"
+    merger = JUnitMerger(input_files, str(output_path), variant=variant_name)
+
+    # Act
+    merger.merge()
+
+    # Assert
+    assert output_path.exists()
+    merged_xml = JUnitXml.fromfile(str(output_path))
+
+    # All suite names should be prefixed with variant
+    suite_names = [suite.name for suite in merged_xml]
+    assert "MyVariant.Component1TestSuite" in suite_names
+    assert "MyVariant.Component2TestSuite" in suite_names
+
+    # All testcase classnames should also be prefixed with variant
+    for suite in merged_xml:
+        for testcase in suite:
+            assert testcase.classname.startswith("MyVariant."), f"Classname '{testcase.classname}' should start with variant prefix 'MyVariant.'"
+
+    # Verify specific classnames from the test fixtures
+    suite1 = next((s for s in merged_xml if s.name == "MyVariant.Component1TestSuite"), None)
+    assert suite1 is not None
+    testcases1 = list(suite1)
+    assert any(tc.classname == "MyVariant.MathTests" for tc in testcases1), "Should have 'MyVariant.MathTests' classname"
+
+    suite2 = next((s for s in merged_xml if s.name == "MyVariant.Component2TestSuite"), None)
+    assert suite2 is not None
+    testcases2 = list(suite2)
+    assert any(tc.classname == "MyVariant.AdvancedMathTests" for tc in testcases2), "Should have 'MyVariant.AdvancedMathTests' classname"
+
+
+def test_variant_with_empty_classnames(temp_dir):
+    """Test that variant prefixing handles testcases with None or empty classnames gracefully"""
+    # Arrange
+    xml_path = temp_dir / "test_empty_classname.xml"
+
+    suite = TestSuite("TestSuite")
+
+    # Test case with normal classname
+    test1 = TestCase("test_with_classname")
+    test1.classname = "NormalClass"
+    suite.add_testcase(test1)
+
+    # Test case with None classname
+    test2 = TestCase("test_without_classname")
+    test2.classname = None
+    suite.add_testcase(test2)
+
+    # Test case with empty string classname
+    test3 = TestCase("test_with_empty_classname")
+    test3.classname = ""
+    suite.add_testcase(test3)
+
+    xml = JUnitXml()
+    xml.add_testsuite(suite)
+    xml.write(str(xml_path))
+
+    output_path = temp_dir / "output.xml"
+    variant_name = "MyVariant"
+    merger = JUnitMerger([str(xml_path)], str(output_path), variant=variant_name)
+
+    # Act
+    merger.merge()
+
+    # Assert
+    assert output_path.exists()
+    merged_xml = JUnitXml.fromfile(str(output_path))
+
+    suite = next(iter(merged_xml))
+    assert suite.name == "MyVariant.TestSuite"
+
+    testcases = list(suite)
+    assert len(testcases) == 3
+
+    # Test case with normal classname should be prefixed
+    tc1 = next((tc for tc in testcases if tc.name == "test_with_classname"), None)
+    assert tc1 is not None
+    assert tc1.classname == "MyVariant.NormalClass"
+
+    # Test case with None classname should remain None (not prefixed)
+    tc2 = next((tc for tc in testcases if tc.name == "test_without_classname"), None)
+    assert tc2 is not None
+    assert tc2.classname is None
+
+    # Test case with empty classname should remain empty (not prefixed)
+    tc3 = next((tc for tc in testcases if tc.name == "test_with_empty_classname"), None)
+    assert tc3 is not None
+    assert tc3.classname == ""

@@ -83,6 +83,10 @@ class JUnitMerger:
 
                     # Remove verbose output blocks from all testcases
                     for testcase in suite:
+                        # Prefix classname with variant if provided
+                        if self.variant and testcase.classname:
+                            testcase.classname = f"{self.variant}.{testcase.classname}"
+
                         # Remove system-out and properties, but preserve system-err and result elements
                         testcase.system_out = None
                         # Clear properties by setting to empty list
