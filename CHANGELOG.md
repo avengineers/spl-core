@@ -1,6 +1,22 @@
 # CHANGELOG
 
 
+## v7.15.0-rc.3 (2026-02-05)
+
+### Bug Fixes
+
+- Add variant-level output files for reports target
+  ([`459c4c0`](https://github.com/avengineers/spl-core/commit/459c4c0a473d0ccae91f4de54c4fcd2f0b44329d))
+
+- Enhance JUnitMerger to remove verbose output from test cases
+  ([`545dd47`](https://github.com/avengineers/spl-core/commit/545dd47d6e4dd159c1a4037503f57949aa9a445a))
+
+### Features
+
+- Add variant name support for JUnit XML merging
+  ([`a3cbc90`](https://github.com/avengineers/spl-core/commit/a3cbc90baa898f9d77a9f5d0a8aa326e1431c7c2))
+
+
 ## v7.15.0-rc.2 (2026-02-04)
 
 ### Bug Fixes
