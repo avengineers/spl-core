@@ -81,6 +81,16 @@ class JUnitMerger:
                     if self.variant:
                         suite.name = f"{self.variant}.{suite.name}"
 
+                    # Remove verbose output blocks from all testcases
+                    for testcase in suite:
+                        # Remove system-out and properties, but preserve system-err and result elements
+                        testcase.system_out = None
+                        # Clear properties by setting to empty list
+                        if hasattr(testcase, "_elem") and testcase._elem is not None:
+                            properties_elem = testcase._elem.find("properties")
+                            if properties_elem is not None:
+                                testcase._elem.remove(properties_elem)
+
                     merged_xml.add_testsuite(suite)
 
             except Exception as e:

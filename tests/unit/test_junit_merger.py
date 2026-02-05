@@ -91,16 +91,10 @@ def single_testsuite_xml_file(temp_dir):
     xml_content = """<?xml version="1.0" encoding="UTF-8"?>
 <testsuite name="(empty)" tests="3" failures="0" disabled="0" skipped="0" hostname="" time="0" timestamp="2026-02-04T09:37:47">
     <testcase name="test_case_1" classname="component1.test_case_1" time="0.001" status="run">
-        <properties/>
-        <system-out>Test output 1</system-out>
     </testcase>
     <testcase name="test_case_2" classname="component1.test_case_2" time="0.002" status="run">
-        <properties/>
-        <system-out>Test output 2</system-out>
     </testcase>
     <testcase name="test_case_3" classname="component1.test_case_3" time="0.003" status="run">
-        <properties/>
-        <system-out>Test output 3</system-out>
     </testcase>
 </testsuite>
 """
@@ -119,12 +113,8 @@ def another_single_testsuite_xml_file(temp_dir):
     xml_content = """<?xml version="1.0" encoding="UTF-8"?>
 <testsuite name="(empty)" tests="2" failures="0" disabled="0" skipped="0" hostname="" time="0" timestamp="2026-02-04T09:37:48">
     <testcase name="test_foo" classname="component2.test_foo" time="0.001" status="run">
-        <properties/>
-        <system-out>Foo test output</system-out>
     </testcase>
     <testcase name="test_bar" classname="component2.test_bar" time="0.002" status="run">
-        <properties/>
-        <system-out>Bar test output</system-out>
     </testcase>
 </testsuite>
 """
@@ -461,3 +451,69 @@ def test_main_cli_with_variant_argument(temp_dir, sample_junit_xml_1, sample_jun
     suite_names = [suite.name for suite in merged_xml]
     assert "test_variant.Component1TestSuite" in suite_names
     assert "test_variant.Component2TestSuite" in suite_names
+
+
+def test_merge_removes_properties_and_system_out(temp_dir):
+    """Test that merge removes <properties> and <system-out> from testcases while preserving test results"""
+    # Arrange - Create input file with verbose blocks
+    component_dir = temp_dir / "test_component"
+    component_dir.mkdir()
+    input_file = component_dir / "junit.xml"
+
+    xml_content = """<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="TestSuite" tests="2" failures="1" disabled="0" skipped="0">
+    <testcase name="test_pass" classname="Tests.test_pass" time="0.001" status="run">
+        <properties>
+            <property name="key" value="value"/>
+        </properties>
+        <system-out>Verbose output from passing test</system-out>
+    </testcase>
+    <testcase name="test_fail" classname="Tests.test_fail" time="0.002" status="run">
+        <properties/>
+        <system-out>Verbose output from failing test</system-out>
+        <system-err>Some error output that should be preserved</system-err>
+        <failure message="Test failed" type="AssertionError">Stack trace here</failure>
+    </testcase>
+</testsuite>
+"""
+    input_file.write_text(xml_content)
+
+    output_path = temp_dir / "merged-junit.xml"
+    merger = JUnitMerger([str(input_file)], str(output_path))
+
+    # Act
+    merger.merge()
+
+    # Assert - Verify output exists and is valid
+    assert output_path.exists()
+    merged_xml = JUnitXml.fromfile(str(output_path))
+
+    # Get the test suite and testcases
+    suite = next(iter(merged_xml))
+    testcases = list(suite)
+    assert len(testcases) == 2
+
+    # Check that properties and system-out are removed
+    for testcase in testcases:
+        # Verify system_out is None or empty
+        assert testcase.system_out is None or testcase.system_out == ""
+
+        # Verify properties element is not present in the XML
+        if hasattr(testcase, "_elem") and testcase._elem is not None:
+            properties_elem = testcase._elem.find("properties")
+            assert properties_elem is None, "Properties element should be removed"
+
+            # Verify system-out element is not present
+            system_out_elem = testcase._elem.find("system-out")
+            assert system_out_elem is None or (system_out_elem.text is None or system_out_elem.text.strip() == ""), "System-out element should be removed or empty"
+
+    # Verify that critical test result elements are preserved
+    failing_test = next((tc for tc in testcases if tc.name == "test_fail"), None)
+    assert failing_test is not None
+    assert failing_test.result is not None, "Failure information should be preserved"
+
+    # Verify essential attributes are preserved
+    passing_test = next((tc for tc in testcases if tc.name == "test_pass"), None)
+    assert passing_test is not None
+    assert passing_test.classname == "Tests.test_pass"
+    assert passing_test.time == 0.001
