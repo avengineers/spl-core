@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.15.0-rc.4 (2026-02-05)
+
+### Bug Fixes
+
+- Add variant prefixing for testcase classnames in JUnit XML merging
+  ([`1409a25`](https://github.com/avengineers/spl-core/commit/1409a25938a82a24bc96d0f31312ac293a448b02))
+
+
 ## v7.15.0-rc.3 (2026-02-05)
 
 ### Bug Fixes
