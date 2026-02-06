@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.15.0 (2026-02-06)
+
+### Features
+
+- Update VSCode extensions recommendations
+  ([`c8e06c0`](https://github.com/avengineers/spl-core/commit/c8e06c07e5eaee8d441e3c439fb5e92d4f859bce))
+
+
 ## v7.14.0 (2026-01-26)
 
 ### Features
