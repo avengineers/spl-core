@@ -620,7 +620,7 @@ function(_spl_coverage_create_overall_report)
         # Generate variant-level merged coverage JSON
         add_custom_command(
             OUTPUT ${COV_OUT_VARIANT_JSON}
-            COMMAND gcovr --root ${CMAKE_SOURCE_DIR} --add-tracefile \"${CMAKE_CURRENT_BINARY_DIR}/**/${COV_OUT_JSON}\" --json --output ${COV_OUT_VARIANT_JSON}
+            COMMAND gcovr --root ${CMAKE_SOURCE_DIR} --add-tracefile \"${CMAKE_CURRENT_BINARY_DIR}/**/${COV_OUT_JSON}\" --json-summary-pretty --output ${COV_OUT_VARIANT_JSON}
             DEPENDS ${GLOBAL_COMPONENTS_COVERAGE_JSON_LIST}
             COMMENT "Generating variant-level merged coverage JSON ${COV_OUT_VARIANT_JSON} ..."
         )
