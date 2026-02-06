@@ -1,6 +1,17 @@
 # CHANGELOG
 
 
+## v7.15.0-rc.5 (2026-02-06)
+
+### Bug Fixes
+
+- Update gcovr command to include json-summary-pretty
+  ([`5650772`](https://github.com/avengineers/spl-core/commit/5650772a385716a5f18a37b1d655c8c06393ca1f))
+
+- Update gcovr version to 8.6
+  ([`7a98f41`](https://github.com/avengineers/spl-core/commit/7a98f413c8bc790452243366e0d8d9cd7f7b53b4))
+
+
 ## v7.15.0-rc.4 (2026-02-05)
 
 ### Bug Fixes
