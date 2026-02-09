@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.15.1-rc.1 (2026-02-09)
+
+### Bug Fixes
+
+- Update sphinx-needs
+  ([`4f6881a`](https://github.com/avengineers/spl-core/commit/4f6881a9dbb11bd3d29117d46c45e4e3c7f77d11))
+
+
 ## v7.15.0 (2026-02-06)
 
 ### Features
