@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.15.1-rc.2 (2026-02-10)
+
+### Bug Fixes
+
+- Fix linking between test case and specification
+  ([`4976570`](https://github.com/avengineers/spl-core/commit/4976570ff05fcc6b9005e53dec05fb7c05379823))
+
+
 ## v7.15.1-rc.1 (2026-02-09)
 
 ### Bug Fixes
