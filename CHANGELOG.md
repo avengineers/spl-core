@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.16.0 (2026-02-10)
+
+### Features
+
+- Implement variant-level merged test results generation
+  ([`64df00b`](https://github.com/avengineers/spl-core/commit/64df00b5020845cec842f5b73584b75e74729807))
+
+
 ## v7.15.0 (2026-02-06)
 
 ### Features
