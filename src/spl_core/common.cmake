@@ -363,6 +363,7 @@ Unit Test Results
 .. test-report:: Unit Test Results
     :id: TEST_RESULT_${component_name}
     :file: ${_component_test_junit_xml}
+    :link: [[tr_link('title', 'case')]]
 
 ")
 
