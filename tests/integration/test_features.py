@@ -35,6 +35,19 @@ class TestSplFeatures(SplProjectIntegrationTestBase):
         else:
             raise AssertionError("No test case found in junit.xml")
 
+        "Expected variant-level merged files shall exist"
+        variant_coverage_json = build_dir.joinpath("variant-coverage.json")
+        assert variant_coverage_json.exists(), "variant-coverage.json should be generated"
+        variant_junit_xml = build_dir.joinpath("variant-junit.xml")
+        assert variant_junit_xml.exists(), "variant-junit.xml should be generated"
+
+        "Verify variant-level JUnit XML contains merged test results"
+        variant_testsuite_root = ET.parse(variant_junit_xml).getroot()  # noqa: S314
+        # The variant XML should contain testsuites from all components
+        testsuites = variant_testsuite_root.findall("testsuite") if variant_testsuite_root.tag == "testsuites" else [variant_testsuite_root]
+        total_tests = sum(int(ts.attrib.get("tests", 0)) for ts in testsuites)
+        assert total_tests >= 2, "Variant-level JUnit XML should contain at least the component tests"
+
         "Simulate a gcno leftover from a previous build"
         gcno_file = build_dir.joinpath("src/component/CMakeFiles/src_component.dir/src/source_does_not_exist.c.gcno")
         gcno_file.touch()
