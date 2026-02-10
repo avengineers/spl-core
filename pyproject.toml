@@ -18,6 +18,7 @@ packages = [{ include = "spl_core", from = "src" }]
 
 [tool.poetry.scripts]
 please = "spl_core.main:main"
+junit_merger = "spl_core.test_utils.junit_merger:main"
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/avengineers/spl-core/issues"
@@ -27,7 +28,7 @@ please = "spl_core.main:main"
 python = ">=3.10,<3.12"
 py-app-dev = "^2.1"
 cookiecutter = "==2.6.0"
-gcovr = "^8.3"
+gcovr = "^8.6"
 hammocking = ">=0.8,<0.10"
 kconfiglib = "^14.1"
 typer = "^0"
@@ -49,6 +50,7 @@ sphinx-design = ">=0.5,<0.7"
 pypeline-semantic-release = ">=0.4.1,<=0.5.0"
 pypeline-runner = ">=1,<=2"
 py7zr = "^1.0.0"
+junitparser = "*"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=7,<9"
@@ -57,7 +59,6 @@ pre-commit = "^3.1.1"
 ruff = ">=0.5,<0.13"
 jinja2 = "*"
 testfixtures = "*"
-junitparser = "*"
 mashumaro = "*"
 loguru = "*"
 flake8 = "*"
