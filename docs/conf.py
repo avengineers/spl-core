@@ -13,9 +13,9 @@ sys.path.insert(0, sources_path.as_posix())
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "SPL Core"
-copyright = "2024, RMT"
+copyright = "2026, RMT"
 author = "RMT"
-release = "7.13.0"
+release = "7.16.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -55,10 +55,15 @@ extensions.append("sphinx_needs")
 extensions.append("sphinx_copybutton")
 
 # The suffix of source filenames.
-source_suffix = [
-    ".rst",
-    ".md",
-]
+# Keep Markdown as the primary source, but allow reStructuredText so
+# autosummary-generated .rst stubs are processed correctly.
+source_suffix = {
+    ".md": "markdown",
+    ".rst": "restructuredtext",
+}
+
+# Ensure autosummary generates API stubs
+autosummary_generate = True
 
 templates_path = ["_templates"]
 exclude_patterns = ["build", "Thumbs.db", ".DS_Store"]
