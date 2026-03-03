@@ -1,6 +1,30 @@
 # CHANGELOG
 
 
+## v7.16.0 (2026-02-10)
+
+### Features
+
+- Implement variant-level merged test results generation
+  ([`64df00b`](https://github.com/avengineers/spl-core/commit/64df00b5020845cec842f5b73584b75e74729807))
+
+
+## v7.15.0 (2026-02-06)
+
+### Features
+
+- Update VSCode extensions recommendations
+  ([`c8e06c0`](https://github.com/avengineers/spl-core/commit/c8e06c07e5eaee8d441e3c439fb5e92d4f859bce))
+
+
+## v7.14.0 (2026-01-26)
+
+### Features
+
+- Add artifacts.json metadata support to ArtifactsArchiver
+  ([`4b1c3a9`](https://github.com/avengineers/spl-core/commit/4b1c3a9de229c8f45813a6ea4b49c3275f7508dc))
+
+
 ## v7.13.0 (2025-11-13)
 
 ### Features
