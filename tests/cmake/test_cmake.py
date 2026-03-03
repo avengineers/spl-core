@@ -1,5 +1,7 @@
+import os
 import subprocess
 from pathlib import Path
+from typing import Optional
 
 from tests.utils import TestDir, create_clean_test_dir
 
@@ -12,7 +14,7 @@ class TestCmake:
         # create a new test workspace
         cls.test_workspace = create_clean_test_dir("test_cmake")
 
-    def run_cmake_unit_test(self, unit_test: str) -> int:
+    def run_cmake_unit_test(self, unit_test: str, extra_args: str = "", env: Optional[dict[str, str]] = None) -> int:
         """
         CMake unit test runner
 
@@ -20,15 +22,21 @@ class TestCmake:
         ----
             unit_test (str): a sub directory in tests containing a CMakeLists.txt
             with unit tests inside.
+            extra_args (str): optional extra arguments to pass to the cmake command.
+            env (dict): optional dictionary of environment variables to set for the cmake process.
 
         Returns:
         -------
             int: exit (return) code of the cmake command
 
         """
-        unit_test_command = f"cmake -S tests\\cmake\\{unit_test} -B {self.test_workspace}\\{unit_test} -G Ninja --log-level=DEBUG"
+        unit_test_command = f"cmake -S tests\\cmake\\{unit_test} -B {self.test_workspace}\\{unit_test} -G Ninja --log-level=DEBUG {extra_args}"
         print(f"Execute: {unit_test_command}")
-        return subprocess.run(unit_test_command).returncode
+        run_env = None
+        if env:
+            run_env = os.environ.copy()
+            run_env.update(env)
+        return subprocess.run(unit_test_command, env=run_env).returncode
 
     def test_cmake_common_cmake(self):
         assert 0 == self.run_cmake_unit_test("common.cmake")
@@ -94,3 +102,16 @@ class TestCmake:
 
     def test_cmake_multi_binary(self):
         assert 0 == self.run_cmake_unit_test("multi_binary")
+
+    def test_cmake_doxysphinx_extra_args_sequential_when_option_on(self):
+        # When SPL_DOXYSPHINX_SEQUENTIAL=ON, SPL_DOXYSPHINX_EXTRA_ARGS should be "--sequential".
+        assert 0 == self.run_cmake_unit_test("doxysphinx_sequential", "-DSPL_DOXYSPHINX_SEQUENTIAL=ON")
+
+    def test_cmake_doxysphinx_extra_args_empty_when_option_off(self):
+        # When SPL_DOXYSPHINX_SEQUENTIAL=OFF explicitly, SPL_DOXYSPHINX_EXTRA_ARGS should be empty.
+        assert 0 == self.run_cmake_unit_test("doxysphinx_sequential_off", "-DSPL_DOXYSPHINX_SEQUENTIAL=OFF")
+
+    def test_cmake_doxysphinx_extra_args_sequential_via_env_var(self):
+        # When the SPL_DOXYSPHINX_SEQUENTIAL environment variable is set to ON,
+        # SPL_DOXYSPHINX_EXTRA_ARGS should be "--sequential" without any -D flag.
+        assert 0 == self.run_cmake_unit_test("doxysphinx_sequential_env", env={"SPL_DOXYSPHINX_SEQUENTIAL": "ON"})
