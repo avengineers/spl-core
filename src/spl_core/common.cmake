@@ -1,3 +1,20 @@
+# Option to run doxysphinx in sequential mode (avoids crashes on some systems).
+# Can be set via:
+# 1. CMake option:        -DSPL_DOXYSPHINX_SEQUENTIAL=ON
+# 2. Environment variable: SPL_DOXYSPHINX_SEQUENTIAL=ON (no project file changes needed)
+# The environment variable takes precedence if set.
+if(DEFINED ENV{SPL_DOXYSPHINX_SEQUENTIAL})
+    set(SPL_DOXYSPHINX_SEQUENTIAL "$ENV{SPL_DOXYSPHINX_SEQUENTIAL}" CACHE BOOL "Run doxysphinx build with --sequential option" FORCE)
+endif()
+
+option(SPL_DOXYSPHINX_SEQUENTIAL "Run doxysphinx build with --sequential option" OFF)
+
+if(SPL_DOXYSPHINX_SEQUENTIAL)
+    set(SPL_DOXYSPHINX_EXTRA_ARGS "--sequential")
+else()
+    set(SPL_DOXYSPHINX_EXTRA_ARGS "")
+endif()
+
 macro(_spl_slash_to_underscore out in)
     string(REGEX REPLACE "/" "_" ${out} ${in})
 endmacro()
@@ -21,10 +38,10 @@ endmacro()
 #
 # component_path - because it must call add_subdirectory to the component's directory
 # target_executable
-#   - required to determine the build directory for the component (one can not call add_subdirectory
-#     for the same component multiple times with the same build directory)
-#   - must be set to the "global" scope because it is required in spl_create_component to append it to the component name.
-#     spl_create_component gets to decide the component name and will make it "global" for this macro to read it back.
+# - required to determine the build directory for the component (one can not call add_subdirectory
+# for the same component multiple times with the same build directory)
+# - must be set to the "global" scope because it is required in spl_create_component to append it to the component name.
+# spl_create_component gets to decide the component name and will make it "global" for this macro to read it back.
 #
 macro(spl_add_component component_path)
     set(target_executable "${ARGV1}")
@@ -32,6 +49,7 @@ macro(spl_add_component component_path)
 
     # Set global variables for spl_create_component
     unset(GLOBAL__SPL_ADD_COMPONENT__TARGET_EXECUTABLE)
+
     if("${target_executable}" STREQUAL "")
         set(target_executable ${LINK_TARGET_NAME})
         add_subdirectory(${CMAKE_SOURCE_DIR}/${component_path})
@@ -39,6 +57,7 @@ macro(spl_add_component component_path)
         set(GLOBAL__SPL_ADD_COMPONENT__TARGET_EXECUTABLE "${target_executable}")
         add_subdirectory(${CMAKE_SOURCE_DIR}/${component_path} "${CMAKE_BINARY_DIR}/${target_executable}/${component_path}")
     endif()
+
     # Add the newly created component to the linked libraries
     if(TARGET ${GLOBAL__SPL_CREATE_COMPONENT__NEW_COMPONENT_NAME})
         if(BUILD_KIT STREQUAL prod)
@@ -52,27 +71,30 @@ endmacro()
 # Arguments:
 #
 # component_name - the name of the component. (!) This macro expects that a CMake variable with this name holds the component path.
-#                  This means that ${${component_name}} is the component path.
+# This means that ${${component_name}} is the component path.
 # [target_executable] - (optional) name of the target executable.
 #
 # Needs to know:
 #
 # component_path - because it must call add_subdirectory to the component's directory
 # target_executable
-#   - required to determine the build directory for the component (one can not call add_subdirectory
-#     for the same component multiple times without specifying the build directory)
-#   - must be set to the "global" scope because it is required in spl_create_component to append it to the component name
+# - required to determine the build directory for the component (one can not call add_subdirectory
+# for the same component multiple times without specifying the build directory)
+# - must be set to the "global" scope because it is required in spl_create_component to append it to the component name
 #
 macro(spl_add_named_component component_name)
     set(target_executable "${ARGV1}")
     set(component_path ${${component_name}})
+
     if(NOT IS_ABSOLUTE ${component_path})
         set(component_path ${CMAKE_SOURCE_DIR}/${component_path})
     endif()
+
     message(DEBUG "spl_add_named_component: component_name=${component_name}, component_path=${component_path}, target_executable=${target_executable}")
 
     # Set global variables for spl_create_component
     unset(GLOBAL__SPL_ADD_COMPONENT__TARGET_EXECUTABLE)
+
     if("${target_executable}" STREQUAL "")
         set(target_executable ${LINK_TARGET_NAME})
         add_subdirectory(${component_path})
@@ -181,7 +203,7 @@ endmacro(_spl_get_google_test)
 #
 # Needs to know:
 # - target_executable - global variable set by the spl_add_component macros to make sure different component
-#                       names are used for different executables
+# names are used for different executables
 #
 # The component name will be made "global" such that the spl_add_compoent macro can add it to the executable
 #
@@ -197,6 +219,7 @@ macro(spl_create_component)
     file(RELATIVE_PATH component_path ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_LIST_DIR})
 
     unset(GLOBAL__SPL_CREATE_COMPONENT__NEW_COMPONENT_NAME)
+
     if(NOT CREATE_COMPONENT_NAME)
         # The component relative path to the project root dictates the component name
         _spl_slash_to_underscore(component_name ${component_path})
@@ -204,10 +227,12 @@ macro(spl_create_component)
         # Explicit name provided - use it as-is
         set(component_name ${CREATE_COMPONENT_NAME})
     endif()
+
     # If there is a custom target executable, prefix the component name
     if(GLOBAL__SPL_ADD_COMPONENT__TARGET_EXECUTABLE)
         set(component_name ${GLOBAL__SPL_ADD_COMPONENT__TARGET_EXECUTABLE}_${component_name})
     endif()
+
     # Make the component name public
     set(GLOBAL__SPL_CREATE_COMPONENT__NEW_COMPONENT_NAME ${component_name} PARENT_SCOPE)
 
@@ -427,7 +452,7 @@ Code Coverage
                 add_custom_target(
                     ${component_name}_report
                     COMMAND ${CMAKE_COMMAND} -E make_directory ${_component_reports_out_dir}
-                    COMMAND doxysphinx build ${_sphinx_source_dir} ${_component_reports_html_out_dir} ${_rel_component_doxyfile}
+                    COMMAND doxysphinx build ${_sphinx_source_dir} ${_component_reports_html_out_dir} ${_rel_component_doxyfile} ${SPL_DOXYSPHINX_EXTRA_ARGS}
                     COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_reports_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -E -b html ${_sphinx_source_dir} ${_component_reports_html_out_dir}
                     BYPRODUCTS ${_component_reports_html_out_dir}/index.html
                     DEPENDS ${TEST_OUT_JUNIT} ${component_name}_doxygen ${_cov_out_html}
@@ -562,7 +587,7 @@ Code Coverage
             add_custom_target(
                 ${component_name}_doxysphinx
                 COMMAND ${CMAKE_COMMAND} -E make_directory ${_variant_component_reports_out_dir}
-                COMMAND doxysphinx build ${PROJECT_SOURCE_DIR} ${_reports_html_output_dir} ${_rel_component_doxyfile}
+                COMMAND doxysphinx build ${PROJECT_SOURCE_DIR} ${_reports_html_output_dir} ${_rel_component_doxyfile} ${SPL_DOXYSPHINX_EXTRA_ARGS}
                 DEPENDS ${component_name}_doxygen
                 COMMENT "Generating variant component doxysphinx report ${component_name}_doxysphinx ..."
             )
@@ -797,7 +822,7 @@ macro(_spl_add_test_suite COMPONENT_NAME PROD_SRC TEST_SOURCES)
     gtest_discover_tests(
         ${exe_name}
         PROPERTIES
-            DISCOVERY_TIMEOUT 60
+        DISCOVERY_TIMEOUT 60
     )
 endmacro(_spl_add_test_suite)
 
