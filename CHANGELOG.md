@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.17.0 (2026-03-04)
+
+### Features
+
+- Add extra arguments for doxysphinx build
+  ([`bd409c1`](https://github.com/avengineers/spl-core/commit/bd409c179e6cb582636f6871abf0bd854bd10063))
+
+
 ## v7.16.0 (2026-02-10)
 
 ### Features
