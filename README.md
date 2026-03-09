@@ -1,6 +1,10 @@
 # SPL (Software Product Line) Core
 
 <p align="center">
+  <img src="docs/images/spl_core_logo.jpg" alt="SPL Core Logo" width="200">
+</p>
+
+<p align="center">
   <a href="https://github.com/avengineers/spl-core/actions/workflows/ci.yml?query=branch%3Adevelop">
     <img src="https://img.shields.io/github/actions/workflow/status/avengineers/spl-core/ci.yml?branch=develop&label=CI&logo=github&style=flat-square" alt="CI Status" >
   </a>
