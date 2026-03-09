@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v7.17.1 (2026-03-09)
+
+### Bug Fixes
+
+- Update poetry lock
+  ([`93ceffb`](https://github.com/avengineers/spl-core/commit/93ceffba6ff3ba6ac0c3dd4e09dec2d277f72a5b))
+
+
 ## v7.17.0 (2026-03-04)
 
 ### Features
