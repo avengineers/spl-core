@@ -4,7 +4,9 @@
 import json
 import os
 import datetime
-import re
+
+from spl_core.report_generation.spl_sphinx import SplSphinx
+from spl_core.report_generation.spl_html_settings import html_theme, html_show_sourcelink, html_theme_options  # noqa: F401
 
 day = datetime.date.today()
 # meta data #################################################################
@@ -42,136 +44,28 @@ numfig = True
 # Omit "documentation" in title
 html_title = f"{project} {release}"
 
-html_theme = "sphinx_rtd_theme"
+# Use default SPL HTML theme configuration (imported from spl_html_settings)
+# Can be overridden after import if needed
 
-# Show hyper link which leeds to the source of page displayed
-html_show_sourcelink = True
-
-html_theme_options = {
-    "canonical_url": "",
-    "analytics_id": "",  # Provided by Google in your dashboard
-    "display_version": True,
-    "prev_next_buttons_location": "bottom",
-    "style_external_links": True,
-    "logo_only": False,
-    "style_nav_header_background": "white",
-    # Toc options
-    "collapse_navigation": True,
-    "sticky_navigation": True,
-    "navigation_depth": 6,
-    "includehidden": True,
-    "titles_only": False,
-}
 
 # EXTENSIONS AND THEIR CONFIGS ##############################################
 
-# extensions and their configuration #########################################
-extensions = []
+# Get default SPL extensions and their configurations
+extensions = SplSphinx.default_extensions
+extension_configs = SplSphinx.default_extension_configs
 
-extensions.append("sphinx_rtd_size")
-sphinx_rtd_size_width = "90%"
+# Apply extension-specific configurations
+sphinx_rtd_size_width = extension_configs["sphinx_rtd_size_width"]
+tr_report_template = extension_configs["tr_report_template"]
+myst_enable_extensions = extension_configs["myst_enable_extensions"]
+source_suffix = extension_configs["source_suffix"]
 
-extensions.append("sphinxcontrib.mermaid")
-
-extensions.append("sphinx_needs")
-
-extensions.append("sphinxcontrib.test_reports")
-tr_report_template = "doc/test_report_template.txt"
-
-
-def tr_link(app, need, needs, first_option_name, second_option_name, *args, **kwargs):
-    """Make links between 'needs'. In comparison to the default 'tr_link' function,
-    this function supports regular expression pattern matching."""
-    if first_option_name not in need:
-        return ""
-    # Get the value of the 'first_option_name'
-    first_option_value = need[first_option_name]
-
-    links = []
-    for need_target in needs.values():
-        # Skip linking to itself
-        if need_target["id"] == need["id"]:
-            continue
-        if second_option_name not in need_target:
-            continue
-
-        if first_option_value is not None and len(first_option_value) > 0:
-            second_option_value = need_target[second_option_name]
-            if second_option_value is not None and len(second_option_value) > 0:
-                if first_option_value == second_option_value:
-                    links.append(need_target["id"])
-                # if the first option value has a *, use regex matching
-                elif "*" in first_option_value:
-                    if re.match(first_option_value, second_option_value):
-                        links.append(need_target["id"])
-
-    return links
-
-
-needs_functions = [tr_link]
-
-extensions.append("sphinx.ext.todo")
-
-# Render Your Data Readable ##################################################
-# Enables adding Jupyter notebooks to toctree
-# @see https://sphinxcontribdatatemplates.readthedocs.io/en/latest/index.html
-extensions.append("sphinxcontrib.datatemplates")
-
-# needs_types - this option allows the setup of own need types like bugs, user_stories and more.
-needs_types = [
-    dict(directive="req", title="Requirement", prefix="R_", color="#BFD8D2", style="node"),
-    dict(
-        directive="spec",
-        title="Specification",
-        prefix="S_",
-        color="#FEDCD2",
-        style="node",
-    ),
-    dict(
-        directive="impl",
-        title="Implementation",
-        prefix="I_",
-        color="#DF744A",
-        style="node",
-    ),
-    dict(directive="test", title="Test Case", prefix="T_", color="#DCB239", style="node"),
-]
-
-# Define own options
-needs_extra_options = ["integrity"]
-
-# Define own link types
-needs_extra_links = [
-    # SWE.3 BP.5: link from Implementation (Software unit) to Specification (Software detailed design)
-    # AND
-    # SWE.2 BP.7: link from Requirements (Software Requirement) to Architecture (Software Architecture)
-    {"option": "implements", "incoming": "is implemented by", "outgoing": "implements"},
-    # SWE.4 BP.5: link from Test Case (Unit test specification) to Specification (Software detailed design)
-    {"option": "tests", "incoming": "is tested by", "outgoing": "tests"},
-    # SWE.4 BP.5: link from Test Case (Unit test specification) to Test Result (Unit test result)
-    {"option": "results", "incoming": "is resulted from", "outgoing": "results"},
-]
-
-# Link tests results to the test cases
-needs_global_options = {
-    "results": "[[tr_link('title', 'case')]]",
-}
-
-# Parse markdown files
-extensions.append("myst_parser")
-myst_enable_extensions = [
-    "colon_fence",
-    "deflist",
-    "html_admonition",
-    "html_image",
-]
-
-# The suffix of source filenames.
-source_suffix = [
-    ".rst",
-    ".md",
-]
-
+# Import default SPL sphinx-needs configuration
+needs_from_toml = ".venv/Lib/site-packages/spl_core/report_generation/ubproject.toml"
+# Additional import required because the configuration references custom functions defined in this module
+needs_functions = SplSphinx.default_needs_functions
+needs_global_options = SplSphinx.default_needs_global_options
+                                                                                                                                                                                                                                                                                                                                                                                                     
 # Provide all config values to jinja
 html_context = {
     "build_config": {},

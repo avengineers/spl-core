@@ -1,6 +1,7 @@
 import dataclasses
 import os
 import random
+import re
 import shutil
 import string
 import subprocess
@@ -124,13 +125,21 @@ def create_clean_test_dir(name: str = "tmp_test") -> TestDir:
 def setup_new_spl_project(project_dir: Path, no_application: bool = False) -> Path:
     """Creates a new SPL project in the given directory and returns the path to the project.
     The current SPL-Core repository is installed as a Python dependency."""
-    KickstartProject(project_dir=project_dir, force=False, no_application=no_application).run()
+    # force=True: on Windows, locked .venv files may prevent full directory deletion in
+    # create_clean_test_dir, leaving stale content. force=True skips the non-empty check
+    # and overwrites with copytree, so the kickstart always succeeds.
+    KickstartProject(project_dir=project_dir, force=True, no_application=no_application).run()
 
     # Replace the SPL-Core dependency in the pyproject.toml
     pyproject_toml = project_dir.joinpath("pyproject.toml")
     # "spl-core @ file:///C:/D/git/_oss_/spl-core",
     new_dependency = f"spl-core @ file:///{this_repository_root_dir().as_posix()}"
-    pyproject_toml.write_text(pyproject_toml.read_text().replace("spl-core>=7,<8", new_dependency))
+    original_content = pyproject_toml.read_text()
+    # Match "spl-core" followed by any version specifier, with or without parentheses.
+    # Examples: "spl-core (>=7,<8)", "spl-core>=8,<9", "spl-core ^8.0"
+    updated_content = re.sub(r"spl-core\s*\(?[><=!~^,.\d\s]+\)?", new_dependency, original_content)
+    assert original_content != updated_content, f"Failed to replace spl-core dependency in {pyproject_toml}. Check if the dependency format has changed."
+    pyproject_toml.write_text(updated_content)
 
     return project_dir
 

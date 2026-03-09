@@ -1,0 +1,48 @@
+[needs]
+extra_links = [
+    { option = "realizes", incoming = "is realized by", outgoing = "realizes" },
+    { option = "fulfills", incoming = "is fulfilled by", outgoing = "fulfills" },
+    { option = "refines", incoming = "is refined by", outgoing = "refines" },
+    { option = "implements", incoming = "is implemented by", outgoing = "implements" },
+    { option = "results", incoming = "results from", outgoing = "results" },
+    { option = "verifies", incoming = "is verified by", outgoing = "verifies" },
+    { option = "tests", incoming = "is tested by", outgoing = "tests" },
+]
+extra_options = [
+    "integrity",
+]
+
+[[needs.types]]
+directive = "arch"
+title = "Architecture"
+prefix = "A_"
+color = "#DF744A"
+style = "node"
+
+[[needs.types]]
+directive = "req"
+title = "Requirement"
+prefix = "R_"
+color = "#BFD8D2"
+style = "node"
+
+[[needs.types]]
+directive = "spec"
+title = "Specification"
+prefix = "S_"
+color = "#FEDCD2"
+style = "node"
+
+[[needs.types]]
+directive = "impl"
+title = "Implementation"
+prefix = "I_"
+color = "#DF744A"
+style = "node"
+
+[[needs.types]]
+directive = "test"
+title = "Test Case"
+prefix = "T_"
+color = "#DCB239"
+style = "node"
