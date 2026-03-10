@@ -1,6 +1,22 @@
 # CHANGELOG
 
 
+## v8.0.0-rc.1 (2026-03-10)
+
+### Bug Fixes
+
+- Update poetry lock
+  ([`93ceffb`](https://github.com/avengineers/spl-core/commit/93ceffba6ff3ba6ac0c3dd4e09dec2d277f72a5b))
+
+### Features
+
+- Refactor report generation
+  ([`ab8baab`](https://github.com/avengineers/spl-core/commit/ab8baaba94139f16be1bddce84b0e48a13631fdf))
+
+- Update sphinx-needs
+  ([`a2e1957`](https://github.com/avengineers/spl-core/commit/a2e195796c96cc63bd43cc3db7c8f190595990ad))
+
+
 ## v7.17.0 (2026-03-04)
 
 ### Features
