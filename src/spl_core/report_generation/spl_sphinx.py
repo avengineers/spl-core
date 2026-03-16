@@ -1,5 +1,8 @@
 """Centralized Sphinx configuration for SPL projects."""
 
+import datetime
+import json
+import os
 import re
 from typing import Any, ClassVar
 
@@ -96,3 +99,35 @@ class SplSphinx:
             ".md",
         ],
     }
+
+    @classmethod
+    def get_default_html_context(cls) -> dict[str, Any]:
+        """Get the default HTML context for Sphinx builds.
+
+        Loads build and feature configurations from environment variables:
+        - SPHINX_BUILD_CONFIGURATION_FILE: JSON file with build configuration
+        - AUTOCONF_JSON_FILE: JSON file with feature configuration
+        - VARIANT: variant name
+
+        Returns a dictionary with ``build_config``, ``config``, and ``timestamp`` keys.
+        Note: call ``include_patterns.extend(html_context["build_config"].get("include_patterns", []))
+        in conf.py`` to propagate include patterns from the build configuration.
+        """
+        context: dict[str, Any] = {
+            "build_config": {},
+            "config": {},
+            "timestamp": f"{datetime.datetime.now(tz=datetime.timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC",
+        }
+
+        if "SPHINX_BUILD_CONFIGURATION_FILE" in os.environ:
+            with open(os.environ["SPHINX_BUILD_CONFIGURATION_FILE"]) as file:
+                context["build_config"] = json.load(file)
+
+        if "AUTOCONF_JSON_FILE" in os.environ:
+            with open(os.environ["AUTOCONF_JSON_FILE"]) as file:
+                context["config"] = json.load(file)["features"]
+
+        if "VARIANT" in os.environ:
+            context["build_config"]["variant"] = os.environ["VARIANT"]
+
+        return context

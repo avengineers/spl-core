@@ -32,6 +32,7 @@
 doc/software_architecture/index
 doc/software_requirements/index
 doc/components/index
+doc/common/index
 {% if build_config.target == 'reports' %}
 {{ build_config.reports_output_dir }}/coverage
 {% endif %}
