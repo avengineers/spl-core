@@ -1,6 +1,22 @@
 # CHANGELOG
 
 
+## v8.0.0 (2026-03-16)
+
+### Bug Fixes
+
+- Add changes according to review
+  ([`bfd6e2d`](https://github.com/avengineers/spl-core/commit/bfd6e2d966a5181c09a4aa74ed3c258070135676))
+
+### Features
+
+- Refactor report generation
+  ([`4b9343d`](https://github.com/avengineers/spl-core/commit/4b9343df5895c4359c4bc2244f5971f06cdcee6a))
+
+- Update sphinx-needs
+  ([`c34c2eb`](https://github.com/avengineers/spl-core/commit/c34c2eb8f1d96e875213f5798a7e097aeef37d89))
+
+
 ## v7.17.1 (2026-03-09)
 
 ### Bug Fixes
