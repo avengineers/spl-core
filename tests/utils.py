@@ -207,6 +207,8 @@ class IntegrationTestsSplProject:
         self.env["SPLCORE_PATH"] = this_repository_root_dir().joinpath("src/spl_core").as_posix()
         # Force the usage of the project directory virtual environment
         self.env["PIPENV_IGNORE_VIRTUALENVS"] = "1"
+        # Prevent Poetry from detecting and reusing the parent project's venv
+        self.env.pop("VIRTUAL_ENV", None)
         # Make sure the project directory virtual environment is used
         self.env["PATH"] = f"{project_dir.joinpath('.venv/Scripts').as_posix()}{os.pathsep}{self.env['PATH']}"
 

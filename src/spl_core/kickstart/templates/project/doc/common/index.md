@@ -1,3 +1,7 @@
 # Common Documentation of the Project
 
-Some text...
+```{toctree}
+:maxdepth: 2
+
+sphinx_configuration
+```
