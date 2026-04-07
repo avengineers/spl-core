@@ -1,12 +1,12 @@
 # CHANGELOG
 
 
-## v8.1.0-rc1.dev.1 (2026-04-07)
+## v8.1.0 (2026-04-07)
 
 ### Features
 
 - Add HAMMOCKING_CONFIG_FILE and --project-root-dir support
-  ([`377f868`](https://github.com/avengineers/spl-core/commit/377f8683439126a28fa9557be842d512409573e8))
+  ([`11328cd`](https://github.com/avengineers/spl-core/commit/11328cd11ec17789ea11d83028620ed473c42c95))
 
 - Update hammocking dependency to >=0.11 which introduces --config and --project-root-dir CLI
   options - Always pass --project-root-dir to hammocking so that ignore_symbols_outside_project
