@@ -1453,14 +1453,14 @@ tests = ["flask (>=2.2.5)", "hypothesis (>=6.79.4)", "pytest (>=7.4.4)"]
 
 [[package]]
 name = "junitparser"
-version = "4.0.2"
+version = "5.0.0"
 description = "Manipulates JUnit/xUnit Result XML files"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "junitparser-4.0.2-py3-none-any.whl", hash = "sha256:94c3570e41fcaedc64cc3c634ca99457fe41a84dd1aa8ff74e9e12e66223a155"},
-    {file = "junitparser-4.0.2.tar.gz", hash = "sha256:d5d07cece6d4a600ff3b7b96c8db5ffa45a91eed695cb86c45c3db113c1ca0f8"},
+    {file = "junitparser-5.0.0-py3-none-any.whl", hash = "sha256:9e279f2214dc74b6a86b22db757abda2e8e66e819fe882dad5b392d57024cd26"},
+    {file = "junitparser-5.0.0.tar.gz", hash = "sha256:f15e292877258d7c5755d672ce86f82c3622c7ea4c2f44f55de44ed7518484d3"},
 ]
 
 [[package]]
