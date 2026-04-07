@@ -1,6 +1,23 @@
 # CHANGELOG
 
 
+## v8.1.0-rc1.dev.1 (2026-04-07)
+
+### Features
+
+- Add HAMMOCKING_CONFIG_FILE and --project-root-dir support
+  ([`377f868`](https://github.com/avengineers/spl-core/commit/377f8683439126a28fa9557be842d512409573e8))
+
+- Update hammocking dependency to >=0.11 which introduces --config and --project-root-dir CLI
+  options - Always pass --project-root-dir to hammocking so that ignore_symbols_outside_project
+  (default true in >=0.11) filters symbols correctly relative to the SPL project root - Add
+  HAMMOCKING_CONFIG_FILE CMake variable to optionally forward an ini config file via --config for
+  per-project mock configuration - Add integration tests for both new hammocking arguments -
+  Document new CMake variables in getting_started guide
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+
+
 ## v8.0.0 (2026-03-16)
 
 ### Bug Fixes
