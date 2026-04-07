@@ -748,11 +748,15 @@ macro(_spl_add_test_suite COMPONENT_NAME PROD_SRC TEST_SOURCES)
 
     set(component_inc_dirs "$<TARGET_PROPERTY:${COMPONENT_NAME},INCLUDE_DIRECTORIES>")
     set(component_comp_defs "$<TARGET_PROPERTY:${COMPONENT_NAME},COMPILE_DEFINITIONS>")
+    set(_hammocking_config_arg "")
+    if(DEFINED HAMMOCKING_CONFIG_FILE AND NOT "${HAMMOCKING_CONFIG_FILE}" STREQUAL "")
+        set(_hammocking_config_arg "--config;${HAMMOCKING_CONFIG_FILE}")
+    endif()
     add_custom_command(
         OUTPUT ${MOCK_SRC}
         BYPRODUCTS mockup_${component_name}.h
         WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-        COMMAND python -m hammocking --suffix _${COMPONENT_NAME} --sources ${PROD_SRC} --plink ${CMAKE_CURRENT_BINARY_DIR}/${PROD_PARTIAL_LINK} --outdir ${CMAKE_CURRENT_BINARY_DIR} "$<$<BOOL:${component_inc_dirs}>:-I$<JOIN:${component_inc_dirs},;-I>>" "$<$<BOOL:${component_comp_defs}>:-D$<JOIN:${component_comp_defs},;-D>>" ${COMPILER_SPECIFIC_INCLUDES} -x c
+        COMMAND python -m hammocking --suffix _${COMPONENT_NAME} --sources ${PROD_SRC} --plink ${CMAKE_CURRENT_BINARY_DIR}/${PROD_PARTIAL_LINK} --outdir ${CMAKE_CURRENT_BINARY_DIR} --project-root-dir ${CMAKE_SOURCE_DIR} ${_hammocking_config_arg} "$<$<BOOL:${component_inc_dirs}>:-I$<JOIN:${component_inc_dirs},;-I>>" "$<$<BOOL:${component_comp_defs}>:-D$<JOIN:${component_comp_defs},;-D>>" ${COMPILER_SPECIFIC_INCLUDES} -x c
         COMMAND_EXPAND_LISTS
         VERBATIM
         DEPENDS
