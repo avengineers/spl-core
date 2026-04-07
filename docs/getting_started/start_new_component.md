@@ -230,6 +230,30 @@ TEST(MyComp, testCorrectBehavior)
 
 For more details on how to set expectations with Google Mock, see the [GMock for dummies](https://google.github.io/googletest/gmock_for_dummies.html#setting-expectations).
 
+#### Hammocking Configuration
+
+Starting with spl-core 8.x (using hammocking >=0.11), Hammocking only mocks symbols
+that originate from within the project by default (`ignore_symbols_outside_project = true`).
+This avoids generating unnecessary mocks for standard library or OS-provided symbols.
+
+To customize Hammocking behaviour, create a `hammocking.ini` file in your SPL project
+and set the `HAMMOCKING_CONFIG_FILE` CMake variable in your `CMakeLists.txt`:
+
+```cmake
+set(HAMMOCKING_CONFIG_FILE ${CMAKE_CURRENT_LIST_DIR}/hammocking.ini)
+```
+
+Example `hammocking.ini`:
+
+```ini
+[hammocking]
+ignore_symbols_outside_project=true
+exclude_pattern=^(_|my_platform_prefix_)
+```
+
+See the [Hammocking documentation](https://github.com/avengineers/hammocking) for all
+available configuration options.
+
 **Configurability**
 
 One must include the `autoconf.h` file in the test file to be able to use the configuration features.

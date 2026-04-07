@@ -1,6 +1,9 @@
 # Output directory of tests
 /out
 
+# Local planning roadmap (not for version control)
+/ROADMAP.md
+
 # Any log directory
 **/[Ll][Oo][Gg]/*
 
