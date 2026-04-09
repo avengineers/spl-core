@@ -52,7 +52,7 @@ To use this step, you need to add it to your pypeline.yaml file as follows:
 ```yaml
 ...
 - step: CheckCIContext
-  module: pypeline_semantic_release.steps
+  module: pypeline_semantic_release.check_ci_context
 - step: CollectPRChanges
   module: spl_core.steps.collect_pr_changes
 ...

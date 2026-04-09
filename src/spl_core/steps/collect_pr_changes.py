@@ -7,7 +7,7 @@ from mashumaro.mixins.json import DataClassJSONMixin
 from py_app_dev.core.logging import logger
 from py_app_dev.core.subprocess import SubprocessExecutor
 from pypeline.domain.pipeline import PipelineStep
-from pypeline_semantic_release.steps import CIContext
+from pypeline_semantic_release.check_ci_context import CIContext
 
 
 @dataclass
