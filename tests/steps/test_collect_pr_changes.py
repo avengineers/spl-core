@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from pypeline.domain.execution_context import ExecutionContext
-from pypeline_semantic_release.steps import CIContext, CISystem
+from pypeline_semantic_release.check_ci_context import CIContext, CISystem
 
 from spl_core.steps.collect_pr_changes import CollectPRChanges, PR_Changes
 
