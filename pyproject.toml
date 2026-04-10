@@ -25,14 +25,14 @@ junit_merger = "spl_core.test_utils.junit_merger:main"
 "Changelog" = "https://github.com/avengineers/spl-core/blob/develop/CHANGELOG.md"
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.12"
+python = ">=3.10,<3.14"
 py-app-dev = "^2.1"
 cookiecutter = "==2.7.1"
 gcovr = "^8.6"
 hammocking = "^1.0"
+clanguru = ">=0,<1"
 kconfiglib = "^14.1"
 typer = ">=0,<1"
-doxysphinx = "^3.3"
 sphinx = ">=7.3,<9.0"
 sphinx-rtd-theme = ">=2,<4"
 sphinxcontrib-mermaid = ">=0.9,<2.1"
@@ -49,8 +49,8 @@ sphinx-book-theme = "^1.1"
 sphinx-design = ">=0.5,<0.7"
 pypeline-semantic-release = ">=0.5,<1.0"
 pypeline-runner = ">=1,<=2"
-py7zr = "^1.0"
-junitparser = "^5.0"
+py7zr = "^1.1.0"
+junitparser = "*"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=7,<10"
@@ -106,7 +106,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-target-version = "py38"
+target-version = "py313"
 line-length = 220
 lint.ignore = [
     "D203", # 1 blank line required before class docstring

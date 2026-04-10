@@ -203,7 +203,6 @@ def test_create_artifacts_archive_outside_spl_build(spl_build: SplBuild, tmp_pat
             [
                 Path("build/my_var/test/reports/html/build/my_var/test/my_component/reports/coverage.html"),
                 Path("build/my_var/test/reports/html/build/my_var/test/my_component/reports/coverage/index.html"),
-                Path("build/my_var/test/reports/html/build/my_var/test/my_component/reports/doxygen/html/index.html"),
                 Path("build/my_var/test/reports/html/build/my_var/test/my_component/reports/unit_test_results.html"),
                 Path("build/my_var/test/reports/html/build/my_var/test/my_component/reports/unit_test_spec.html"),
             ],

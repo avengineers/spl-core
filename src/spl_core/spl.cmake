@@ -90,6 +90,9 @@ elseif(BUILD_KIT STREQUAL test)
     list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 
     add_custom_target(coverage)
+    add_custom_target(source_docs)
+
+    set(CLANGURU_COMPILE_COMMANDS ${CMAKE_BINARY_DIR}/compile_commands.json)
 else()
     message(FATAL_ERROR "Invalid BUILD_KIT selected!")
 endif(BUILD_KIT STREQUAL prod)

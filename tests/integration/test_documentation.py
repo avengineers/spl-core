@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 import pytest
 from bs4 import BeautifulSoup
@@ -27,7 +26,6 @@ class TestDocumentation(SplKickstartProjectIntegrationTestBase):
                     "unit_test_results.html",
                     "coverage.html",
                     "coverage/index.html",
-                    "doxygen/html/index.html",
                 ]:
                     assert build_dir.joinpath(f"reports/html/{rel_build_dir}/{component_path}/reports/{file}").exists(), f"Component test {file} expected but not found"
 
@@ -53,10 +51,24 @@ class TestDocumentation(SplKickstartProjectIntegrationTestBase):
                         section_id=section_id,
                     )
 
-                # - impl needs in doxygen HTML must have an :implements: link to a spec
-                doxygen_html_dir = reports_dir / "doxygen/html"
-                found_any_impl = any(self._assert_needs_have_link_option(html_file, need_type_class="needs_type_impl", link_span_class="implements") for html_file in doxygen_html_dir.glob("*.html"))
-                assert found_any_impl, f"No impl needs found in doxygen HTML for {component_path} - check that source files contain :implements: links."
+    def test_build_source_docs(self) -> None:
+        variant = "EnglishVariant"
+        result = self.spl_project.build(variant, "source_docs")
+        assert result is not None and result.returncode == 0, "Building source_docs shall not fail."
+
+        build_dir = self.spl_project.artifacts.get_build_dir(variant, "test")
+        # Verify at least one component has generated RST files
+        found_rst = False
+        for component_path in self.spl_project.components:
+            source_docs_dir = build_dir / component_path / "source_docs"
+            if source_docs_dir.exists():
+                rst_files = list(source_docs_dir.glob("*.rst"))
+                if rst_files:
+                    found_rst = True
+                    for rst_file in rst_files:
+                        content = rst_file.read_text(encoding="utf-8")
+                        assert len(content) > 0, f"RST file {rst_file} is empty"
+        assert found_rst, "Expected at least one component with generated RST source docs"
 
     @staticmethod
     def _assert_needs_have_link_option(html_file: Path, need_type_class: str, link_span_class: str) -> bool:
@@ -80,7 +92,7 @@ class TestDocumentation(SplKickstartProjectIntegrationTestBase):
         return bool(needs)
 
     @staticmethod
-    def _assert_needs_table_columns_have_links(html_file: Path, columns: list[str], section_id: Optional[str] = None) -> None:
+    def _assert_needs_table_columns_have_links(html_file: Path, columns: list[str], section_id: str | None = None) -> None:
         """Assert that every row in the sphinx-needs table has links in the specified columns.
 
         Used to catch regressions where cross-links between test specs, test cases, and test

@@ -7,14 +7,6 @@ set(BUILD_KIT prod)
 # ## IUT ####################################
 include(${CMAKE_CURRENT_LIST_DIR}/../../../src/spl_core/common.cmake)
 
-# ## test: SPL_DOXYSPHINX_EXTRA_ARGS (default OFF) #########
-# given: SPL_DOXYSPHINX_SEQUENTIAL is OFF by default
-
-# then: SPL_DOXYSPHINX_EXTRA_ARGS should be empty
-if(NOT "${SPL_DOXYSPHINX_EXTRA_ARGS}" STREQUAL "")
-    message(FATAL_ERROR "Failing Test: SPL_DOXYSPHINX_EXTRA_ARGS should be empty when SPL_DOXYSPHINX_SEQUENTIAL is OFF, but got: '${SPL_DOXYSPHINX_EXTRA_ARGS}'.")
-endif()
-
 # ## test: _spl_slash_to_underscore #########
 # given
 set(string_with_slashes "abc/def/ghi")

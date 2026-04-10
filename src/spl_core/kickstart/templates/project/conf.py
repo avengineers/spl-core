@@ -46,6 +46,10 @@ html_title = f"{project} {release}"
 # Use default SPL HTML theme configuration (imported from spl_html_settings)
 # Can be overridden after import if needed
 
+# ToDo -> check if this is still needed, if not also remove the js-file
+# Mermaid diagram config - force light theme for classic purple blocks
+html_static_path = ["doc/_static"]
+html_js_files = [("force-light-mermaid.js", {"priority": 100})]
 
 # EXTENSIONS AND THEIR CONFIGS ##############################################
 

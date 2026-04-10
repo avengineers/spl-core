@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## v8.1.1 (2026-04-09)
+
+### Bug Fixes
+
+- Update semantic release
+  ([`a39d24d`](https://github.com/avengineers/spl-core/commit/a39d24d71f618ff2aec173227a56e921ddb267e7))
+
 
 ## v8.1.2 (2026-04-15)
 
