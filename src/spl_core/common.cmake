@@ -430,7 +430,7 @@ Code Coverage
                 # This will avoid the need to copy the coverage/** directory inside the component report sphinx output directory.
                 add_custom_command(
                     OUTPUT ${_cov_out_html}
-                    COMMAND gcovr --root ${PROJECT_SOURCE_DIR} --add-tracefile ${_cov_out_json} --html --html-details --output ${_cov_out_html} ${GCOVR_ADDITIONAL_OPTIONS}
+                    COMMAND ${GCOVR_EXE} --root ${PROJECT_SOURCE_DIR} --add-tracefile ${_cov_out_json} --html --html-details --output ${_cov_out_html} ${GCOVR_ADDITIONAL_OPTIONS}
                     DEPENDS ${_cov_out_json}
                     COMMENT "Generating component coverage html report ${_cov_out_html} ..."
                 )
@@ -577,7 +577,7 @@ Code Coverage
             set(_cov_out_json ${component_path}/coverage.json)
             add_custom_command(
                 OUTPUT ${_cov_out_html}
-                COMMAND gcovr --root ${PROJECT_SOURCE_DIR} --add-tracefile ${_cov_out_json} --html --html-details --output ${_cov_out_html} ${GCOVR_ADDITIONAL_OPTIONS}
+                COMMAND ${GCOVR_EXE} --root ${PROJECT_SOURCE_DIR} --add-tracefile ${_cov_out_json} --html --html-details --output ${_cov_out_html} ${GCOVR_ADDITIONAL_OPTIONS}
                 DEPENDS ${_cov_out_json}
                 COMMENT "Generating variant component coverage html report ${_cov_out_html} ..."
             )
@@ -598,7 +598,7 @@ Code Coverage
     set(_cov_out_variant_html reports/html/${_rel_reports_output_dir}/coverage/index.html)
     add_custom_command(
         OUTPUT ${_cov_out_variant_html}
-        COMMAND gcovr --root ${CMAKE_SOURCE_DIR} --add-tracefile \"${CMAKE_CURRENT_BINARY_DIR}/**/${COV_OUT_JSON}\" --html --html-details --output ${_cov_out_variant_html}
+        COMMAND ${GCOVR_EXE} --root ${CMAKE_SOURCE_DIR} --add-tracefile \"${CMAKE_CURRENT_BINARY_DIR}/**/${COV_OUT_JSON}\" --html --html-details --output ${_cov_out_variant_html}
         DEPENDS ${GLOBAL_COMPONENTS_COVERAGE_JSON_LIST}
         COMMENT "Generating overall code coverage report ${_cov_out_variant_html} ..."
     )
@@ -645,7 +645,7 @@ function(_spl_coverage_create_overall_report)
         # Generate variant-level merged coverage JSON
         add_custom_command(
             OUTPUT ${COV_OUT_VARIANT_JSON}
-            COMMAND gcovr --root ${CMAKE_SOURCE_DIR} --add-tracefile \"${CMAKE_CURRENT_BINARY_DIR}/**/${COV_OUT_JSON}\" --json-summary-pretty --output ${COV_OUT_VARIANT_JSON}
+            COMMAND ${GCOVR_EXE} --root ${CMAKE_SOURCE_DIR} --add-tracefile \"${CMAKE_CURRENT_BINARY_DIR}/**/${COV_OUT_JSON}\" --json-summary-pretty --output ${COV_OUT_VARIANT_JSON}
             DEPENDS ${GLOBAL_COMPONENTS_COVERAGE_JSON_LIST}
             COMMENT "Generating variant-level merged coverage JSON ${COV_OUT_VARIANT_JSON} ..."
         )
@@ -661,7 +661,7 @@ function(_spl_coverage_create_overall_report)
         # Generate variant-level HTML coverage report
         add_custom_command(
             OUTPUT ${COV_OUT_VARIANT_HTML}
-            COMMAND gcovr --root ${CMAKE_SOURCE_DIR} --add-tracefile \"${CMAKE_CURRENT_BINARY_DIR}/**/${COV_OUT_JSON}\" --html --html-details --output ${COV_OUT_VARIANT_HTML}
+            COMMAND ${GCOVR_EXE} --root ${CMAKE_SOURCE_DIR} --add-tracefile \"${CMAKE_CURRENT_BINARY_DIR}/**/${COV_OUT_JSON}\" --html --html-details --output ${COV_OUT_VARIANT_HTML}
             DEPENDS ${GLOBAL_COMPONENTS_COVERAGE_JSON_LIST}
             COMMENT "Generating overall code coverage report ${COV_OUT_VARIANT_HTML} ..."
         )
@@ -784,6 +784,11 @@ macro(_spl_add_test_suite COMPONENT_NAME PROD_SRC TEST_SOURCES)
     list(APPEND GLOBAL_COMPONENTS_COVERAGE_JSON_LIST "${CMAKE_CURRENT_BINARY_DIR}/${COV_OUT_JSON}")
     set(GLOBAL_COMPONENTS_COVERAGE_JSON_LIST "${GLOBAL_COMPONENTS_COVERAGE_JSON_LIST}" PARENT_SCOPE)
 
+    # Resolve gcovr once per test suite. CMake caches the result, so this is cheap.
+    # Adding GCOVR_EXE to DEPENDS ensures coverage.json is rebuilt when gcovr is updated,
+    # preventing format version mismatches in incremental builds (e.g., got 0.11 expected 0.14).
+    find_program(GCOVR_EXE gcovr REQUIRED)
+
     # Create coverage results (coverage.json)
     add_custom_command(
         OUTPUT ${COV_OUT_JSON}
@@ -792,8 +797,8 @@ macro(_spl_add_test_suite COMPONENT_NAME PROD_SRC TEST_SOURCES)
         COMMAND python ${SPL_CORE_PYTHON_DIRECTORY}/gcov_maid/gcov_maid.py --working-dir . --wipe-orphaned-gcno
 
         # Run gcovr to generate coverage json for the component
-        COMMAND gcovr --root ${CMAKE_SOURCE_DIR} --json --output ${COV_OUT_JSON} ${GCOVR_ADDITIONAL_OPTIONS} ${CMAKE_CURRENT_BINARY_DIR}
-        DEPENDS ${TEST_OUT_JUNIT}
+        COMMAND ${GCOVR_EXE} --root ${CMAKE_SOURCE_DIR} --json --output ${COV_OUT_JSON} ${GCOVR_ADDITIONAL_OPTIONS} ${CMAKE_CURRENT_BINARY_DIR}
+        DEPENDS ${TEST_OUT_JUNIT} ${GCOVR_EXE}
         COMMENT "Generating component ${COMPONENT_NAME} code coverage json report ${COV_OUT_JSON} ..."
     )
 
@@ -801,7 +806,7 @@ macro(_spl_add_test_suite COMPONENT_NAME PROD_SRC TEST_SOURCES)
     set(COV_OUT_HTML reports/coverage/index.html)
     add_custom_command(
         OUTPUT ${COV_OUT_HTML}
-        COMMAND gcovr --root ${CMAKE_SOURCE_DIR} --add-tracefile ${COV_OUT_JSON} --html --html-details --output ${COV_OUT_HTML} ${GCOVR_ADDITIONAL_OPTIONS}
+        COMMAND ${GCOVR_EXE} --root ${CMAKE_SOURCE_DIR} --add-tracefile ${COV_OUT_JSON} --html --html-details --output ${COV_OUT_HTML} ${GCOVR_ADDITIONAL_OPTIONS}
         DEPENDS ${COV_OUT_JSON}
         COMMENT "Generating component ${COMPONENT_NAME} code coverage html report ${COV_OUT_HTML} ..."
     )

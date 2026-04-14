@@ -128,6 +128,10 @@ are real targets generating exactly one document including all components.
 ```{mermaid}
 graph TB
     unittests --> component_unittests["&lt;component&gt;_unittests"]
+    unittests --> coverage
+    coverage --> component_coverage["&lt;component&gt;_coverage"]
+    component_coverage --> coverage_json["coverage.json (per component)"]
+    coverage_json --> variant_coverage_json["variant-coverage.json"]
     docs --> component_docs["&lt;component&gt;_docs"]
     reports --> component_report["&lt;component&gt;_reports"]
     doc
@@ -170,7 +174,7 @@ src/
 
 ## Sphinx Build Configuration
 
-Sphnix build required configuration file(conf.py) and main md(index.md) file are located in same folder.
+Sphinx build required configuration file(conf.py) and main md(index.md) file are located in same folder.
 Because of this:
 
 * we need conf.py and index.md files in the root directory

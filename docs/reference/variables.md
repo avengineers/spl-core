@@ -50,9 +50,28 @@ The environment variable takes precedence over the CMake cache value. This means
 override the project-level setting without modifying any committed files.
 ```
 
-## COMPONENT_NAMES
+(GCOVR_ADDITIONAL_OPTIONS)=
 
-The list of components of the current variant.
+## GCOVR_ADDITIONAL_OPTIONS
+
+A CMake variable to pass additional options to all `gcovr` invocations. This affects
+per-component coverage JSON and HTML generation as well as variant-level report generation.
+
+**Default:** empty (no additional options)
+
+Example — exclude generated and third-party files from coverage:
+
+```cmake
+set(GCOVR_ADDITIONAL_OPTIONS "--exclude=.*test.*" "--exclude=.*mock.*")
+```
+
+Example — set a minimum coverage threshold:
+
+```cmake
+set(GCOVR_ADDITIONAL_OPTIONS "--fail-under-line=80")
+```
+
+## COMPONENT_NAMES
 
 ## PROD_SOURCES
 
