@@ -1,6 +1,9 @@
+import os
+import shutil
 import subprocess
 import textwrap
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 import pytest
 from utils import SplProjectIntegrationTestBase
@@ -295,3 +298,51 @@ class TestSplFeatures(SplProjectIntegrationTestBase):
         "Expected build results shall exist"
         executable = self.spl_project.artifacts.get_build_dir(variant, "prod").joinpath("my_main.exe")
         assert executable.exists()
+
+    def test_coverage_json_rebuilt_after_gcovr_update(self):
+        """Verify that coverage.json is regenerated when the gcovr executable is updated.
+
+        This is a regression test for a bug where incremental builds failed with
+        'AssertionError: Wrong format version' after upgrading gcovr, because the
+        coverage.json files were not invalidated when the gcovr binary changed.
+        """
+        variant = "Variant1"
+
+        "Restore original CMakeLists.txt — previous tests may have modified it"
+        self.spl_project.artifacts.src_dir.joinpath("component", "CMakeLists.txt").write_text(
+            textwrap.dedent(
+                """\
+                spl_add_source(src/component.c)
+                spl_add_test_source(test/test_component.cc)
+                spl_add_required_interface(src/component_b)
+                spl_add_required_interface(src/common)
+                spl_create_component(LONG_NAME "Component")
+                """
+            )
+        )
+
+        "Do initial build to ensure coverage.json exists"
+        result = self.spl_project.build(variant, "unittests")
+        assert result.returncode == 0, "Initial build shall not fail."
+
+        build_dir = self.spl_project.artifacts.get_build_dir(variant, "test")
+        coverage_json = build_dir.joinpath("src/component/coverage.json")
+        assert coverage_json.exists(), "coverage.json shall exist after initial build"
+
+        "Find gcovr in the project's virtual environment"
+        gcovr_exe = shutil.which("gcovr", path=self.spl_project.env["PATH"])
+        assert gcovr_exe is not None, "gcovr shall be installed in the project's virtual environment"
+
+        "Record timestamp of coverage.json before simulated gcovr update"
+        coverage_json_mtime_before = os.stat(coverage_json).st_mtime_ns
+
+        "Touch gcovr executable to simulate a version update (binary replacement changes mtime)"
+        Path(gcovr_exe).touch()
+
+        "Incremental build must succeed and regenerate coverage.json"
+        result = self.spl_project.build(variant, "unittests")
+        assert result.returncode == 0, "Incremental build after gcovr update shall not fail."
+
+        "coverage.json must have been regenerated due to the gcovr dependency"
+        coverage_json_mtime_after = os.stat(coverage_json).st_mtime_ns
+        assert coverage_json_mtime_after > coverage_json_mtime_before, "coverage.json shall be regenerated when the gcovr executable changes"

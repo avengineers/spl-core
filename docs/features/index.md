@@ -1,5 +1,39 @@
 # ✨ Features
 
+## Code Coverage
+
+SPL Core automatically collects code coverage data when running unit tests and generates
+both per-component and variant-level reports using [gcovr](https://gcovr.com).
+
+### Per-component coverage
+
+After running the `<component>_unittests` or `unittests` target, each component produces:
+
+- `coverage.json` — raw coverage data in gcovr JSON format
+- `reports/coverage/index.html` — HTML coverage report
+
+Both files are located under `build/<Variant>/test/Debug/<component path>/`.
+
+### Variant-level coverage
+
+After running the `unittests` target, SPL Core merges all component coverage files into
+a single variant-level summary:
+
+- `variant-coverage.json` — merged JSON summary (gcovr `--json-summary-pretty` format)
+
+This file is located at `build/<Variant>/test/Debug/`.
+
+### Customization
+
+Additional gcovr options can be passed via the CMake variable `GCOVR_ADDITIONAL_OPTIONS`.
+See {ref}`GCOVR_ADDITIONAL_OPTIONS <GCOVR_ADDITIONAL_OPTIONS>` for details.
+
+### Incremental build safety
+
+The `coverage.json` generation depends on the `gcovr` executable itself. This means
+CMake automatically regenerates coverage data when gcovr is updated, preventing
+format version mismatches in incremental builds.
+
 ## Component Report
 
 To support the {ref}`component <glossary_component>` development, SPL Core provides features to:
