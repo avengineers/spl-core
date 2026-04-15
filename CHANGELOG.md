@@ -1,6 +1,29 @@
 # CHANGELOG
 
 
+## v8.1.2 (2026-04-15)
+
+### Bug Fixes
+
+- Rebuild coverage.json when gcovr is updated
+  ([`80c9a9f`](https://github.com/avengineers/spl-core/commit/80c9a9f42c96b0a65b4fda1ccfcfe2c73e0af408))
+
+Use find_program to resolve gcovr once per test suite and add the gcovr executable as a DEPENDS
+  entry to the coverage.json custom command. This ensures CMake invalidates stale coverage.json
+  files after a gcovr upgrade, preventing 'Wrong format version' errors in incremental builds.
+
+All gcovr COMMAND invocations now use the resolved ${GCOVR_EXE} path for consistency.
+
+Adds a regression test that touches the gcovr binary and verifies coverage.json is regenerated on
+  the next incremental build.
+
+Also improves documentation: - Add Code Coverage section to features/index.md - Add coverage and
+  <component>_coverage targets to reference/targets.md - Document GCOVR_ADDITIONAL_OPTIONS in
+  reference/variables.md - Fix typo 'Sphnix' and extend build target diagram in internals/index.md
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+
+
 ## v8.1.1 (2026-04-09)
 
 ### Bug Fixes
