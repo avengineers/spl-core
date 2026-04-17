@@ -1,11 +1,25 @@
 # CHANGELOG
 
-## v8.1.1 (2026-04-09)
 
-### Bug Fixes
+## v9.0.0-rc1.dev.1 (2026-04-17)
 
-- Update semantic release
-  ([`a39d24d`](https://github.com/avengineers/spl-core/commit/a39d24d71f618ff2aec173227a56e921ddb267e7))
+### Features
+
+- Update python to 3.13 and remove doxysphinx
+  ([`a224e40`](https://github.com/avengineers/spl-core/commit/a224e40b54eec11188cc6d38ad55dbb86da1b2d1))
+
+- Upgrade Python requirement to >=3.13,<3.14 - Remove doxysphinx dependency and replace with direct
+  doxygen copy - Modernize type hints (List->list, Dict->dict, Optional->X|None) - Update pre-commit
+  hooks, CI workflows, and readthedocs config - Add doxygen API reference as raw HTML link in report
+  templates - Add mermaid light theme fix for documentation - Regenerate poetry.lock from scratch
+
+BREAKING CHANGE: requires Python 3.13+
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+
+### BREAKING CHANGES
+
+- Requires Python 3.13+
 
 
 ## v8.1.2 (2026-04-15)
