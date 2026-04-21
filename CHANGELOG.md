@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v9.0.0-rc3.dev.1 (2026-04-21)
+
+### Bug Fixes
+
+- Update spl-core
+  ([`64e3511`](https://github.com/avengineers/spl-core/commit/64e35113e46dc17cf758ec47b7a8f0c8f41c3c23))
+
+
 ## v9.0.0-rc2.dev.1 (2026-04-20)
 
 
