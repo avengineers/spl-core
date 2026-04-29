@@ -1,6 +1,16 @@
 # CHANGELOG
 
 
+## v8.1.3 (2026-04-29)
+
+### Bug Fixes
+
+- **deps**: Bump hammocking from 1.0.1 to 1.0.2
+  ([`f1719fa`](https://github.com/avengineers/spl-core/commit/f1719fa3523c07b57f6b4c2a615e700d9b45ea51))
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+
+
 ## v8.1.2 (2026-04-15)
 
 ### Bug Fixes
