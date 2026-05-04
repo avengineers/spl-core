@@ -128,7 +128,7 @@ jobs:
               if: env.publish_release == 'true' && steps.release.outputs.released == 'true'
 
             - name: Publish package distributions to GitHub Releases
-              uses: python-semantic-release/upload-to-gh-release@main
+              uses: python-semantic-release/publish-action@v9
               if: env.publish_release == 'true' && steps.release.outputs.released == 'true'
               with:
                   github_token: ${{ secrets.GITHUB_TOKEN }}
