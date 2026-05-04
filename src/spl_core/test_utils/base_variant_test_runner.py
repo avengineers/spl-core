@@ -42,7 +42,6 @@ class BaseVariantTestRunner(ABC):
             Path("coverage.html"),
             Path("unit_test_results.html"),
             Path("unit_test_spec.html"),
-            Path("doxygen/html/index.html"),
             Path("coverage/index.html"),
         ]
 

@@ -13,7 +13,6 @@
 {% if build_config.component_info.has_reports %}
 {{ build_config.component_info.reports_output_dir }}/unit_test_spec
 {{ build_config.component_info.reports_output_dir }}/unit_test_results
-{{ build_config.component_info.reports_output_dir }}/doxygen/html/index
 {{ build_config.component_info.reports_output_dir }}/coverage
 {% endif %}
 ```

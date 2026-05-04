@@ -69,7 +69,6 @@ class SplBuild:
             [
                 "coverage.html",
                 "coverage/index.html",
-                "doxygen/html/index.html",
                 "unit_test_results.html",
                 "unit_test_spec.html",
             ],

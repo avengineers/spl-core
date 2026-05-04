@@ -102,16 +102,3 @@ class TestCmake:
 
     def test_cmake_multi_binary(self):
         assert 0 == self.run_cmake_unit_test("multi_binary")
-
-    def test_cmake_doxysphinx_extra_args_sequential_when_option_on(self):
-        # When SPL_DOXYSPHINX_SEQUENTIAL=ON, SPL_DOXYSPHINX_EXTRA_ARGS should be "--sequential".
-        assert 0 == self.run_cmake_unit_test("doxysphinx_sequential", "-DSPL_DOXYSPHINX_SEQUENTIAL=ON")
-
-    def test_cmake_doxysphinx_extra_args_empty_when_option_off(self):
-        # When SPL_DOXYSPHINX_SEQUENTIAL=OFF explicitly, SPL_DOXYSPHINX_EXTRA_ARGS should be empty.
-        assert 0 == self.run_cmake_unit_test("doxysphinx_sequential_off", "-DSPL_DOXYSPHINX_SEQUENTIAL=OFF")
-
-    def test_cmake_doxysphinx_extra_args_sequential_via_env_var(self):
-        # When the SPL_DOXYSPHINX_SEQUENTIAL environment variable is set to ON,
-        # SPL_DOXYSPHINX_EXTRA_ARGS should be "--sequential" without any -D flag.
-        assert 0 == self.run_cmake_unit_test("doxysphinx_sequential_env", env={"SPL_DOXYSPHINX_SEQUENTIAL": "ON"})
