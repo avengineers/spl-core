@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v8.2.0-rc.2 (2026-05-04)
+
+### Bug Fixes
+
+- Update github actions
+  ([`2890e8d`](https://github.com/avengineers/spl-core/commit/2890e8d45f8e7e2540359258ede04948603a6a51))
+
+
 ## v8.2.0-rc.1 (2026-05-04)
 
 ### Features
