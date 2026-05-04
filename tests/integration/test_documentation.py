@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 import pytest
 from bs4 import BeautifulSoup
@@ -93,7 +92,7 @@ class TestDocumentation(SplKickstartProjectIntegrationTestBase):
         return bool(needs)
 
     @staticmethod
-    def _assert_needs_table_columns_have_links(html_file: Path, columns: list[str], section_id: Optional[str] = None) -> None:
+    def _assert_needs_table_columns_have_links(html_file: Path, columns: list[str], section_id: str | None = None) -> None:
         """Assert that every row in the sphinx-needs table has links in the specified columns.
 
         Used to catch regressions where cross-links between test specs, test cases, and test

@@ -126,7 +126,7 @@ function Invoke-Build-System {
     }
 
     # Select 'test' build kit based on target
-    if ($target.Contains("unittests") -or $target.Contains("reports")) {
+    if ($target.Contains("unittests") -or $target.Contains("reports") -or $target.Contains("source_docs")) {
         $buildKit = "test"
     }
     # If buildKit is 'test' then buildType is 'Debug'

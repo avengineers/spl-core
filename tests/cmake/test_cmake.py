@@ -1,7 +1,6 @@
 import os
 import subprocess
 from pathlib import Path
-from typing import Optional
 
 from tests.utils import TestDir, create_clean_test_dir
 
@@ -14,7 +13,7 @@ class TestCmake:
         # create a new test workspace
         cls.test_workspace = create_clean_test_dir("test_cmake")
 
-    def run_cmake_unit_test(self, unit_test: str, extra_args: str = "", env: Optional[dict[str, str]] = None) -> int:
+    def run_cmake_unit_test(self, unit_test: str, extra_args: str = "", env: dict[str, str] | None = None) -> int:
         """
         CMake unit test runner
 
