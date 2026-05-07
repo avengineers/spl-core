@@ -799,7 +799,7 @@ macro(_spl_generate_clanguru_source_docs COMPONENT_NAME SRC_FILES)
         return()
     endif()
 
-    set(_clanguru_docs_out_dir ${CMAKE_CURRENT_BINARY_DIR}/source_docs)
+    set(_clanguru_docs_out_dir ${CMAKE_CURRENT_BINARY_DIR}/__source_docs)
     set(_clanguru_doc_outputs "")
     foreach(_src_file ${SRC_FILES})
         get_filename_component(_src_name ${_src_file} NAME)
@@ -812,6 +812,7 @@ macro(_spl_generate_clanguru_source_docs COMPONENT_NAME SRC_FILES)
                 --output-file ${_doc_output}
                 --compilation-database ${CLANGURU_COMPILE_COMMANDS}
                 --format rst
+                --jinja-raw-tags
             # Strip @rst/@endrst markers from generated RST so Sphinx can process directives directly
             COMMAND python -c "import pathlib,re$<SEMICOLON> p=pathlib.Path(r'${_doc_output}')$<SEMICOLON> p.write_text(re.sub(r'(?m)^\\s*@(?:end)?rst\\s*$$','',p.read_text(encoding='utf-8')),encoding='utf-8')"
             DEPENDS ${_src_file}

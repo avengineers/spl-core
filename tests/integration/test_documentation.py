@@ -60,7 +60,7 @@ class TestDocumentation(SplKickstartProjectIntegrationTestBase):
         # Verify at least one component has generated RST files
         found_rst = False
         for component_path in self.spl_project.components:
-            source_docs_dir = build_dir / component_path / "source_docs"
+            source_docs_dir = build_dir / component_path / "__source_docs"
             if source_docs_dir.exists():
                 rst_files = list(source_docs_dir.glob("*.rst"))
                 if rst_files:
