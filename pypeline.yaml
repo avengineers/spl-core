@@ -8,6 +8,9 @@ pipeline:
               python_package_manager: poetry>=2.2
         - step: ScoopInstall
           module: pypeline.steps.scoop_install
+    lint:
+        - step: PreCommit
+          run: pre-commit run --all-files
     build:
         - step: RunPytest
           file: steps/build.py

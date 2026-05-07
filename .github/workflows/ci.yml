@@ -38,7 +38,13 @@ jobs:
               with:
                   python-version: "3.13"
 
-            - uses: pre-commit/action@v3.0.1
+            - name: Install pypeline runner
+              run: pip install pypeline-runner>=1.23
+              shell: bash
+
+            - name: Run pypeline
+              run: pypeline run --step PreCommit
+              shell: bash
 
             # Make sure commit messages follow the conventional commits convention:
             # https://www.conventionalcommits.org

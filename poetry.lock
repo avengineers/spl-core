@@ -656,14 +656,14 @@ files = [
 
 [[package]]
 name = "clanguru"
-version = "0.17.0"
+version = "0.19.0"
 description = "C language utils and tools based on the clang and binutils modules."
 optional = false
 python-versions = "<4.0,>=3.10"
 groups = ["main"]
 files = [
-    {file = "clanguru-0.17.0-py3-none-any.whl", hash = "sha256:54978c0e857291d7adfeea1f9b76fe082060ac5e9b119d7714e1ff70064f9687"},
-    {file = "clanguru-0.17.0.tar.gz", hash = "sha256:9edb2f66c7d3f1269d2612288dc030c0ec6c5ee22d0363bd972c2bc6f9215529"},
+    {file = "clanguru-0.19.0-py3-none-any.whl", hash = "sha256:14b916c24f39eb288f96f1251ad2745baf8edbcce133a6ee28327118924fed68"},
+    {file = "clanguru-0.19.0.tar.gz", hash = "sha256:5d61f1e02ad2e4b41fb71bc4607b64c9179bc3da66cf72d2986e7e0fb085c561"},
 ]
 
 [package.dependencies]
