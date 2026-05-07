@@ -1,6 +1,16 @@
 # CHANGELOG
 
 
+## v8.2.0-rc.3 (2026-05-07)
+
+### Bug Fixes
+
+- Update clanguru
+  ([`838f9f0`](https://github.com/avengineers/spl-core/commit/838f9f0a98c829ae680bae52be4f8a572b449022))
+
+Co-authored-by: Copilot <copilot@github.com>
+
+
 ## v8.2.0-rc.2 (2026-05-04)
 
 ### Bug Fixes
