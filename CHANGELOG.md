@@ -1,6 +1,16 @@
 # CHANGELOG
 
 
+## v8.2.0-rc.5 (2026-05-08)
+
+### Bug Fixes
+
+- Generate source_docs only if an index file is available
+  ([`f12e7c3`](https://github.com/avengineers/spl-core/commit/f12e7c39d6b44826f86161e08bffacbeebc52937))
+
+Co-authored-by: Copilot <copilot@github.com>
+
+
 ## v8.2.0-rc.4 (2026-05-07)
 
 ### Bug Fixes
