@@ -302,13 +302,6 @@ macro(spl_create_component)
             _spl_add_test_suite(${component_name} "${SOURCES}" "${TEST_SOURCES}")
         endif()
 
-        # Generate source documentation using clanguru
-        set(_COMPONENT_SOURCE_DOCS_INCLUDE_PATTERN "")
-        set(_clanguru_all_sources ${SOURCES} ${TEST_SOURCES})
-        if(_clanguru_all_sources)
-            _spl_generate_clanguru_source_docs(${component_name} "${_clanguru_all_sources}")
-        endif()
-
         set(_component_dir ${CMAKE_CURRENT_LIST_DIR})
         set(_component_doc_dir ${_component_dir}/doc)
         set(_component_test_junit_xml ${CMAKE_CURRENT_BINARY_DIR}/junit.xml)
@@ -421,6 +414,13 @@ Code Coverage
                     DEPENDS ${TEST_OUT_JUNIT} ${_cov_out_html}
                 )
             endif(TEST_SOURCES)
+
+            # Generate source documentation using clanguru
+            set(_COMPONENT_SOURCE_DOCS_INCLUDE_PATTERN "")
+            set(_clanguru_all_sources ${SOURCES} ${TEST_SOURCES})
+            if(_clanguru_all_sources)
+                _spl_generate_clanguru_source_docs(${component_name} "${_clanguru_all_sources}")
+            endif()
 
             # Collect all component sphinx include pattern to be used in the variant targets (docs, reports)
             list(APPEND COMPONENTS_SPHINX_INCLUDE_PATTERNS "${_rel_component_doc_dir}/**" "${_rel_component_docs_out_dir}/**" "${_rel_component_reports_out_dir}/**")
