@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v8.2.0 (2026-05-19)
+
+### Features
+
+- Replace doxysphinx/doxygen with clanguru
+  ([`1cf7e3f`](https://github.com/avengineers/spl-core/commit/1cf7e3fde0440470f25419049b5e5392d0b79fcd))
+
+
 ## v8.1.3 (2026-04-29)
 
 ### Bug Fixes
