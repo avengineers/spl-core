@@ -116,7 +116,7 @@ class SplSphinx:
         context: dict[str, Any] = {
             "build_config": {},
             "config": {},
-            "timestamp": f"{datetime.datetime.now(tz=datetime.timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC",
+            "timestamp": f"{datetime.datetime.now(tz=datetime.UTC).strftime('%Y-%m-%d %H:%M:%S')} UTC",
         }
 
         if "SPHINX_BUILD_CONFIGURATION_FILE" in os.environ:

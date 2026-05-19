@@ -3,7 +3,7 @@ import shutil
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -160,7 +160,7 @@ def test_multiple_archives_with_target_repos(test_dir, test_files, monkeypatch, 
     output_dir = test_dir / "output"
 
     # Create 3 archives with different configurations
-    archives_config: List[Dict[str, Any]] = [
+    archives_config: list[dict[str, Any]] = [
         {
             "name": "logs_archive",
             "filename": "logs.7z",
@@ -669,7 +669,7 @@ def test_update_artifacts_json_file_not_exists(test_dir):
     artifacts = {"test.html": "https://example.com/test.html"}
 
     # Act & Assert
-    with pytest.raises(FileNotFoundError, match="artifacts.json file does not exist"):
+    with pytest.raises(FileNotFoundError, match=r"artifacts\.json file does not exist"):
         archiver.update_artifacts_json("test_category", artifacts, non_existent_path)
 
 
@@ -682,7 +682,7 @@ def test_update_artifacts_json_corrupted_json(test_dir):
     artifacts = {"test.html": "https://example.com/test.html"}
 
     # Act & Assert
-    with pytest.raises(ValueError, match="Could not parse artifacts.json"):
+    with pytest.raises(ValueError, match=r"Could not parse artifacts\.json"):
         archiver.update_artifacts_json("test_category", artifacts, corrupted_json_path)
 
 
@@ -695,7 +695,7 @@ def test_update_artifacts_json_invalid_structure(test_dir):
     artifacts = {"test.html": "https://example.com/test.html"}
 
     # Act & Assert
-    with pytest.raises(ValueError, match="invalid structure.*artifacts.*not found"):
+    with pytest.raises(ValueError, match=r"invalid structure.*artifacts.*not found"):
         archiver.update_artifacts_json("test_category", artifacts, invalid_structure_path)
 
 

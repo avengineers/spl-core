@@ -1,3 +1,8 @@
+[source]
+exclude = [".bzr", ".direnv", ".eggs", ".git", ".git-rewrite", ".hg", ".svn", ".venv", ".vscode", "_build", "dist", "node_modules", "site-packages"]
+respect_gitignore = false
+extend_include = ["build/**/__source_docs/**"]
+
 [needs]
 extra_links = [
     { option = "realizes", incoming = "is realized by", outgoing = "realizes" },

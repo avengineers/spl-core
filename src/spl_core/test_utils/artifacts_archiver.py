@@ -1,9 +1,9 @@
 import json
 import os
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import py7zr
 from py_app_dev.core.logging import logger
@@ -25,7 +25,7 @@ class BuildMetadata:
     branch_name: str
     build_number: str
     is_tag: bool
-    pr_number: Optional[str]
+    pr_number: str | None
 
 
 @dataclass
@@ -39,9 +39,9 @@ class GitMetadata:
         repository_url: The git repository URL (from remote.origin.url)
     """
 
-    commit_id: Optional[str]
-    commit_message: Optional[str]
-    repository_url: Optional[str]
+    commit_id: str | None
+    commit_message: str | None
+    repository_url: str | None
 
 
 class ArtifactsArchive:
@@ -67,9 +67,9 @@ class ArtifactsArchive:
     def __init__(self, out_dir: Path, archive_name: str) -> None:
         self.out_dir: Path = out_dir
         self.archive_name: str = archive_name
-        self.archive_artifacts: List[ArtifactsArchive.ArchiveArtifact] = []
+        self.archive_artifacts: list[ArtifactsArchive.ArchiveArtifact] = []
 
-    def register(self, artifacts: List[Path]) -> None:
+    def register(self, artifacts: list[Path]) -> None:
         """
         Register artifacts for archiving.
         Args:
@@ -156,12 +156,12 @@ class ArtifactsArchiver:
     It provides a unified interface for registering artifacts to different archives.
     """
 
-    def __init__(self, artifactory_base_url: Optional[str] = None) -> None:
-        self.archives: Dict[str, ArtifactsArchive] = {}
-        self._target_repos: Dict[str, str] = {}
+    def __init__(self, artifactory_base_url: str | None = None) -> None:
+        self.archives: dict[str, ArtifactsArchive] = {}
+        self._target_repos: dict[str, str] = {}
         self.artifactory_base_url = artifactory_base_url
 
-    def add_archive(self, out_dir: Path, archive_filename: str, target_repo: Optional[str] = None, archive_name: str = "default") -> ArtifactsArchive:
+    def add_archive(self, out_dir: Path, archive_filename: str, target_repo: str | None = None, archive_name: str = "default") -> ArtifactsArchive:
         """
         Add a new archive to the archiver.
 
@@ -181,7 +181,7 @@ class ArtifactsArchiver:
             self._target_repos[archive_name] = target_repo
         return archive
 
-    def register(self, artifacts: List[Path], archive_name: str = "default") -> None:
+    def register(self, artifacts: list[Path], archive_name: str = "default") -> None:
         """
         Register artifacts for archiving to a specific archive.
 
@@ -215,7 +215,7 @@ class ArtifactsArchiver:
 
         return self.archives[archive_name]
 
-    def get_archive_url(self, archive_name: str = "default") -> Optional[str]:
+    def get_archive_url(self, archive_name: str = "default") -> str | None:
         """
         Get the Artifactory URL for a specific archive.
 
@@ -246,7 +246,7 @@ class ArtifactsArchiver:
 
         return archive_url
 
-    def create_all_archives(self) -> Dict[str, Path]:
+    def create_all_archives(self) -> dict[str, Path]:
         """
         Create all registered archives.
 
@@ -488,9 +488,9 @@ class ArtifactsArchiver:
         git_metadata = self._get_git_metadata()
 
         # Create the initial artifacts.json structure with base metadata
-        artifacts_data: Dict[str, Any] = {
+        artifacts_data: dict[str, Any] = {
             "variant": variant,
-            "build_timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds") + "Z",
+            "build_timestamp": datetime.now(UTC).isoformat(timespec="seconds") + "Z",
             "build_number": build_metadata.build_number,
         }
 
@@ -530,7 +530,7 @@ class ArtifactsArchiver:
 
         return json_path
 
-    def update_artifacts_json(self, category: str, artifacts: Dict[str, str], artifacts_json_path: Path) -> Path:
+    def update_artifacts_json(self, category: str, artifacts: dict[str, str], artifacts_json_path: Path) -> Path:
         """
         Add or update artifacts in a specific category for the artifacts.json file.
 
@@ -581,7 +581,7 @@ class ArtifactsArchiver:
 
         return artifacts_json_path
 
-    def list_archives(self) -> List[str]:
+    def list_archives(self) -> list[str]:
         """
         Get a list of all archive names.
 

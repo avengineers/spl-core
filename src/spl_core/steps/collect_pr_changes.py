@@ -1,7 +1,6 @@
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional
 
 from mashumaro.mixins.json import DataClassJSONMixin
 from py_app_dev.core.logging import logger
@@ -18,7 +17,7 @@ class PR_Changes(DataClassJSONMixin):
     target_branch: str
     current_branch: str
     commit_id: str
-    changed_files: List[str]
+    changed_files: list[str]
 
 
 class CollectPRChanges(PipelineStep):
@@ -45,7 +44,7 @@ class CollectPRChanges(PipelineStep):
                 )
                 logger.info(f"PR changes saved to {output_file}")
 
-    def _get_changed_files(self, target_branch: str, current_branch: str) -> List[str]:
+    def _get_changed_files(self, target_branch: str, current_branch: str) -> list[str]:
         """Get list of changed files in the current branch/PR"""
         # Fetch both branches to ensure they exist locally
         logger.info(f"Fetching branches: {target_branch} and {current_branch}")
@@ -88,10 +87,10 @@ class CollectPRChanges(PipelineStep):
                 continue
         return []
 
-    def get_inputs(self) -> List[Path]:
+    def get_inputs(self) -> list[Path]:
         return []
 
-    def get_outputs(self) -> List[Path]:
+    def get_outputs(self) -> list[Path]:
         return [self.output_dir.joinpath("pr_changes.json")]
 
     def get_name(self) -> str:
@@ -108,7 +107,7 @@ class CollectPRChanges(PipelineStep):
         """
         return {"latest_commit": self._get_commit_id()}
 
-    def _get_commit_id(self, ci_context: Optional[CIContext] = None) -> str:
+    def _get_commit_id(self, ci_context: CIContext | None = None) -> str:
         """Get the latest commit ID in the current branch."""
         try:
             if not ci_context:

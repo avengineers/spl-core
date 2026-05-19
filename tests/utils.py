@@ -5,10 +5,11 @@ import re
 import shutil
 import string
 import subprocess
+from collections.abc import Collection
 from contextlib import ContextDecorator
 from pathlib import Path
 from time import perf_counter
-from typing import Any, Collection, Dict, List, Optional
+from typing import Any
 
 from py_app_dev.core.subprocess import SubprocessExecutor
 
@@ -20,7 +21,7 @@ def this_repository_root_dir() -> Path:
 
 
 class ExecutionTime(ContextDecorator):
-    def __init__(self, message: Optional[str] = None):
+    def __init__(self, message: str | None = None):
         self.name = message
 
     def __enter__(self):
@@ -69,7 +70,7 @@ class WorkspaceArtifacts:
     def kconfig_model_file(self) -> Path:
         return self.project_root_dir.joinpath("KConfig")
 
-    def get_build_dir(self, variant: Variant | str, build_kit: str, build_type: Optional[str] = "Debug") -> Path:
+    def get_build_dir(self, variant: Variant | str, build_kit: str, build_type: str | None = "Debug") -> Path:
         if build_type:
             return self.project_root_dir.joinpath(f"build/{variant}/{build_kit}/{build_type}")
         return self.project_root_dir.joinpath(f"build/{variant}/{build_kit}")
@@ -86,7 +87,7 @@ class TestDir:
     __test__ = False
     path: Path
 
-    def write_file(self, name: str, content: Optional[str] = None) -> Path:
+    def write_file(self, name: str, content: str | None = None) -> Path:
         file = self.path.joinpath(name)
         file.parent.mkdir(parents=True, exist_ok=True)
         file.write_text(content if content else self.gen_random_text(10))
@@ -164,7 +165,7 @@ class DirectoryTracker:
     def reset_status(self):
         self.start_status = self._collect_files_status()
 
-    def _collect_files_status(self) -> Dict[Path, int]:
+    def _collect_files_status(self) -> dict[Path, int]:
         """
         Store a set with all files and their timestamps
         """
@@ -198,7 +199,7 @@ class IntegrationTestsSplProject:
     One can either create a new project or use an example project.
     """
 
-    def __init__(self, project_dir: Path, components: List[str]):
+    def __init__(self, project_dir: Path, components: list[str]):
         self.project_dir = project_dir
         self.components = components
         self.artifacts = WorkspaceArtifacts(self.project_dir)

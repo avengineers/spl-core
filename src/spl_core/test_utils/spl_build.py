@@ -1,9 +1,10 @@
 import json
 import time
 import zipfile
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, ClassVar, List, Optional
+from typing import ClassVar
 
 from py_app_dev.core.logging import time_it
 from py_app_dev.core.subprocess import SubprocessExecutor
@@ -20,8 +21,8 @@ class ArchiveArtifact:
 class ArtifactsCollection:
     """Obsolete class for collecting artifacts to be archived."""
 
-    def __init__(self, artifacts: List[Path], build_dir: Path):
-        self.archive_artifacts: List[ArchiveArtifact] = []
+    def __init__(self, artifacts: list[Path], build_dir: Path):
+        self.archive_artifacts: list[ArchiveArtifact] = []
         for artifact in artifacts:
             if artifact.is_absolute():
                 artifact_path = artifact
@@ -69,7 +70,6 @@ class SplBuild:
             [
                 "coverage.html",
                 "coverage/index.html",
-                "doxygen/html/index.html",
                 "unit_test_results.html",
                 "unit_test_spec.html",
             ],
@@ -77,7 +77,7 @@ class SplBuild:
         ),
     }
 
-    def __init__(self, variant: str, build_kit: str, build_type: Optional[str] = None, target: Optional[str] = None) -> None:
+    def __init__(self, variant: str, build_kit: str, build_type: str | None = None, target: str | None = None) -> None:
         self.variant = variant
         self.build_kit = build_kit
         self.build_type = build_type
@@ -93,7 +93,7 @@ class SplBuild:
         return Path(f"build/{self.variant}/{self.build_kit}")
 
     @time_it()
-    def execute(self, target: Optional[str] = None, additional_args: Optional[List[str]] = None) -> int:
+    def execute(self, target: str | None = None, additional_args: list[str] | None = None) -> int:
         """
         Execute an SPL build (of a given target).
 
@@ -166,7 +166,7 @@ class SplBuild:
             return []
         return [self.build_dir / artifact for artifact in target_data]
 
-    def create_artifacts_archive(self, expected_artifacts: List[Path]) -> Path:
+    def create_artifacts_archive(self, expected_artifacts: list[Path]) -> Path:
         """
         Obsolete method for creating an archive of artifacts.
 
@@ -197,7 +197,7 @@ class SplBuild:
             print(f"Error creating artifacts zip file: {e}")
             raise e
 
-    def create_artifacts_json(self, expected_artifacts: List[Path]) -> Path:
+    def create_artifacts_json(self, expected_artifacts: list[Path]) -> Path:
         """
         Obsolete method to create a JSON file listing the collected artifacts.
 
