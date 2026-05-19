@@ -2,7 +2,6 @@ import json
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional
 
 
 class ArchiveArtifactsCollection:
@@ -23,9 +22,9 @@ class ArchiveArtifactsCollection:
         archive_path: Path
         absolute_path: Path
 
-    def __init__(self, artifacts: List[Path], build_dir: Path):
+    def __init__(self, artifacts: list[Path], build_dir: Path):
         self.build_dir = build_dir
-        self.archive_artifacts: List[ArchiveArtifactsCollection.ArchiveArtifact] = []
+        self.archive_artifacts: list[ArchiveArtifactsCollection.ArchiveArtifact] = []
         for artifact in artifacts:
             # Convert all artifacts to absolute paths first
             artifact_path = artifact.resolve() if not artifact.is_absolute() else artifact
@@ -53,7 +52,7 @@ class ArchiveArtifactsCollection:
 
                 self.archive_artifacts.append(self.ArchiveArtifact(archive_path=archive_path, absolute_path=artifact_path))
 
-    def create_archive(self, zip_filename: Optional[str] = None) -> Path:
+    def create_archive(self, zip_filename: str | None = None) -> Path:
         """
         Create a zip file containing the collected artifacts.
         Args:
@@ -86,7 +85,7 @@ class ArchiveArtifactsCollection:
             print(f"Error creating artifacts zip file: {e}")
             raise e
 
-    def create_json(self, json_filename: Optional[str] = None) -> Path:
+    def create_json(self, json_filename: str | None = None) -> Path:
         """
         Create a JSON file containing the collected artifacts.
         Args:

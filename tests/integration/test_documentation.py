@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 import pytest
 from bs4 import BeautifulSoup
@@ -14,11 +13,24 @@ class TestDocumentation(SplKickstartProjectIntegrationTestBase):
         result = self.spl_project.build(variant, "reports")
         assert result is not None and result.returncode == 0, "Execution shall not fail."
 
+        # Expected clanguru-generated RST source docs per component
+        expected_source_docs: dict[str, list[str]] = {
+            "src/main": ["main.c.rst"],
+            "src/greeter": ["greeter.c.rst", "test_greeter.cc.rst"],
+        }
+
         # Check all generated artifacts
         build_dir = self.spl_project.artifacts.get_build_dir(variant, "test")
         rel_build_dir = build_dir.relative_to(self.spl_project.artifacts.project_root_dir)
         for component_path in self.spl_project.components:
             assert build_dir.joinpath(f"reports/html/{component_path}/doc/index.html").exists(), "Component report expected but not found"
+
+            # Check clanguru RST source docs
+            for rst_name in expected_source_docs.get(component_path, []):
+                rst_file = build_dir / component_path / "__source_docs" / rst_name
+                assert rst_file.exists(), f"Expected RST file {rst_file} not found"
+                assert rst_file.stat().st_size > 0, f"RST file {rst_file} is empty"
+
             # if there are any files in the component test dir
             if len(list(self.spl_project.artifacts.project_root_dir.joinpath(component_path).glob("test/*"))):
                 # Existence checks for all expected report artifacts
@@ -27,7 +39,6 @@ class TestDocumentation(SplKickstartProjectIntegrationTestBase):
                     "unit_test_results.html",
                     "coverage.html",
                     "coverage/index.html",
-                    "doxygen/html/index.html",
                 ]:
                     assert build_dir.joinpath(f"reports/html/{rel_build_dir}/{component_path}/reports/{file}").exists(), f"Component test {file} expected but not found"
 
@@ -53,11 +64,6 @@ class TestDocumentation(SplKickstartProjectIntegrationTestBase):
                         section_id=section_id,
                     )
 
-                # - impl needs in doxygen HTML must have an :implements: link to a spec
-                doxygen_html_dir = reports_dir / "doxygen/html"
-                found_any_impl = any(self._assert_needs_have_link_option(html_file, need_type_class="needs_type_impl", link_span_class="implements") for html_file in doxygen_html_dir.glob("*.html"))
-                assert found_any_impl, f"No impl needs found in doxygen HTML for {component_path} - check that source files contain :implements: links."
-
     @staticmethod
     def _assert_needs_have_link_option(html_file: Path, need_type_class: str, link_span_class: str) -> bool:
         """Assert that every need of the given type in the HTML file has a non-empty link option.
@@ -80,7 +86,7 @@ class TestDocumentation(SplKickstartProjectIntegrationTestBase):
         return bool(needs)
 
     @staticmethod
-    def _assert_needs_table_columns_have_links(html_file: Path, columns: list[str], section_id: Optional[str] = None) -> None:
+    def _assert_needs_table_columns_have_links(html_file: Path, columns: list[str], section_id: str | None = None) -> None:
         """Assert that every row in the sphinx-needs table has links in the specified columns.
 
         Used to catch regressions where cross-links between test specs, test cases, and test

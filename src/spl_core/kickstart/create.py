@@ -1,31 +1,30 @@
 import shutil
 from pathlib import Path
-from typing import List, Optional, Union
 
 from py_app_dev.core.exceptions import UserNotificationException
 from py_app_dev.core.logging import logger
 
 
 class ProjectBuilder:
-    def __init__(self, project_dir: Path, input_dir: Optional[Path] = None) -> None:
+    def __init__(self, project_dir: Path, input_dir: Path | None = None) -> None:
         self.project_dir = project_dir
         self.input_dir = input_dir if input_dir else Path(__file__).parent.joinpath("templates")
 
-        self.dirs: List[Path] = []
+        self.dirs: list[Path] = []
         self.check_target_directory_flag = True
 
     def with_disable_target_directory_check(self) -> "ProjectBuilder":
         self.check_target_directory_flag = False
         return self
 
-    def with_dir(self, dir: Union[Path, str]) -> "ProjectBuilder":
+    def with_dir(self, dir: Path | str) -> "ProjectBuilder":
         self.dirs.append(self.resolve_file_path(dir))
         return self
 
-    def resolve_file_paths(self, files: List[Path | str]) -> List[Path]:
+    def resolve_file_paths(self, files: list[Path | str]) -> list[Path]:
         return [self.resolve_file_path(file) for file in files]
 
-    def resolve_file_path(self, file: Union[Path, str]) -> Path:
+    def resolve_file_path(self, file: Path | str) -> Path:
         return self.input_dir.joinpath(file) if isinstance(file, str) else file
 
     @staticmethod

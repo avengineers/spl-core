@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List
 
 import pytest
 from typer.testing import CliRunner
@@ -11,7 +10,7 @@ runner = CliRunner()
 
 
 @pytest.fixture
-def kickstart_files() -> List[str]:
+def kickstart_files() -> list[str]:
     """Collect all project template files."""
     project_template_path = Path("src/spl_core/kickstart/templates/project")
     all_files = [str(path.relative_to(project_template_path)) for path in project_template_path.rglob("*") if path.is_file()]
@@ -19,7 +18,7 @@ def kickstart_files() -> List[str]:
     return all_files
 
 
-def test_init_default(kickstart_files: List[str], tmp_path: Path) -> None:
+def test_init_default(kickstart_files: list[str], tmp_path: Path) -> None:
     result = runner.invoke(app, ["init", "--project-dir", tmp_path.as_posix()])
     assert result.exit_code == 0
 
@@ -27,7 +26,7 @@ def test_init_default(kickstart_files: List[str], tmp_path: Path) -> None:
         assert tmp_path.joinpath(file).exists(), f"{file} shall exist"
 
 
-def test_init_with_force_in_non_empty_directory(tmp_path: Path, kickstart_files: List[str]) -> None:
+def test_init_with_force_in_non_empty_directory(tmp_path: Path, kickstart_files: list[str]) -> None:
     tmp_path.joinpath("test").mkdir()
     result = runner.invoke(app, ["init", "--project-dir", tmp_path.as_posix()])
     assert result.exit_code == 1, "The command shall fail because the directory is not empty."

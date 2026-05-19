@@ -3,11 +3,12 @@ import json
 import os
 import re
 from abc import ABC, abstractmethod
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum, auto
 from pathlib import Path
-from typing import Any, Generator, List, Optional
+from typing import Any
 
 import kconfiglib
 
@@ -69,7 +70,7 @@ class ConfigurationData:
     - requires no variable substitution (this should have been already done)
     """
 
-    elements: List[ConfigElement]
+    elements: list[ConfigElement]
 
 
 class FileWriter(ABC):
@@ -102,7 +103,7 @@ class HeaderWriter(FileWriter):
         We had to implemented here because we refactor the file writers to use the ConfigurationData
         instead of the KConfig configuration. ConfigurationData has variable substitution already done.
         """
-        result: List[str] = [
+        result: list[str] = [
             "/** @file */",
             "#ifndef __autoconf_h__",
             "#define __autoconf_h__",
@@ -158,7 +159,7 @@ class CMakeWriter(FileWriter):
     """Writes the ConfigurationData as CMake variables"""
 
     def generate_content(self, configuration_data: ConfigurationData) -> str:
-        result: List[str] = []
+        result: list[str] = []
         add = result.append
         for element in configuration_data.elements:
             val = element.value
@@ -185,8 +186,8 @@ class KConfig:
     def __init__(
         self,
         k_config_model_file: Path,
-        k_config_file: Optional[Path] = None,
-        k_config_root_directory: Optional[Path] = None,
+        k_config_file: Path | None = None,
+        k_config_root_directory: Path | None = None,
     ):
         """
         :param k_config_model_file: Feature model definition (KConfig format)

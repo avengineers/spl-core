@@ -1,20 +1,3 @@
-# Option to run doxysphinx in sequential mode (avoids crashes on some systems).
-# Can be set via:
-# 1. CMake option:        -DSPL_DOXYSPHINX_SEQUENTIAL=ON
-# 2. Environment variable: SPL_DOXYSPHINX_SEQUENTIAL=ON (no project file changes needed)
-# The environment variable takes precedence if set.
-if(DEFINED ENV{SPL_DOXYSPHINX_SEQUENTIAL})
-    set(SPL_DOXYSPHINX_SEQUENTIAL "$ENV{SPL_DOXYSPHINX_SEQUENTIAL}" CACHE BOOL "Run doxysphinx build with --sequential option" FORCE)
-endif()
-
-option(SPL_DOXYSPHINX_SEQUENTIAL "Run doxysphinx build with --sequential option" OFF)
-
-if(SPL_DOXYSPHINX_SEQUENTIAL)
-    set(SPL_DOXYSPHINX_EXTRA_ARGS "--sequential")
-else()
-    set(SPL_DOXYSPHINX_EXTRA_ARGS "")
-endif()
-
 macro(_spl_slash_to_underscore out in)
     string(REGEX REPLACE "/" "_" ${out} ${in})
 endmacro()
@@ -401,27 +384,13 @@ Code Coverage
 
 ")
 
-                # generate Doxyfile from template
-                set(_component_doxyfile ${_component_reports_out_dir}/Doxyfile)
-                set(DOXYGEN_PROJECT_NAME "${CREATE_COMPONENT_LONG_NAME} Documentation")
-                set(DOXYGEN_OUTPUT_DIRECTORY ${_component_reports_out_dir}/doxygen)
-                set(DOXYGEN_INPUT "${_component_dir}/src ${_component_dir}/test ${KCONFIG_OUT_DIR}")
-
-                # We need to add the googletest include directory to the doxygen include path
-                # to be able to resolve the TEST() macros in the test files.
-                set(DOXYGEN_INCLUDE_PATH "${_sphinx_source_dir}/build/modules/googletest-src/googletest/include ${KCONFIG_OUT_DIR}")
-                set(DOXYGEN_AWESOME_PATH "${_sphinx_source_dir}/doc/doxygen-awesome")
-                configure_file(${_sphinx_source_dir}/doc/Doxyfile.in ${_component_doxyfile} @ONLY)
-                file(RELATIVE_PATH _rel_component_doxyfile ${CMAKE_CURRENT_BINARY_DIR} ${_component_doxyfile})
-                file(RELATIVE_PATH _rel_component_doxysphinx_index_rst ${_sphinx_source_dir} ${DOXYGEN_OUTPUT_DIRECTORY}/html/index)
-
                 file(WRITE ${_reports_config_json} "{
     \"component_info\": ${_component_info},
     \"include_patterns\": [\"${_rel_component_doc_dir}/**\",\"${_rel_component_reports_out_dir}/**\"]
 }")
 
                 # add the generated files as dependency to cmake configure step
-                set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_reports_config_json} ${_unit_test_spec_rst} ${_unit_test_results_rst} ${_component_doxyfile})
+                set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_reports_config_json} ${_unit_test_spec_rst} ${_unit_test_results_rst})
 
                 set(_cov_out_html reports/html/${_rel_component_reports_out_dir}/coverage/index.html)
                 file(RELATIVE_PATH _cov_out_json ${CMAKE_CURRENT_BINARY_DIR} ${_component_coverage_json})
@@ -435,32 +404,29 @@ Code Coverage
                     COMMENT "Generating component coverage html report ${_cov_out_html} ..."
                 )
 
-                # We need to have a separate component doxygen generation target because it is required
-                # by both the component and variant reports.
-                add_custom_target(
-
-                    # No OUTPUT is defined to force execution of this target every time
-                    ${component_name}_doxygen
-                    COMMAND ${CMAKE_COMMAND} -E make_directory ${_component_reports_out_dir}
-                    COMMAND ${CMAKE_COMMAND} -E remove_directory ${DOXYGEN_OUTPUT_DIRECTORY}
-                    COMMAND ${CMAKE_COMMAND} -E make_directory ${DOXYGEN_OUTPUT_DIRECTORY}
-                    COMMAND doxygen ${_rel_component_doxyfile}
-                )
-
                 # No OUTPUT is defined to force execution of this target every time
                 # TODO: list of dependencies is not complete
                 add_custom_target(
                     ${component_name}_report
                     COMMAND ${CMAKE_COMMAND} -E make_directory ${_component_reports_out_dir}
-                    COMMAND doxysphinx build ${_sphinx_source_dir} ${_component_reports_html_out_dir} ${_rel_component_doxyfile} ${SPL_DOXYSPHINX_EXTRA_ARGS}
                     COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_reports_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -E -b html ${_sphinx_source_dir} ${_component_reports_html_out_dir}
                     BYPRODUCTS ${_component_reports_html_out_dir}/index.html
-                    DEPENDS ${TEST_OUT_JUNIT} ${component_name}_doxygen ${_cov_out_html}
+                    DEPENDS ${TEST_OUT_JUNIT} ${_cov_out_html}
                 )
             endif(TEST_SOURCES)
 
+            # Generate source documentation using clanguru
+            set(_COMPONENT_SOURCE_DOCS_INCLUDE_PATTERN "")
+            set(_clanguru_all_sources ${SOURCES} ${TEST_SOURCES})
+            if(_clanguru_all_sources)
+                _spl_generate_clanguru_source_docs(${component_name} "${_clanguru_all_sources}")
+            endif()
+
             # Collect all component sphinx include pattern to be used in the variant targets (docs, reports)
             list(APPEND COMPONENTS_SPHINX_INCLUDE_PATTERNS "${_rel_component_doc_dir}/**" "${_rel_component_docs_out_dir}/**" "${_rel_component_reports_out_dir}/**")
+            if(_COMPONENT_SOURCE_DOCS_INCLUDE_PATTERN)
+                list(APPEND COMPONENTS_SPHINX_INCLUDE_PATTERNS "${_COMPONENT_SOURCE_DOCS_INCLUDE_PATTERN}")
+            endif()
             set(COMPONENTS_SPHINX_INCLUDE_PATTERNS ${COMPONENTS_SPHINX_INCLUDE_PATTERNS} PARENT_SCOPE)
         endif(EXISTS ${_component_doc_dir}/index.rst OR EXISTS ${_component_doc_dir}/index.md)
     endif(BUILD_KIT STREQUAL prod)
@@ -562,10 +528,8 @@ Code Coverage
 
 ")
 
-    # For every component we need to create specific coverage and doxysphinx targets to make sure
+    # For every component we need to create specific coverage targets to make sure
     # the output files are generated in the overall variant sphinx output directory.
-    # This will avoid the need to copy all the component coverage and doxygen files from the component
-    # directories to the variant directory.
     foreach(component_info ${COMPONENTS_INFO})
         string(JSON component_name GET ${component_info} name)
         string(JSON component_path GET ${component_info} path)
@@ -583,15 +547,6 @@ Code Coverage
             )
             list(APPEND _components_coverage_html ${_cov_out_html})
 
-            set(_rel_component_doxyfile ${component_path}/reports/Doxyfile)
-            add_custom_target(
-                ${component_name}_doxysphinx
-                COMMAND ${CMAKE_COMMAND} -E make_directory ${_variant_component_reports_out_dir}
-                COMMAND doxysphinx build ${PROJECT_SOURCE_DIR} ${_reports_html_output_dir} ${_rel_component_doxyfile} ${SPL_DOXYSPHINX_EXTRA_ARGS}
-                DEPENDS ${component_name}_doxygen
-                COMMENT "Generating variant component doxysphinx report ${component_name}_doxysphinx ..."
-            )
-            list(APPEND _components_variant_doxysphinx_targets ${component_name}_doxysphinx)
         endif()
     endforeach()
 
@@ -623,7 +578,7 @@ Code Coverage
         # We need to call sphinx-build with -E to make sure all files are regenerated.
         COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_reports_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -E -b html ${PROJECT_SOURCE_DIR} ${_reports_html_output_dir}
         BYPRODUCTS ${_reports_html_output_dir}/index.html
-        DEPENDS ${JUNIT_OUT_VARIANT_XML} ${COV_OUT_VARIANT_JSON} _components_variant_coverage_html_target ${_components_variant_doxysphinx_targets}
+        DEPENDS ${JUNIT_OUT_VARIANT_XML} ${COV_OUT_VARIANT_JSON} _components_variant_coverage_html_target source_docs
     )
 endmacro()
 
@@ -834,6 +789,48 @@ macro(_spl_add_test_suite COMPONENT_NAME PROD_SRC TEST_SOURCES)
         DISCOVERY_TIMEOUT 60
     )
 endmacro(_spl_add_test_suite)
+
+macro(_spl_generate_clanguru_source_docs COMPONENT_NAME SRC_FILES)
+    if(NOT CLANGURU_EXECUTABLE)
+        find_program(CLANGURU_EXECUTABLE clanguru)
+    endif()
+    if(NOT CLANGURU_EXECUTABLE)
+        message(FATAL_ERROR "clanguru not found. Please install clanguru to enable source documentation generation.")
+        return()
+    endif()
+
+    set(_clanguru_docs_out_dir ${CMAKE_CURRENT_BINARY_DIR}/__source_docs)
+    set(_clanguru_doc_outputs "")
+    foreach(_src_file ${SRC_FILES})
+        get_filename_component(_src_name ${_src_file} NAME)
+        set(_doc_output ${_clanguru_docs_out_dir}/${_src_name}.rst)
+        add_custom_command(
+            OUTPUT ${_doc_output}
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${_clanguru_docs_out_dir}
+            COMMAND ${CLANGURU_EXECUTABLE} docs
+                --source-file ${_src_file}
+                --output-file ${_doc_output}
+                --compilation-database ${CMAKE_BINARY_DIR}/compile_commands.json
+                --format rst
+                --jinja-raw-tags
+            DEPENDS ${_src_file}
+            COMMENT "Generating RST docs for ${_src_name} (${COMPONENT_NAME})"
+        )
+        list(APPEND _clanguru_doc_outputs ${_doc_output})
+    endforeach()
+
+    if(_clanguru_doc_outputs)
+        add_custom_target(
+            ${COMPONENT_NAME}_source_docs
+            DEPENDS ${_clanguru_doc_outputs}
+        )
+        add_dependencies(source_docs ${COMPONENT_NAME}_source_docs)
+
+        # Expose source_docs directory for Sphinx include patterns
+        file(RELATIVE_PATH _rel_clanguru_docs_out_dir ${PROJECT_SOURCE_DIR} ${_clanguru_docs_out_dir})
+        set(_COMPONENT_SOURCE_DOCS_INCLUDE_PATTERN "${_rel_clanguru_docs_out_dir}/**")
+    endif()
+endmacro(_spl_generate_clanguru_source_docs)
 
 macro(spl_add_conan_requires requirement)
     list(APPEND CONAN__REQUIRES ${requirement})

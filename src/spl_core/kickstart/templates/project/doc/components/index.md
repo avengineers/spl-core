@@ -12,7 +12,6 @@
 {% if (build_config.target == 'reports') and component_info.has_reports %}
 /{{ component_info.reports_output_dir }}/unit_test_spec
 /{{ component_info.reports_output_dir }}/unit_test_results
-/{{ component_info.reports_output_dir }}/doxygen/html/index
 /{{ component_info.reports_output_dir }}/coverage
 {% endif %}
 ```

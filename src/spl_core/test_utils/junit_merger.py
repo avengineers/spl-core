@@ -8,7 +8,6 @@ This enables CI/CD tooling to consume aggregated test results from all component
 import argparse
 import sys
 from pathlib import Path
-from typing import List, Optional
 
 from junitparser import JUnitXml
 
@@ -27,7 +26,7 @@ class JUnitMerger:
     components into a unified JUnit XML file for CI/CD tooling.
     """
 
-    def __init__(self, input_files: List[str], output_file: str, variant: Optional[str] = None):
+    def __init__(self, input_files: list[str], output_file: str, variant: str | None = None):
         """
         Initialize the JUnit merger.
 
