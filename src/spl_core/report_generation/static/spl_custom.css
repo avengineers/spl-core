@@ -1,0 +1,197 @@
+/* SPL Theme Layout — aligned with the SPLE Platform Page.
+ *
+ * These overrides ensure the PyData Sphinx Theme uses a full-width layout
+ * with persistent left (navigation) and right (table of contents) sidebars.
+ * Without them the theme defaults to a narrow centered article container.
+ */
+
+/* Hide heading anchors by default, show on hover */
+.headerlink {
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+
+h1:hover .headerlink,
+h2:hover .headerlink,
+h3:hover .headerlink,
+h4:hover .headerlink,
+h5:hover .headerlink,
+h6:hover .headerlink {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Full-width page and article container */
+.bd-main .bd-content .bd-article-container {
+    max-width: 100%;
+}
+
+.bd-page-width {
+    max-width: 100%;
+}
+
+/* Left sidebar (navigation) width */
+.bd-sidebar-primary {
+    width: 20rem;
+}
+
+/* Keep the primary sidebar visible on Doxygen sub-pages (orphans not in any
+   toctree).  PyData adds "hide-on-wide" when it cannot find a toctree parent,
+   which collapses the sidebar on desktop. Override that so the root navigation
+   remains accessible — matching the old RTD theme behaviour. */
+.bd-sidebar-primary.hide-on-wide {
+    display: flex !important;
+}
+
+/* Overall layout variables */
+html {
+    --pst-header-height: 5rem;
+    --pst-header-article-height: calc(var(--pst-header-height) * 1 / 4);
+    --pst-sidebar-secondary: 17rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * Layout fixes for Doxygen content embedded via doxysphinx.
+ *
+ * IMPORTANT: The Doxygen CSS files (doxygen.css, doxygen-awesome.css) ARE
+ * loaded by the browser — doxysphinx leaves <link> tags in the embedded HTML.
+ * Because those <link> tags appear in the <body> (after the <head> stylesheets),
+ * they are applied AFTER spl_custom.css.  For equal specificity + !important,
+ * the last-loaded stylesheet wins.  We therefore prefix layout-critical rules
+ * with ".bd-article" to guarantee higher specificity than the Doxygen CSS.
+ * ---------------------------------------------------------------------------
+ */
+
+/* Reset doxygen-awesome's --content-maxwidth (default 1050px) which limits
+   .contents width via max-width: var(--content-maxwidth).  Also prevent
+   horizontal overflow from Doxygen's internally generated elements (menus,
+   resize handles) which are sized for standalone pages and can be slightly
+   wider than the Sphinx article container. */
+.bd-article .doxygen-content {
+    --content-maxwidth: 100% !important;
+    overflow-x: hidden;
+}
+
+/* doxygen.css sets "display: inline; width: auto !important" on #doc-content
+   which shrinks it to content width.  Additionally, resize.js sets a fixed
+   pixel height based on window.height() — designed for standalone Doxygen
+   pages but causing excessive whitespace inside the Sphinx layout. */
+.bd-article .doxygen-content #doc-content {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+}
+
+/* doxygen-awesome.css sets max-width: var(--content-maxwidth) on .contents */
+.bd-article .doxygen-content div.contents {
+    max-width: 100% !important;
+}
+
+/* doxygen-awesome.css sets "display: inline-block" on tbody inside .contents
+   tables (excluding memberdecls etc.) — this shrinks the needs table tbody
+   to content width.  Override with the correct table display value. */
+.bd-article .doxygen-content .contents table.need tbody {
+    display: table-row-group !important;
+}
+
+/* Override Bootstrap .container max-width inside the article.  doxysphinx and
+   sphinx-needs both add "docutils container" classes, which triggers Bootstrap's
+   responsive max-width constraints (540px-1320px). */
+.bd-article .container {
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+/* Prevent justified text in function prototypes (Doxygen uses table layout) */
+.bd-article .doxygen-content .memproto table.memname {
+    width: auto;
+}
+
+/* ---------------------------------------------------------------------------
+ * Dark mode for Doxygen content.
+ *
+ * doxygen-awesome.css defines dark-mode colours under
+ * @media (prefers-color-scheme: dark) which only activates for OS-level dark
+ * mode.  PyData toggles dark mode via html[data-theme="dark"], so we bridge
+ * the gap by re-declaring doxygen-awesome's dark variables under that selector.
+ * ---------------------------------------------------------------------------
+ */
+html[data-theme="dark"] .doxygen-content {
+    --page-background-color: #1C1D1F;
+    --page-foreground-color: #d2dbde;
+    --page-secondary-foreground-color: #859399;
+    --separator-color: #38393b;
+    --side-nav-background: #252628;
+    --code-background: #2a2c2f;
+    --tablehead-background: #2a2c2f;
+    --blockquote-background: #222325;
+    --blockquote-foreground: #7e8c92;
+    --odd-color: rgba(100,100,100,.06);
+    --primary-color: #1982d2;
+    --primary-dark-color: #86a9c4;
+    --primary-light-color: #4779ac;
+    --fragment-background: #282c34;
+    --fragment-foreground: #dbe4eb;
+    --fragment-keyword: #cc99cd;
+    --fragment-keywordtype: #ab99cd;
+    --fragment-keywordflow: #e08000;
+    --fragment-token: #7ec699;
+    --fragment-comment: #999999;
+    --fragment-link: #98c0e3;
+    --fragment-preprocessor: #65cabe;
+    --fragment-linenumber-color: #cccccc;
+    --fragment-linenumber-background: #35393c;
+    --fragment-linenumber-border: #1f1f1f;
+    --warning-color: #2e1917;
+    --warning-color-dark: #ad2617;
+    --warning-color-darker: #f5b1aa;
+    --note-color: #3b2e04;
+    --note-color-dark: #f1b602;
+    --note-color-darker: #ceb670;
+    --todo-color: #163750;
+    --todo-color-dark: #1982D2;
+    --todo-color-darker: #dcf0fa;
+    --deprecated-color: #2e323b;
+    --deprecated-color-dark: #738396;
+    --deprecated-color-darker: #abb0bd;
+    --bug-color: #2a2536;
+    --bug-color-dark: #7661b3;
+    --bug-color-darker: #ae9ed6;
+    --invariant-color: #303a35;
+    --invariant-color-dark: #76ce96;
+    --invariant-color-darker: #cceed5;
+}
+
+/* ---------------------------------------------------------------------------
+ * Dark mode for sphinx-needs requirement blocks.
+ *
+ * sphinx-needs ships modern.css (light) and dark.css, but the dark theme is
+ * NOT loaded when PyData switches to dark mode.  Re-declare the sphinx-needs
+ * CSS variables under the PyData dark-mode selector.
+ * ---------------------------------------------------------------------------
+ */
+html[data-theme="dark"] {
+    --sn-color-bg-gray: #333;
+    --sn-color-bg-lightgray: rgba(255,255,255,0.1);
+    --sn-color-bg-green: #04723c;
+    --sn-color-bg-red: #81201b;
+    --sn-color-bg-yellow: #a97c32;
+    --sn-color-bg-blue: #096285;
+
+    --sn-color-border-lightgray: rgba(255,255,255,0.2);
+    --sn-color-border-green: #04723c;
+    --sn-color-border-red: #81201b;
+    --sn-color-border-yellow: #a97c32;
+    --sn-color-border-blue: #096285;
+
+    --sn-color-need-border: #888;
+    --sn-color-need-bg: #333;
+    --sn-color-need-bg-head: rgba(255,255,255,0.1);
+
+    --sn-color-complete-bg-head: rgba(255,255,255,0.1);
+    --sn-color-complete-bg-foot: rgba(255,255,255,0.1);
+
+    --sn-color-datatable-label: #eee;
+}

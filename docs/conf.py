@@ -44,9 +44,8 @@ extensions.extend(
     ]
 )
 
-# Resize rtd theme
-extensions.append("sphinx_rtd_size")
-sphinx_rtd_size_width = "90%"
+# sphinx-design for grids, cards, tabs
+extensions.append("sphinx_design")
 
 # sphinx_needs
 extensions.append("sphinx_needs")
@@ -72,5 +71,13 @@ exclude_patterns = ["build", "Thumbs.db", ".DS_Store"]
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "sphinx_rtd_theme"
+html_theme = "pydata_sphinx_theme"
+html_theme_options = {
+    "navbar_start": [],
+    "navbar_center": [],
+    "navbar_end": [],
+    "show_nav_level": 0,
+    "show_toc_level": 0,
+    "header_links_before_dropdown": 0,
+}
 # html_static_path = ["_static"]
