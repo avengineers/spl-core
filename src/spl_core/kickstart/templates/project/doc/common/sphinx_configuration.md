@@ -8,13 +8,14 @@ settings are provided by `spl_core` and only need to be wired up here.
 ```python
 from importlib.resources import files
 from spl_core.report_generation.spl_sphinx import SplSphinx
-from spl_core.report_generation.spl_html_settings import html_theme, html_show_sourcelink, html_theme_options  # noqa: F401
+from spl_core.report_generation.spl_html_settings import html_theme, html_show_sourcelink, html_theme_options, html_sidebars  # noqa: F401
 ```
 
 ## HTML Theme
 
-The HTML theme settings are provided via the import above and active
-automatically. To override them, reassign the variables after the import:
+The HTML theme settings (`pydata_sphinx_theme`) are provided via the import
+above and active automatically. To override them, reassign the variables after
+the import:
 
 ```python
 html_theme = "my_custom_theme"
@@ -28,7 +29,6 @@ Use `SplSphinx` to get the default set of extensions and their configurations:
 extensions = SplSphinx.default_extensions
 extension_configs = SplSphinx.default_extension_configs
 
-sphinx_rtd_size_width = extension_configs["sphinx_rtd_size_width"]
 tr_report_template = extension_configs["tr_report_template"]
 myst_enable_extensions = extension_configs["myst_enable_extensions"]
 source_suffix = extension_configs["source_suffix"]
