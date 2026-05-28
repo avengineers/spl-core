@@ -273,7 +273,8 @@ macro(spl_create_component)
 \"has_docs\": \"\",
 \"docs_output_dir\": \"\",
 \"has_reports\": \"\",
-\"reports_output_dir\": \"\"
+\"reports_output_dir\": \"\",
+\"source_docs_dir\": \"\"
 }")
     set(_component_is_header_only FALSE)
 
@@ -356,7 +357,7 @@ Unit Test Specification
 =======================
 
 .. needtable::
-   :filter: type == 'test'
+   :filter: type == 'test' and '${component_path}/' in docname
    :columns: id, title, tests, results
    :style: table
 
@@ -374,19 +375,16 @@ Unit Test Results
 
 ")
 
-                # create coverate rst file to be able to automatically link to the coverage/index.html
-                set(_coverage_rst ${_component_reports_out_dir}/coverage.rst)
-                file(WRITE ${_coverage_rst} "
-Code Coverage
-=============
+                # Clean up legacy coverage RST stub and write Markdown fallback.
+                # The fallback is overwritten with a full coverage table at build time
+                # by the component_report target's coverage_to_md.py command.
+                file(REMOVE ${_component_reports_out_dir}/coverage.rst)
+                file(WRITE ${_component_reports_out_dir}/coverage.md "# Code Coverage\n\n<a href=\"coverage/index.html\">Report</a>\n")
 
-`Report <coverage/index.html>`_
-
-")
-
+                file(RELATIVE_PATH _rel_component_source_docs_dir ${_sphinx_source_dir} ${CMAKE_CURRENT_BINARY_DIR}/__source_docs)
                 file(WRITE ${_reports_config_json} "{
     \"component_info\": ${_component_info},
-    \"include_patterns\": [\"${_rel_component_doc_dir}/**\",\"${_rel_component_reports_out_dir}/**\"]
+    \"include_patterns\": [\"${_rel_component_doc_dir}/**\",\"${_rel_component_reports_out_dir}/**\",\"${_rel_component_source_docs_dir}/**\"]
 }")
 
                 # add the generated files as dependency to cmake configure step
@@ -409,6 +407,7 @@ Code Coverage
                 add_custom_target(
                     ${component_name}_report
                     COMMAND ${CMAKE_COMMAND} -E make_directory ${_component_reports_out_dir}
+                    COMMAND python ${SPL_CORE_PYTHON_DIRECTORY}/coverage_to_md.py --json ${_cov_out_json} --html-dir reports/html/${_rel_component_reports_out_dir}/coverage --html-link-prefix coverage --output ${_component_reports_out_dir}/coverage.md --heading "Code Coverage"
                     COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_reports_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -E -b html ${_sphinx_source_dir} ${_component_reports_html_out_dir}
                     BYPRODUCTS ${_component_reports_html_out_dir}/index.html
                     DEPENDS ${TEST_OUT_JUNIT} ${_cov_out_html}
@@ -420,6 +419,16 @@ Code Coverage
             set(_clanguru_all_sources ${SOURCES} ${TEST_SOURCES})
             if(_clanguru_all_sources)
                 _spl_generate_clanguru_source_docs(${component_name} "${_clanguru_all_sources}")
+            endif()
+
+            # Ensure component report waits for source docs to be generated
+            if(TARGET ${component_name}_source_docs AND TARGET ${component_name}_report)
+                add_dependencies(${component_name}_report ${component_name}_source_docs)
+            endif()
+
+            # Store source docs directory in component info for variant report toctree
+            if(_COMPONENT_SOURCE_DOCS_INCLUDE_PATTERN)
+                string(JSON _component_info SET "${_component_info}" source_docs_dir "\"${_rel_clanguru_docs_out_dir}\"")
             endif()
 
             # Collect all component sphinx include pattern to be used in the variant targets (docs, reports)
@@ -518,15 +527,11 @@ macro(_spl_create_reports_target)
     \"components_info\": ${_components_info_json}
 }")
 
-    # create the variant code coverage rst file
-    set(_coverage_rst ${_reports_output_dir}/coverage.rst)
-    file(WRITE ${_coverage_rst} "
-Code Coverage
-=============
-
-`Report <coverage/index.html>`_
-
-")
+    # Clean up legacy coverage RST stub and write Markdown fallback.
+    # The fallback is overwritten with a full coverage table at build time
+    # by the reports target's coverage_to_md.py command.
+    file(REMOVE ${_reports_output_dir}/coverage.rst)
+    file(WRITE ${_reports_output_dir}/coverage.md "# Code Coverage\n\n<a href=\"coverage/index.html\">Report</a>\n")
 
     # For every component we need to create specific coverage targets to make sure
     # the output files are generated in the overall variant sphinx output directory.
@@ -534,6 +539,29 @@ Code Coverage
         string(JSON component_name GET ${component_info} name)
         string(JSON component_path GET ${component_info} path)
         string(JSON component_reports_output_dir GET ${component_info} reports_output_dir)
+        string(JSON component_long_name GET ${component_info} long_name)
+        string(JSON component_has_docs GET ${component_info} has_docs)
+
+        # Generate per-component index page so component names appear in sidebar navigation.
+        # Without this, only the sub-pages (coverage, test results, ...) show up in the
+        # PyData Sphinx Theme sidebar because Markdown headings are invisible to toctree.
+        if(component_has_docs)
+            if(NOT component_long_name)
+                set(_display_name ${component_name})
+            else()
+                set(_display_name ${component_long_name})
+            endif()
+            set(_wrapper_content "# ${_display_name}\n\n```{toctree}\n:maxdepth: 2\n\n/${component_path}/doc/index\n")
+            if(component_reports_output_dir)
+                string(APPEND _wrapper_content "/${component_reports_output_dir}/unit_test_spec\n/${component_reports_output_dir}/unit_test_results\n/${component_reports_output_dir}/coverage\n")
+            endif()
+            string(JSON component_source_docs_dir ERROR_VARIABLE _json_err GET ${component_info} source_docs_dir)
+            if(component_source_docs_dir)
+                string(APPEND _wrapper_content "/${component_source_docs_dir}/index\n")
+            endif()
+            string(APPEND _wrapper_content "```\n")
+            file(WRITE ${_reports_output_dir}/${component_name}_index.md "${_wrapper_content}")
+        endif()
 
         if(component_reports_output_dir)
             set(_variant_component_reports_out_dir reports/html/${component_reports_output_dir})
@@ -547,6 +575,15 @@ Code Coverage
             )
             list(APPEND _components_coverage_html ${_cov_out_html})
 
+            # Generate component-level coverage Markdown with full table for the variant report
+            set(_component_cov_md ${PROJECT_SOURCE_DIR}/${component_reports_output_dir}/coverage.md)
+            add_custom_command(
+                OUTPUT ${_component_cov_md}
+                COMMAND python ${SPL_CORE_PYTHON_DIRECTORY}/coverage_to_md.py --json ${_cov_out_json} --html-dir ${_variant_component_reports_out_dir}/coverage --html-link-prefix coverage --output ${_component_cov_md} --heading "Code Coverage"
+                DEPENDS ${_cov_out_json} ${_cov_out_html}
+                COMMENT "Generating component coverage markdown for ${component_name} ..."
+            )
+            list(APPEND _component_coverage_md_files ${_component_cov_md})
         endif()
     endforeach()
 
@@ -574,11 +611,12 @@ Code Coverage
         reports
         ALL
         COMMAND ${CMAKE_COMMAND} -E make_directory ${_reports_output_dir}
+        COMMAND python ${SPL_CORE_PYTHON_DIRECTORY}/coverage_to_md.py --json ${COV_OUT_VARIANT_JSON} --html-dir reports/html/${_rel_reports_output_dir}/coverage --html-link-prefix coverage --output ${_reports_output_dir}/coverage.md --heading "Code Coverage"
 
         # We need to call sphinx-build with -E to make sure all files are regenerated.
         COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_reports_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -E -b html ${PROJECT_SOURCE_DIR} ${_reports_html_output_dir}
         BYPRODUCTS ${_reports_html_output_dir}/index.html
-        DEPENDS ${JUNIT_OUT_VARIANT_XML} ${COV_OUT_VARIANT_JSON} _components_variant_coverage_html_target source_docs
+        DEPENDS ${JUNIT_OUT_VARIANT_XML} ${COV_OUT_VARIANT_JSON} _components_variant_coverage_html_target ${_component_coverage_md_files} source_docs
     )
 endmacro()
 
@@ -825,6 +863,14 @@ macro(_spl_generate_clanguru_source_docs COMPONENT_NAME SRC_FILES)
             DEPENDS ${_clanguru_doc_outputs}
         )
         add_dependencies(source_docs ${COMPONENT_NAME}_source_docs)
+
+        # Generate index.rst for source docs so they appear in the Sphinx toctree/sidebar
+        set(_source_docs_index_content "Source Files\n============\n\n.. toctree::\n   :maxdepth: 1\n\n")
+        foreach(_src_file ${SRC_FILES})
+            get_filename_component(_src_name ${_src_file} NAME)
+            string(APPEND _source_docs_index_content "   ${_src_name}\n")
+        endforeach()
+        file(WRITE ${_clanguru_docs_out_dir}/index.rst "${_source_docs_index_content}")
 
         # Expose source_docs directory for Sphinx include patterns
         file(RELATIVE_PATH _rel_clanguru_docs_out_dir ${PROJECT_SOURCE_DIR} ${_clanguru_docs_out_dir})
