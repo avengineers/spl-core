@@ -1,6 +1,59 @@
 # CHANGELOG
 
 
+## v9.0.0 (2026-05-29)
+
+### Features
+
+- Add coverage Markdown overview with condition coverage support
+  ([#298](https://github.com/avengineers/spl-core/pull/298),
+  [`15aece1`](https://github.com/avengineers/spl-core/commit/15aece1331ac61fc0b5f4eeddd5d6ba616962d64))
+
+- Add coverage_to_md.py for generating Markdown coverage summary tables - Support line, function,
+  branch, and MC/DC condition coverage - Integrate clanguru source documentation links into report
+  sidebar via common.cmake custom targets
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+
+- Migrate from sphinx_rtd_theme to pydata_sphinx_theme 0.18
+  ([#298](https://github.com/avengineers/spl-core/pull/298),
+  [`d70b6f0`](https://github.com/avengineers/spl-core/commit/d70b6f0b1b2d0e7dbdfb106ef19732cda90e0c02))
+
+BREAKING CHANGE: All downstream projects must switch their conf.py to import from
+  spl_core.report_generation instead of using sphinx_rtd_theme directly.
+
+- Replace Read the Docs theme with PyData Sphinx Theme 0.18 - Add spl_theme_extension.py for
+  auto-registering static/templates dirs - Add spl_custom.css with full-width layout, Doxygen
+  overflow, dark mode fixes - Add spl-sidebar-nav.html as fallback template for orphan pages - Add
+  default avengineers logo - Configure html_sidebars with sidebar-collapse + sidebar-nav-bs for
+  native collapsible navigation - Add spl_sphinx_defaults.py centralizing extensions and myst
+  settings - Update docs/conf.py to use new theme imports
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+
+- Update kickstart templates for PyData theme
+  ([#298](https://github.com/avengineers/spl-core/pull/298),
+  [`bc705a4`](https://github.com/avengineers/spl-core/commit/bc705a4ca04db00b01c10d259897d330db2725c5))
+
+- Update project conf.py template to import from spl_html_settings - Update documentation references
+  for new theme structure - Adjust component index template for sphinx-design compatibility
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+
+### Testing
+
+- Add unit and integration tests for theme migration
+  ([#298](https://github.com/avengineers/spl-core/pull/298),
+  [`dcf5159`](https://github.com/avengineers/spl-core/commit/dcf51593e2d84d761f3364a07ea50d5b42f33f79))
+
+- Unit tests for spl_html_settings (theme options, sidebar-collapse) - Unit tests for spl_sphinx
+  report generation - Unit tests for coverage_to_md Markdown generation - Unit tests for kickstart
+  template validation - Integration test for full documentation build with new theme - Fix coverage
+  table assertions to match actual column names
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+
+
 ## v8.2.0 (2026-05-19)
 
 ### Features
