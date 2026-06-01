@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -398,6 +399,44 @@ class ArtifactsArchiver:
             repository_url=repository_url,
         )
 
+    @staticmethod
+    def _build_commit_link(repository_url: str | None, commit_id: str | None) -> str | None:
+        """
+        Build a web link to a specific commit from the git remote URL and commit SHA.
+
+        Supports Bitbucket Server (HTTPS and SSH), GitHub, and GitLab remote URL patterns.
+
+        Args:
+            repository_url: The git remote URL (e.g. from GIT_URL or git config remote.origin.url)
+            commit_id: The full git commit SHA
+
+        Returns:
+            A browsable web URL for the commit, or None if the URL pattern is not recognised
+        """
+        if not repository_url or not commit_id:
+            return None
+        # Bitbucket Server HTTPS: https://host/scm/org/repo[.git]
+        match = re.match(r"(https?://[^/]+)/scm/([^/]+)/([^/?#]+?)(?:\.git)?/?$", repository_url, re.IGNORECASE)
+        if match:
+            base_url, org, repo = match.groups()
+            return f"{base_url}/projects/{org.upper()}/repos/{repo}/commits/{commit_id}"
+        # Bitbucket Server SSH: ssh://git@host[:port]/org/repo[.git]
+        match = re.match(r"ssh://[^@]+@([^:/]+)(?::\d+)?/([^/]+)/([^/?#]+?)(?:\.git)?/?$", repository_url, re.IGNORECASE)
+        if match:
+            host, org, repo = match.groups()
+            return f"https://{host}/projects/{org.upper()}/repos/{repo}/commits/{commit_id}"
+        # GitLab HTTPS: https://gitlab.com/org/repo[.git]  (must be checked before GitHub generic pattern)
+        match = re.match(r"(https?://[^/]*gitlab[^/]*)/(.+?)(?:\.git)?/?$", repository_url, re.IGNORECASE)
+        if match:
+            base_url, path = match.groups()
+            return f"{base_url}/{path}/-/commit/{commit_id}"
+        # GitHub / generic HTTPS: https://host/org/repo[.git]
+        match = re.match(r"(https?://[^/]+)/(.+?)(?:\.git)?/?$", repository_url, re.IGNORECASE)
+        if match:
+            base_url, path = match.groups()
+            return f"{base_url}/{path}/commit/{commit_id}"
+        return None
+
     def create_rt_upload_json(self, out_dir: Path) -> Path:
         """
         Create a single rt-upload.json file containing all archives.
@@ -414,9 +453,25 @@ class ArtifactsArchiver:
         """
         # Get build metadata from environment or defaults
         metadata = self._get_build_metadata()
+        git_metadata = self._get_git_metadata()
 
         # Calculate retention period based on branch/tag
         retention_period = self.calculate_retention_period(metadata.branch_name, metadata.is_tag)
+
+        # Build the props string with all available VCS metadata
+        props_parts = [f"retention_period={retention_period}"]
+        if git_metadata.commit_id:
+            props_parts.append(f"commit_id={git_metadata.commit_id}")
+        if metadata.is_tag:
+            props_parts.append(f"tag_name={metadata.branch_name}")
+        elif metadata.pr_number:
+            props_parts.append(f"pull_request={metadata.pr_number}")
+        else:
+            props_parts.append(f"branch={metadata.branch_name}")
+        commit_link = self._build_commit_link(git_metadata.repository_url, git_metadata.commit_id)
+        if commit_link:
+            props_parts.append(f"commit_link={commit_link}")
+        props = ";".join(props_parts)
 
         # Create the files array for Artifactory upload format
         files_array = []
@@ -428,7 +483,6 @@ class ArtifactsArchiver:
                 # Construct the RT target path
                 rt_target = f"{target_repo}/{metadata.branch_name}/{metadata.build_number}/"
 
-                # Add this archive to the files array with retention_period property
                 files_array.append(
                     {
                         "pattern": archive.archive_name,
@@ -436,7 +490,7 @@ class ArtifactsArchiver:
                         "recursive": "false",
                         "flat": "false",
                         "regexp": "false",
-                        "props": f"retention_period={retention_period}",
+                        "props": props,
                     }
                 )
 
