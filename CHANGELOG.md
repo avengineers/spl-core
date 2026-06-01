@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v9.0.1-rc.1 (2026-06-01)
+
+### Bug Fixes
+
+- Add additional properties to rt_upload.json in artifacts-archiver
+  ([`9d70192`](https://github.com/avengineers/spl-core/commit/9d701926d03851ef1655a521360ee9cec7b6b4f7))
+
+
 ## v9.0.0 (2026-05-29)
 
 ### Features
