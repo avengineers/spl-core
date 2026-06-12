@@ -75,6 +75,7 @@ jobs:
                       out/test-report.xml
 
     release:
+        if: github.event_name != 'pull_request'
         needs:
             - test
             - lint
