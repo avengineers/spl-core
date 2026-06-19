@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v9.0.1-rc.2 (2026-06-19)
+
+### Bug Fixes
+
+- Update release handling for only one dollar-hash-pair
+  ([`9d8e4e5`](https://github.com/avengineers/spl-core/commit/9d8e4e5c31fb6308c3785c4668aa0c7d543ff9a2))
+
+
 ## v9.0.1-rc.1 (2026-06-01)
 
 ### Bug Fixes
