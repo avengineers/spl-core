@@ -17,16 +17,18 @@ class BuildMetadata:
     Contains build metadata extracted from environment variables.
 
     Attributes:
-        branch_name: The branch name, PR identifier (e.g., "PR-123"), or tag name
+        branch_name: The deploy branch path (from BRANCH_NAME with $ and # replaced by /), branch name, PR identifier, or tag name
         build_number: The build number or "local_build"
         is_tag: Whether this is a tag build
         pr_number: The PR number (without "PR-" prefix) for pull request builds, None otherwise
+        tag_name: The git tag name for tag builds, None otherwise
     """
 
     branch_name: str
     build_number: str
     is_tag: bool
     pr_number: str | None
+    tag_name: str | None = None
 
 
 @dataclass
@@ -303,6 +305,7 @@ class ArtifactsArchiver:
         build_number = "local_build"
         is_tag = False
         pr_number = None
+        tag_name_value: str | None = None
 
         if os.environ.get("JENKINS_URL"):
             change_id = os.environ.get("CHANGE_ID")
@@ -315,12 +318,28 @@ class ArtifactsArchiver:
                 branch_name = f"PR-{change_id}"
                 pr_number = change_id
             elif tag_name:
-                # Tag build case
-                branch_name = tag_name
                 is_tag = True
+                if "#" in tag_name:
+                    # Tag with embedded variant in $variant#tag syntax (e.g. release/$Disco#ci_test_v3).
+                    # Replace $ and # with /, collapsing /$ or /# into a single / to avoid double slashes.
+                    branch_name = re.sub(r"/?[$#]", "/", tag_name)
+                    match = re.search(r"#([^$#/]+)", tag_name)
+                    tag_name_value = match.group(1).strip() if match else tag_name
+                else:
+                    # Pure git tag build: TAG_NAME set, BRANCH_NAME equals the tag
+                    tag_name_value = tag_name
+                    branch_name = tag_name
             elif jenkins_branch_name:
-                # Regular branch case
-                branch_name = jenkins_branch_name
+                if "#" in jenkins_branch_name:
+                    # Branch with embedded tag in $variant#tag syntax (e.g. release/$Disco#ci_test_v3).
+                    # Replace $ and # with /, collapsing /$ or /# into a single / to avoid double slashes.
+                    branch_name = re.sub(r"/?[$#]", "/", jenkins_branch_name)
+                    match = re.search(r"#([^$#/]+)", jenkins_branch_name)
+                    if match:
+                        tag_name_value = match.group(1).strip()
+                else:
+                    # Regular branch build
+                    branch_name = jenkins_branch_name
 
             if jenkins_build_number:
                 build_number = jenkins_build_number
@@ -330,6 +349,7 @@ class ArtifactsArchiver:
             build_number=build_number,
             is_tag=is_tag,
             pr_number=pr_number,
+            tag_name=tag_name_value,
         )
 
     @staticmethod
@@ -463,11 +483,13 @@ class ArtifactsArchiver:
         if git_metadata.commit_id:
             props_parts.append(f"commit_id={git_metadata.commit_id}")
         if metadata.is_tag:
-            props_parts.append(f"tag_name={metadata.branch_name}")
+            props_parts.append(f"tag_name={metadata.tag_name}")
         elif metadata.pr_number:
             props_parts.append(f"pull_request={metadata.pr_number}")
         else:
             props_parts.append(f"branch={metadata.branch_name}")
+            if metadata.tag_name:
+                props_parts.append(f"tag_name={metadata.tag_name}")
         commit_link = self._build_commit_link(git_metadata.repository_url, git_metadata.commit_id)
         if commit_link:
             props_parts.append(f"commit_link={commit_link}")
@@ -558,11 +580,13 @@ class ArtifactsArchiver:
             # Pull request build
             artifacts_data["pull_request"] = build_metadata.pr_number
         elif build_metadata.is_tag:
-            # Tag build
-            artifacts_data["tag"] = build_metadata.branch_name
+            # Pure git tag build: only the tag
+            artifacts_data["tag"] = build_metadata.tag_name
         else:
-            # Regular branch build (or local build)
+            # Branch build (regular or with embedded tag)
             artifacts_data["branch"] = build_metadata.branch_name
+            if build_metadata.tag_name:
+                artifacts_data["tag"] = build_metadata.tag_name
 
         # Add git metadata if available
         if git_metadata.commit_id:

@@ -397,6 +397,66 @@ def test_create_rt_upload_json_tag_build_props(test_dir, test_files, monkeypatch
     assert "commit_link=https://github.com/myorg/myrepo/commit/deadbeef" in props
 
 
+def test_create_rt_upload_json_branch_with_embedded_tag(test_dir, test_files, monkeypatch):
+    """Test that for a branch with $variant#tag syntax, both the deploy branch and the
+    extracted tag are recorded in props, without TAG_NAME needing to be set."""
+    for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER", "GIT_COMMIT", "GIT_URL"]:
+        monkeypatch.delenv(env_var, raising=False)
+
+    monkeypatch.setenv("JENKINS_URL", "http://jenkins.example.com")
+    monkeypatch.setenv("BRANCH_NAME", "release/$Disco#ci_test_v3")
+    monkeypatch.setenv("BUILD_NUMBER", "42")
+
+    archiver = ArtifactsArchiver()
+    output_dir = test_dir / "output"
+    archiver.add_archive(output_dir, "result.7z", target_repo="my-repo/results")
+    archiver.register(test_files[:1])
+    archiver.create_archive()
+
+    with patch.object(ArtifactsArchiver, "_get_git_metadata", return_value=MagicMock(commit_id=None, repository_url=None)):
+        rt_upload_path = archiver.create_rt_upload_json(output_dir)
+
+    with open(rt_upload_path) as f:
+        data = json.load(f)
+
+    file_entry = data["files"][0]
+    # $ and # are replaced by / to form the deploy path
+    assert file_entry["target"] == "my-repo/results/release/Disco/ci_test_v3/42/"
+    # Props carry both the deploy branch and the extracted tag
+    assert "branch=release/Disco/ci_test_v3" in file_entry["props"]
+    assert "tag_name=ci_test_v3" in file_entry["props"]
+
+
+def test_create_rt_upload_json_branch_with_embedded_tag_no_double_slash(test_dir, test_files, monkeypatch):
+    """Test that /$ and /# in a branch name do not produce // in the deploy path."""
+    for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER", "GIT_COMMIT", "GIT_URL", "SPL_DEPLOY_BRANCH"]:
+        monkeypatch.delenv(env_var, raising=False)
+
+    monkeypatch.setenv("JENKINS_URL", "http://jenkins.example.com")
+    # User wrote /$ and /# explicitly in the branch name
+    monkeypatch.setenv("BRANCH_NAME", "release/$Disco/#ci_test_v3")
+    monkeypatch.setenv("BUILD_NUMBER", "7")
+
+    archiver = ArtifactsArchiver()
+    output_dir = test_dir / "output"
+    archiver.add_archive(output_dir, "result.7z", target_repo="my-repo/results")
+    archiver.register(test_files[:1])
+    archiver.create_archive()
+
+    with patch.object(ArtifactsArchiver, "_get_git_metadata", return_value=MagicMock(commit_id=None, repository_url=None)):
+        rt_upload_path = archiver.create_rt_upload_json(output_dir)
+
+    with open(rt_upload_path) as f:
+        data = json.load(f)
+
+    file_entry = data["files"][0]
+    # /$ → / and /# → / — no double slashes
+    assert "//" not in file_entry["target"]
+    assert file_entry["target"] == "my-repo/results/release/Disco/ci_test_v3/7/"
+    assert "branch=release/Disco/ci_test_v3" in file_entry["props"]
+    assert "tag_name=ci_test_v3" in file_entry["props"]
+
+
 # =============================================================================
 # Tests for get_archive_url
 # =============================================================================
