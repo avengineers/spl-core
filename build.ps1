@@ -6,6 +6,7 @@
 param(
     [switch]$clean ## clean build, wipe out all build artifacts
     , [switch]$install ## install mandatory packages
+    , [switch]$startvscode ## start VSCode with the current folder as workspace
 )
 
 function Invoke-CommandLine {
@@ -82,12 +83,27 @@ try {
     # bootstrap environment
     Invoke-Bootstrap
 
+    $pypelineCommand = ".venv\Scripts\pypeline"
+    if (-Not (Get-Command $pypelineCommand -ErrorAction SilentlyContinue)) {
+        throw "pypeline does not exist at '$pypelineCommand'. Please run '.\build.ps1 -install'."
+    }
+
+    Invoke-CommandLine "$pypelineCommand run --step GenerateEnvSetupScript"
+
+    # Load environment setup script
+    . .\build\install\env_setup.ps1
+
+    if ($startVSCode) {
+        Write-Output "Starting Visual Studio Code..."
+        Invoke-CommandLine "code ." -StopAtError $false
+    }
+
     if (-Not $install) {
         if ($clean) {
             Remove-Path "build"
         }
         # Run pypeline
-        Invoke-CommandLine ".venv\Scripts\pypeline run"
+        Invoke-CommandLine "$pypelineCommand run"
     }
 }
 finally {
