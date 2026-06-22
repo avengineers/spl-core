@@ -323,7 +323,12 @@ try {
     # Load bootstrap's utility functions
     . .\.bootstrap\utils.ps1
 
-    Invoke-CommandLine ".venv\Scripts\pypeline run --step GenerateEnvSetupScript"
+    $pypelineCommand = ".venv\Scripts\pypeline"
+    if (-Not (Get-Command $pypelineCommand -ErrorAction SilentlyContinue)) {
+        throw "pypeline does not exist at '$pypelineCommand'. Please run '.\build.ps1 -install'."
+    }
+
+    Invoke-CommandLine "$pypelineCommand run --step GenerateEnvSetupScript"
 
     # Load environment setup script
     . .\build\env_setup.ps1
