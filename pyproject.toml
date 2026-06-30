@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "spl-core"
-version = "8.2.0"
+version = "8.2.1"
 description = "Software Product Line Support for CMake"
 authors = ["Avengineers <karsten.guenther@kamg.de>"]
 license = "MIT"
@@ -163,6 +163,7 @@ allow_untyped_defs = true
 [[tool.mypy.overrides]]
 module = "docs.*"
 ignore_errors = true
+
 
 
 [build-system]
