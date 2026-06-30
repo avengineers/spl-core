@@ -1,6 +1,17 @@
 # CHANGELOG
 
 
+## v8.2.1 (2026-06-30)
+
+### Bug Fixes
+
+- Generate and load env_setup during install so tools are on PATH
+  ([`8ce92d0`](https://github.com/avengineers/spl-core/commit/8ce92d0feb8d98a036ae612c4008718fcecacaa9))
+
+- Use release bot app token for protected branch push
+  ([`a25f45a`](https://github.com/avengineers/spl-core/commit/a25f45a0bc481ce2264d814b0716a6877e7f687b))
+
+
 ## v8.2.0 (2026-05-19)
 
 ### Features
