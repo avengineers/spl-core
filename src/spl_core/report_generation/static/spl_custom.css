@@ -1,0 +1,57 @@
+/* SPL Theme Layout — aligned with the SPLE Platform Page.
+ *
+ * These overrides give the PyData Sphinx Theme a full-width layout with
+ * persistent left (navigation) and right (table of contents) sidebars.
+ * Without them the theme defaults to a narrow centered article container.
+ *
+ * THEME COUPLING (validated against pydata-sphinx-theme 0.18):
+ * PyData offers no supported full-width option, so the layout rules below target
+ * theme-INTERNAL classes (.bd-page-width, .bd-article-container, .bd-sidebar-primary)
+ * which may change between minor theme releases. The pyproject.toml dependency is
+ * therefore hard-pinned <0.19; re-validate this file before raising that bound.
+ * The CSS custom properties (--pst-*) at the bottom ARE part of the public theme
+ * contract and are the preferred, stable mechanism — prefer them where available.
+ */
+
+/* Hide heading anchors by default, show on hover */
+.headerlink {
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+
+h1:hover .headerlink,
+h2:hover .headerlink,
+h3:hover .headerlink,
+h4:hover .headerlink,
+h5:hover .headerlink,
+h6:hover .headerlink {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* --- Theme-internal class overrides (coupling: see header) ----------------- */
+/* Full-width page and article container */
+.bd-main .bd-content .bd-article-container {
+    max-width: 100%;
+}
+
+.bd-page-width {
+    max-width: 100%;
+}
+
+/* Left sidebar (navigation) width */
+.bd-sidebar-primary {
+    width: 20rem;
+}
+
+/* --- Public theme contract: --pst-* custom properties (stable) ------------- */
+html {
+    --pst-header-height: 5rem;
+    --pst-header-article-height: calc(var(--pst-header-height) * 1 / 4);
+    --pst-sidebar-secondary: 17rem;
+}
+
+/* Dark mode for sphinx-needs requirement blocks is generated at build time from
+ * the installed sphinx-needs dark.css (re-scoped to html[data-theme="dark"]) by
+ * spl_theme_extension.py — kept out of here so the palette cannot drift. */

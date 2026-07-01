@@ -75,18 +75,17 @@ class SplSphinx:
 
     # Default Sphinx Extensions
     default_extensions: ClassVar[list[str]] = [
-        "sphinx_rtd_size",
         "sphinxcontrib.mermaid",
         "sphinx_needs",
         "sphinxcontrib.test_reports",
         "sphinx.ext.todo",
         "sphinxcontrib.datatemplates",
         "myst_parser",
+        "spl_core.report_generation.spl_theme_extension",
     ]
 
     # Extension-specific configurations
     default_extension_configs: ClassVar[dict[str, str | list[str]]] = {
-        "sphinx_rtd_size_width": "90%",
         "tr_report_template": "doc/test_report_template.txt",
         "myst_enable_extensions": [
             "colon_fence",
