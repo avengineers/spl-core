@@ -4,6 +4,14 @@ set(SPL_CORE_ROOT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
 set(SPL_CORE_CMAKE_DIRECTORY ${SPL_CORE_ROOT_DIRECTORY})
 set(SPL_CORE_PYTHON_DIRECTORY ${SPL_CORE_ROOT_DIRECTORY})
 
+# Resolve the Python interpreter from PATH and cache its absolute path in CMakeCache.txt.
+# find_program honors PATH order, so the activated .venv interpreter (which env_setup puts
+# first and which has the required packages like kconfiglib/hammocking installed) wins.
+# find_package(Python3) must NOT be used: it relies on version/registry heuristics and may
+# pick a system Python without those packages (e.g. the GitHub Actions hosted-tool-cache
+# interpreter). Caching keeps the interpreter stable across cmake --regenerate-during-build.
+find_program(SPL_PYTHON NAMES python python3 REQUIRED)
+
 # Always create a compile_commands.json file for C/C++ intellisense / CMake Tools extension
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 

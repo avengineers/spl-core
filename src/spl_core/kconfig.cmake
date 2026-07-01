@@ -21,7 +21,7 @@ if(EXISTS ${KCONFIG_MODEL_FILE})
     # every time (although the content did not change). Therefore stuff gets compiled.
     execute_process(
         WORKING_DIRECTORY ${SPL_CORE_ROOT_DIRECTORY} # TODO: is there a better way to let kconfig.py find other modules?
-        COMMAND python ${SPL_CORE_PYTHON_DIRECTORY}/kconfig/kconfig.py
+        COMMAND ${SPL_PYTHON} ${SPL_CORE_PYTHON_DIRECTORY}/kconfig/kconfig.py
         --kconfig_model_file ${KCONFIG_MODEL_FILE} ${_KCONFIG_CONFIG_FILE_option}
         --out_header_file ${AUTOCONF_H}
         --out_json_file ${AUTOCONF_JSON}
