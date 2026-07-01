@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v9.0.1-rc.3 (2026-07-01)
+
+### Bug Fixes
+
+- Remove dollar from release pattern
+  ([`59835c8`](https://github.com/avengineers/spl-core/commit/59835c81d9bb5375e24b4e9ae06169898e8bdeb0))
+
+
 ## v9.0.1-rc.2 (2026-06-19)
 
 ### Bug Fixes
