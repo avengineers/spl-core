@@ -1,7 +1,7 @@
 # SPL (Software Product Line) Core
 
 <p align="center">
-  <img src="docs/images/spl_core_logo.jpg" alt="SPL Core Logo" width="200">
+  <img src="docs/images/spl_core_logo.png" alt="SPL Core Logo" width="200">
 </p>
 
 <p align="center">
