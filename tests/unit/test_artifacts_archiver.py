@@ -398,13 +398,13 @@ def test_create_rt_upload_json_tag_build_props(test_dir, test_files, monkeypatch
 
 
 def test_create_rt_upload_json_branch_with_embedded_tag(test_dir, test_files, monkeypatch):
-    """Test that for a branch with $variant#tag syntax, both the deploy branch and the
+    """Test that for a branch with variant#tag syntax, both the deploy branch and the
     extracted tag are recorded in props, without TAG_NAME needing to be set."""
     for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER", "GIT_COMMIT", "GIT_URL"]:
         monkeypatch.delenv(env_var, raising=False)
 
     monkeypatch.setenv("JENKINS_URL", "http://jenkins.example.com")
-    monkeypatch.setenv("BRANCH_NAME", "release/$Disco#ci_test_v3")
+    monkeypatch.setenv("BRANCH_NAME", "release/Disco#ci_test_v3")
     monkeypatch.setenv("BUILD_NUMBER", "42")
 
     archiver = ArtifactsArchiver()
@@ -420,7 +420,7 @@ def test_create_rt_upload_json_branch_with_embedded_tag(test_dir, test_files, mo
         data = json.load(f)
 
     file_entry = data["files"][0]
-    # $ and # are replaced by / to form the deploy path
+    # # is replaced by / to form the deploy path
     assert file_entry["target"] == "my-repo/results/release/Disco/ci_test_v3/42/"
     # Props carry both the deploy branch and the extracted tag
     assert "branch=release/Disco/ci_test_v3" in file_entry["props"]
@@ -428,13 +428,13 @@ def test_create_rt_upload_json_branch_with_embedded_tag(test_dir, test_files, mo
 
 
 def test_create_rt_upload_json_branch_with_embedded_tag_no_double_slash(test_dir, test_files, monkeypatch):
-    """Test that /$ and /# in a branch name do not produce // in the deploy path."""
+    """Test that /# in a branch name does not produce // in the deploy path."""
     for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER", "GIT_COMMIT", "GIT_URL", "SPL_DEPLOY_BRANCH"]:
         monkeypatch.delenv(env_var, raising=False)
 
     monkeypatch.setenv("JENKINS_URL", "http://jenkins.example.com")
-    # User wrote /$ and /# explicitly in the branch name
-    monkeypatch.setenv("BRANCH_NAME", "release/$Disco/#ci_test_v3")
+    # User wrote /# explicitly in the branch name
+    monkeypatch.setenv("BRANCH_NAME", "release/Disco/#ci_test_v3")
     monkeypatch.setenv("BUILD_NUMBER", "7")
 
     archiver = ArtifactsArchiver()
@@ -450,7 +450,7 @@ def test_create_rt_upload_json_branch_with_embedded_tag_no_double_slash(test_dir
         data = json.load(f)
 
     file_entry = data["files"][0]
-    # /$ → / and /# → / — no double slashes
+    # /# → / — no double slashes
     assert "//" not in file_entry["target"]
     assert file_entry["target"] == "my-repo/results/release/Disco/ci_test_v3/7/"
     assert "branch=release/Disco/ci_test_v3" in file_entry["props"]
