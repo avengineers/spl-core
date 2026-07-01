@@ -320,8 +320,23 @@ try {
         Write-Host -ForegroundColor Black -BackgroundColor Blue "For installation changes to take effect, please close and re-open your current terminal."
     }
 
-    # Load bootstrap's utility functions
-    . .\.bootstrap\utils.ps1
+    # Load bootstrap's utility functions.
+    # Retry on transient file-lock failures (e.g. antivirus scanning the file immediately
+    # after a bootstrap run or a concurrent build just released file handles).
+    $retryCount = 0
+    $retryDelay = 200
+    while ($true) {
+        try {
+            . .\.bootstrap\utils.ps1
+            break
+        }
+        catch {
+            $retryCount++
+            if ($retryCount -ge 5) { throw }
+            Start-Sleep -Milliseconds $retryDelay
+            $retryDelay = [Math]::Min($retryDelay * 2, 2000)
+        }
+    }
 
     $pypelineCommand = ".venv\Scripts\pypeline"
     if (-Not (Get-Command $pypelineCommand -ErrorAction SilentlyContinue)) {
@@ -372,7 +387,16 @@ try {
 }
 finally {
     Pop-Location
-    if ($waitForKey -and -Not (Test-RunningInCIorTestEnvironment)) {
+    # Prefer the shared helper from utils.ps1 (single source of truth). Fall back to an
+    # inline check only if utils.ps1 was not loaded (the retry loop above may have thrown
+    # before dot-sourcing it), so the finally block stays robust.
+    if (Get-Command Test-RunningInCIorTestEnvironment -ErrorAction SilentlyContinue) {
+        $isCI = Test-RunningInCIorTestEnvironment
+    }
+    else {
+        $isCI = [Boolean]($Env:JENKINS_URL -or $Env:PYTEST_CURRENT_TEST -or $Env:GITHUB_ACTIONS)
+    }
+    if ($waitForKey -and -Not $isCI) {
         Read-Host -Prompt "Press Enter to continue ..."
     }
 }

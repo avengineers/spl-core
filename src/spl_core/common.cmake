@@ -356,7 +356,7 @@ Unit Test Specification
 =======================
 
 .. needtable::
-   :filter: type == 'test'
+   :filter: type == 'test' and '${component_path}/' in docname
    :columns: id, title, tests, results
    :style: table
 
@@ -374,7 +374,7 @@ Unit Test Results
 
 ")
 
-                # create coverate rst file to be able to automatically link to the coverage/index.html
+                # create coverage rst file to be able to automatically link to the coverage/index.html
                 set(_coverage_rst ${_component_reports_out_dir}/coverage.rst)
                 file(WRITE ${_coverage_rst} "
 Code Coverage
@@ -546,7 +546,6 @@ Code Coverage
                 COMMENT "Generating variant component coverage html report ${_cov_out_html} ..."
             )
             list(APPEND _components_coverage_html ${_cov_out_html})
-
         endif()
     endforeach()
 
@@ -711,7 +710,7 @@ macro(_spl_add_test_suite COMPONENT_NAME PROD_SRC TEST_SOURCES)
         OUTPUT ${MOCK_SRC}
         BYPRODUCTS mockup_${component_name}.h
         WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-        COMMAND python -m hammocking --suffix _${COMPONENT_NAME} --sources ${PROD_SRC} --plink ${CMAKE_CURRENT_BINARY_DIR}/${PROD_PARTIAL_LINK} --outdir ${CMAKE_CURRENT_BINARY_DIR} --project-root-dir ${CMAKE_SOURCE_DIR} ${_hammocking_config_arg} "$<$<BOOL:${component_inc_dirs}>:-I$<JOIN:${component_inc_dirs},;-I>>" "$<$<BOOL:${component_comp_defs}>:-D$<JOIN:${component_comp_defs},;-D>>" ${COMPILER_SPECIFIC_INCLUDES} -x c
+        COMMAND ${SPL_PYTHON} -m hammocking --suffix _${COMPONENT_NAME} --sources ${PROD_SRC} --plink ${CMAKE_CURRENT_BINARY_DIR}/${PROD_PARTIAL_LINK} --outdir ${CMAKE_CURRENT_BINARY_DIR} --project-root-dir ${CMAKE_SOURCE_DIR} ${_hammocking_config_arg} "$<$<BOOL:${component_inc_dirs}>:-I$<JOIN:${component_inc_dirs},;-I>>" "$<$<BOOL:${component_comp_defs}>:-D$<JOIN:${component_comp_defs},;-D>>" ${COMPILER_SPECIFIC_INCLUDES} -x c
         COMMAND_EXPAND_LISTS
         VERBATIM
         DEPENDS
@@ -724,7 +723,7 @@ macro(_spl_add_test_suite COMPONENT_NAME PROD_SRC TEST_SOURCES)
         OUTPUT ${TEST_OUT_JUNIT}
 
         # Wipe all gcda files before the test executable recreates them
-        COMMAND python ${SPL_CORE_PYTHON_DIRECTORY}/gcov_maid/gcov_maid.py --working-dir . --wipe-all-gcda
+        COMMAND ${SPL_PYTHON} ${SPL_CORE_PYTHON_DIRECTORY}/gcov_maid/gcov_maid.py --working-dir . --wipe-all-gcda
 
         # Run the test executable, generate JUnit report and return 0 independent of the test result
         COMMAND ${CMAKE_CTEST_COMMAND} ${CMAKE_CTEST_ARGUMENTS} --output-junit ${TEST_OUT_JUNIT} || ${CMAKE_COMMAND} -E true
@@ -749,7 +748,7 @@ macro(_spl_add_test_suite COMPONENT_NAME PROD_SRC TEST_SOURCES)
         OUTPUT ${COV_OUT_JSON}
 
         # Wipe orphaned gcno files before gcovr searches for them
-        COMMAND python ${SPL_CORE_PYTHON_DIRECTORY}/gcov_maid/gcov_maid.py --working-dir . --wipe-orphaned-gcno
+        COMMAND ${SPL_PYTHON} ${SPL_CORE_PYTHON_DIRECTORY}/gcov_maid/gcov_maid.py --working-dir . --wipe-orphaned-gcno
 
         # Run gcovr to generate coverage json for the component
         COMMAND ${GCOVR_EXE} --root ${CMAKE_SOURCE_DIR} --json --output ${COV_OUT_JSON} ${GCOVR_ADDITIONAL_OPTIONS} ${CMAKE_CURRENT_BINARY_DIR}
