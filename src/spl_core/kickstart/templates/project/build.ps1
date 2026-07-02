@@ -387,17 +387,11 @@ try {
 }
 finally {
     Pop-Location
-    # Prefer the shared helper from utils.ps1 (single source of truth). Fall back to an
-    # inline check only if utils.ps1 was not loaded (the retry loop above may have thrown
-    # before dot-sourcing it), so the finally block stays robust.
-    if (Get-Command Test-RunningInCIorTestEnvironment -ErrorAction SilentlyContinue) {
-        $isCI = Test-RunningInCIorTestEnvironment
-    }
-    else {
-        $isCI = [Boolean]($Env:JENKINS_URL -or $Env:PYTEST_CURRENT_TEST -or $Env:GITHUB_ACTIONS)
-    }
-    if ($waitForKey -and -Not $isCI) {
-        Read-Host -Prompt "Press Enter to continue ..."
+    if ((Test-Path ".\.bootstrap\utils.ps1") -and $waitForKey) {
+        . .\.bootstrap\utils.ps1
+        if (-Not (Test-RunningInCIorTestEnvironment)) {
+            Read-Host -Prompt "Press Enter to continue ..."
+        }
     }
 }
 ## end of script

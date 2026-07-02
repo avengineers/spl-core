@@ -10,6 +10,12 @@ variant.
 
 ## Architecture
 
+> **Internal architecture docs:** see `docs/internals/`. Architecture decisions
+> (ADRs, under `docs/internals/decisions/`) and requirements (under
+> `docs/internals/requirements/`) live there and **must be consulted when
+> analysing a task** — check for an existing decision before changing
+> architecture, and record significant new decisions as an ADR.
+
 ```
 src/spl_core/
 ├── main.py                # CLI entry point ("please" command for project init)
