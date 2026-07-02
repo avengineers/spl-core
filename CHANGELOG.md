@@ -1,6 +1,50 @@
 # CHANGELOG
 
 
+## v8.3.0 (2026-07-02)
+
+### Bug Fixes
+
+- Use venv Python across CMake build steps and scope component traces (298)
+  ([`2cf4881`](https://github.com/avengineers/spl-core/commit/2cf4881246ab6e5e1d1189737b640cf1d7cd1959))
+
+- Route KConfig, coverage, gcov_maid and hammocking through SPL_PYTHON - Scope component needtable
+  to the component via docname filter - Harden kickstart build.ps1 bootstrap loading
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+
+### Documentation
+
+- Add internals architecture docs and finalize review changes (298)
+  ([`df892ab`](https://github.com/avengineers/spl-core/commit/df892ab38502a5d69b69c6c638a3750d964b364a))
+
+- add internal architecture/decisions docs (ADRs, empty architecture/requirements folders) -
+  simplify wait-for-key CI detection in build.ps1 template - update locked dependencies
+  (poetry.lock)
+
+### Features
+
+- Upgrade to PyData Sphinx Theme 0.18 and centralize Sphinx settings (298)
+  ([`6940387`](https://github.com/avengineers/spl-core/commit/6940387f0cd72926f4f5e82bfe7042773292946e))
+
+- Add pydata-sphinx-theme 0.18; bump Sphinx, sphinx-needs, pypeline-semantic-release - Centralize
+  theme, extensions, MyST and url_schemes in spl_html_settings - Add spl_theme_extension for
+  CSS/logo injection and sphinx-needs dark-mode CSS - Align spl-core's own docs and kickstart
+  templates with the shared theme
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+
+### Testing
+
+- Add tests for theme migration and report generation (298)
+  ([`069cfe2`](https://github.com/avengineers/spl-core/commit/069cfe201323044e10edf3bd231311f7c2c6a68f))
+
+- Unit tests for spl_html_settings, spl_sphinx, kickstart templates and theme extension CSS helpers
+  - Integration checks for the PyData report build (coverage link, needs traceability)
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+
+
 ## v8.2.1 (2026-06-30)
 
 ### Bug Fixes

@@ -20,7 +20,7 @@ from spl_core.report_generation.spl_html_settings import html_theme  # noqa: E40
 project = "SPL Core"
 copyright = f"{datetime.date.today().year}, Avengineers"
 author = "Avengineers"
-release = "8.2.1"
+release = "8.3.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
