@@ -3001,14 +3001,14 @@ typing-extensions = ">=4.14.1"
 
 [[package]]
 name = "pydata-sphinx-theme"
-version = "0.18.0"
+version = "0.19.0"
 description = "Bootstrap-based Sphinx theme from the PyData community"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "pydata_sphinx_theme-0.18.0-py3-none-any.whl", hash = "sha256:fbe5401f26642d487e3c5b6dfcbf69b3b1d579e80dcc479a429632abe0a13929"},
-    {file = "pydata_sphinx_theme-0.18.0.tar.gz", hash = "sha256:b4abc95ab02600872e060db07c79e056e87b7ea653ab1ffd0e0b1fa75a3003d4"},
+    {file = "pydata_sphinx_theme-0.19.0-py3-none-any.whl", hash = "sha256:5d7dfe3beb0facc88b5d78ff4a4c948f214cc0e03aae27e7fc58286e963b588b"},
+    {file = "pydata_sphinx_theme-0.19.0.tar.gz", hash = "sha256:148ba092bd6937b3321385dc482cc69a29ad2ede36547b4f010ade782bc6a062"},
 ]
 
 [package.dependencies]
@@ -3076,14 +3076,14 @@ diagrams = ["jinja2", "railroad-diagrams"]
 
 [[package]]
 name = "pypeline-runner"
-version = "1.35.0"
+version = "1.35.1"
 description = "Configure and execute pipelines with Python (similar to GitHub workflows or Jenkins pipelines)."
 optional = false
 python-versions = "<4.0,>=3.10"
 groups = ["main"]
 files = [
-    {file = "pypeline_runner-1.35.0-py3-none-any.whl", hash = "sha256:f3210248f876f357e1a17393012bfa64a08329ab89897584c89896c67f929166"},
-    {file = "pypeline_runner-1.35.0.tar.gz", hash = "sha256:fbdb249fe02d55c3bb6ffa53d48e9cd2697b84677f8e73f538358771892f0821"},
+    {file = "pypeline_runner-1.35.1-py3-none-any.whl", hash = "sha256:c4eb00d2dfa1cc2db7018cdcd9da7663fc3ad0508da13196d8ea024f09d48c0d"},
+    {file = "pypeline_runner-1.35.1.tar.gz", hash = "sha256:92b4742437326699c7f57604b13fb5642a184b9a59e55c93d4c698108c981828"},
 ]
 
 [package.dependencies]
@@ -4505,4 +4505,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.14"
-content-hash = "868108239e6151405151013e2c7c942f7f5ac78e20e96142a3a390042e063f44"
+content-hash = "57b2aa92f05de1e2ec6d3dc17162547edb00f631b6aba36ddec5c34f80c9d4d0"
