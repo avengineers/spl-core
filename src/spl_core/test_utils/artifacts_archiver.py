@@ -17,7 +17,7 @@ class BuildMetadata:
     Contains build metadata extracted from environment variables.
 
     Attributes:
-        branch_name: The deploy branch path (from BRANCH_NAME with $ and # replaced by /), branch name, PR identifier, or tag name
+        branch_name: The deploy branch path (from BRANCH_NAME # replaced by /), branch name, PR identifier, or tag name
         build_number: The build number or "local_build"
         is_tag: Whether this is a tag build
         pr_number: The PR number (without "PR-" prefix) for pull request builds, None otherwise
