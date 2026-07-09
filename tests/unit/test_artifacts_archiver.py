@@ -420,15 +420,15 @@ def test_create_rt_upload_json_branch_with_embedded_tag(test_dir, test_files, mo
         data = json.load(f)
 
     file_entry = data["files"][0]
-    # # is replaced by / to form the deploy path
-    assert file_entry["target"] == "my-repo/results/release/Disco/ci_test_v3/42/"
+    # The original branch name (with the literal #tag) is kept as-is for the deploy path
+    assert file_entry["target"] == "my-repo/results/release/Disco#ci_test_v3/42/"
     # Props carry both the deploy branch and the extracted tag
-    assert "branch=release/Disco/ci_test_v3" in file_entry["props"]
+    assert "branch=release/Disco#ci_test_v3" in file_entry["props"]
     assert "tag_name=ci_test_v3" in file_entry["props"]
 
 
 def test_create_rt_upload_json_branch_with_embedded_tag_no_double_slash(test_dir, test_files, monkeypatch):
-    """Test that /# in a branch name does not produce // in the deploy path."""
+    """Test that a branch name with /# is kept as-is (no double slashes) in the deploy path."""
     for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER", "GIT_COMMIT", "GIT_URL", "SPL_DEPLOY_BRANCH"]:
         monkeypatch.delenv(env_var, raising=False)
 
@@ -450,10 +450,10 @@ def test_create_rt_upload_json_branch_with_embedded_tag_no_double_slash(test_dir
         data = json.load(f)
 
     file_entry = data["files"][0]
-    # /# → / — no double slashes
+    # Original branch name is kept as-is — no double slashes introduced
     assert "//" not in file_entry["target"]
-    assert file_entry["target"] == "my-repo/results/release/Disco/ci_test_v3/7/"
-    assert "branch=release/Disco/ci_test_v3" in file_entry["props"]
+    assert file_entry["target"] == "my-repo/results/release/Disco/#ci_test_v3/7/"
+    assert "branch=release/Disco/#ci_test_v3" in file_entry["props"]
     assert "tag_name=ci_test_v3" in file_entry["props"]
 
 

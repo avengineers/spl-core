@@ -17,7 +17,7 @@ class BuildMetadata:
     Contains build metadata extracted from environment variables.
 
     Attributes:
-        branch_name: The deploy branch path (from BRANCH_NAME # replaced by /), branch name, PR identifier, or tag name
+        branch_name: The original branch name, PR identifier or tag name
         build_number: The build number or "local_build"
         is_tag: Whether this is a tag build
         pr_number: The PR number (without "PR-" prefix) for pull request builds, None otherwise
@@ -319,27 +319,21 @@ class ArtifactsArchiver:
                 pr_number = change_id
             elif tag_name:
                 is_tag = True
+                branch_name = tag_name
                 if "#" in tag_name and tag_name.startswith("release/"):
                     # Release tag with embedded variant in variant#tag syntax (e.g. release/Disco#ci_test_v3).
-                    # Replace # with /, collapsing /# into a single / to avoid double slashes.
-                    branch_name = re.sub(r"/?#", "/", tag_name)
                     match = re.search(r"#([^#/]+)", tag_name)
                     tag_name_value = match.group(1).strip() if match else tag_name
                 else:
                     # Pure git tag build: TAG_NAME set, BRANCH_NAME equals the tag
                     tag_name_value = tag_name
-                    branch_name = tag_name
             elif jenkins_branch_name:
+                branch_name = jenkins_branch_name
                 if "#" in jenkins_branch_name and jenkins_branch_name.startswith("release/"):
                     # Release branch with embedded tag in variant#tag syntax (e.g. release/Disco#ci_test_v3).
-                    # Replace # with /, collapsing /# into a single / to avoid double slashes.
-                    branch_name = re.sub(r"/?#", "/", jenkins_branch_name)
                     match = re.search(r"#([^#/]+)", jenkins_branch_name)
                     if match:
                         tag_name_value = match.group(1).strip()
-                else:
-                    # Regular branch build
-                    branch_name = jenkins_branch_name
 
             if jenkins_build_number:
                 build_number = jenkins_build_number
