@@ -1,6 +1,17 @@
 # CHANGELOG
 
 
+## v9.0.1-rc.4 (2026-07-09)
+
+### Bug Fixes
+
+- Change branch name in build artifacts
+  ([`7e5f49e`](https://github.com/avengineers/spl-core/commit/7e5f49ef897cbe88aaefd1a31baae51ba4bc35b0))
+
+- Smaller fix in a comment
+  ([`ec2a26d`](https://github.com/avengineers/spl-core/commit/ec2a26df8460dc561e3f4aa1ecc28ac98f8f8cca))
+
+
 ## v9.0.1-rc.3 (2026-07-01)
 
 ### Bug Fixes
