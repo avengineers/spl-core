@@ -1,5 +1,6 @@
 import json
 import shutil
+import subprocess
 import tempfile
 from datetime import datetime
 from pathlib import Path
@@ -118,6 +119,98 @@ def test_simple_archive_creation(test_dir, test_files):
     assert archive_path.parent == output_dir, "Archive should be in the correct output directory"
     assert archive_path.stat().st_size > 0, "Archive file should not be empty"
     assert len(test_files) == 5, "Should have 5 test files"
+
+
+def test_create_archive_uses_native_7z_with_fast_compression_flags(test_dir, test_files):
+    """Verify that create_archive calls the native 7z binary with -mx=3 and -mmt=on."""
+    # Arrange
+    archiver = ArtifactsArchiver()
+    output_dir = test_dir / "output"
+    archiver.add_archive(output_dir, "test.7z")
+    archiver.register(test_files)
+
+    with patch("spl_core.test_utils.artifacts_archiver.subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+
+        # Act
+        archiver.create_archive()
+
+    # Assert
+    mock_run.assert_called_once()
+    call_args = mock_run.call_args
+    cmd = call_args[0][0]
+    assert cmd[0] == "7z", "Should call the native 7z binary"
+    assert "a" in cmd, "Should use 'a' (add) command"
+    assert "-mx=3" in cmd, "Should use compression level 3 for speed"
+    assert "-mmt=on" in cmd, "Should enable multithreading"
+
+
+def test_create_archive_empty_artifacts_creates_placeholder(test_dir):
+    """Verify that an empty artifact list creates a placeholder file and logs a warning."""
+    # Arrange
+    archiver = ArtifactsArchiver()
+    output_dir = test_dir / "output"
+    archiver.add_archive(output_dir, "empty.7z")
+    # Register no artifacts
+
+    # Act
+    archive_path = archiver.create_archive()
+
+    # Assert
+    assert archive_path.exists(), "Placeholder file should be created even with no artifacts"
+    assert archive_path.name == "empty.7z"
+
+
+def _list_archive_paths(archive_path: Path) -> set[str]:
+    """Return the set of internal entry paths stored in a 7z archive (normalized to '/')."""
+    result = subprocess.run(
+        ["7z", "l", "-slt", "-ba", str(archive_path)],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, f"7z listing failed: {result.stderr}"
+
+    paths: set[str] = set()
+    for line in result.stdout.splitlines():
+        if line.startswith("Path = "):
+            entry = line[len("Path = ") :].strip().replace("\\", "/")
+            paths.add(entry)
+    return paths
+
+
+def test_create_archive_preserves_internal_archive_paths(test_dir):
+    """Verify artifacts are stored inside the archive at their intended archive_path.
+
+    - Files that live under the archive's output directory keep their relative path.
+    - Files outside the output directory are flattened to their filename.
+    This locks in the arcname behavior so future changes cannot silently alter layout.
+    """
+    # Arrange
+    output_dir = test_dir / "output"
+    output_dir.mkdir()
+
+    # File under the output directory -> should keep its nested relative path.
+    nested_file = output_dir / "reports" / "coverage.html"
+    nested_file.parent.mkdir(parents=True)
+    nested_file.write_text("<html>coverage</html>")
+
+    # File outside the output directory -> should be flattened to just its name.
+    external_file = test_dir / "logs" / "application.log"
+    external_file.parent.mkdir(parents=True)
+    external_file.write_text("log content")
+
+    archiver = ArtifactsArchiver()
+    archiver.add_archive(output_dir, "layout.7z")
+    archiver.register([nested_file, external_file])
+
+    # Act
+    archive_path = archiver.create_archive()
+
+    # Assert
+    stored_paths = _list_archive_paths(archive_path)
+    assert "reports/coverage.html" in stored_paths, "Nested file should keep its relative path"
+    assert "application.log" in stored_paths, "External file should be flattened to its name"
+
 
 
 @pytest.mark.parametrize(
