@@ -38,7 +38,7 @@ sphinx = ">=8.1,<9.0"
 # layout classes (.bd-page-width, .bd-article-container, .bd-sidebar-primary) for the
 # full-width SPLE platform look. PyData has no supported full-width option, so a minor
 # theme bump can change these internals. Re-validate spl_custom.css before raising <0.19.
-pydata-sphinx-theme = ">=0.18,<0.19"
+pydata-sphinx-theme = ">=0.18,<0.20"
 sphinxcontrib-mermaid = ">=0.9,<2.1"
 sphinx-needs = ">=7,<9"
 sphinx-test-reports = "^1.0"
