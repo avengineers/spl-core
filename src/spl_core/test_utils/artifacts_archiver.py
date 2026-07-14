@@ -1,11 +1,13 @@
 import json
 import os
+import shutil
+import subprocess
+import tempfile
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-import py7zr
 from py_app_dev.core.logging import logger
 from py_app_dev.core.subprocess import SubprocessExecutor
 
@@ -104,6 +106,10 @@ class ArtifactsArchive:
     def create_archive(self) -> Path:
         """
         Create a 7z file containing the collected artifacts.
+
+        Uses the native ``7z`` binary (invoked via subprocess) with fast
+        compression (``-mx=3``) and multithreading (``-mmt=on``) enabled.
+
         Returns:
             Path: The path to the created 7z file.
         Raises:
@@ -119,35 +125,46 @@ class ArtifactsArchive:
         if archive_path.exists():
             archive_path.unlink()
 
-        if not self.archive_artifacts:
-            logger.warning("No artifacts registered for archiving")
-            # Create empty 7z file
-            with py7zr.SevenZipFile(archive_path, "w") as archive:
-                pass
-            return archive_path
+        # Stage artifacts in a temporary directory so that the archive preserves
+        # each artifact's intended relative path. The native 7z binary stores
+        # files using their path relative to its working directory, so we mirror
+        # the desired archive layout in the staging directory and archive that.
+        with tempfile.TemporaryDirectory() as staging_dir_name:
+            staging_dir = Path(staging_dir_name)
 
-        try:
-            with py7zr.SevenZipFile(archive_path, "w") as archive:
+            if not self.archive_artifacts:
+                logger.warning("No artifacts registered for archiving")
+                # Create a placeholder so the resulting archive is still valid.
+                placeholder = staging_dir / "EMPTY_ARCHIVE.txt"
+                placeholder.write_text("No artifacts were registered for this archive.")
+            else:
                 for artifact in self.archive_artifacts:
                     if not artifact.absolute_path.exists():
                         logger.warning(f"Artifact {artifact.absolute_path} does not exist, skipping")
                         continue
 
+                    staged_path = staging_dir / artifact.archive_path
                     try:
+                        staged_path.parent.mkdir(parents=True, exist_ok=True)
                         if artifact.absolute_path.is_file():
-                            archive.write(artifact.absolute_path, arcname=str(artifact.archive_path))
+                            shutil.copy2(artifact.absolute_path, staged_path)
                         elif artifact.absolute_path.is_dir():
-                            # py7zr can handle directories directly
-                            archive.writeall(artifact.absolute_path, arcname=str(artifact.archive_path))
+                            shutil.copytree(artifact.absolute_path, staged_path, dirs_exist_ok=True)
                     except Exception as file_error:
-                        logger.warning(f"Failed to add {artifact.absolute_path} to archive: {file_error}")
+                        logger.warning(f"Failed to stage {artifact.absolute_path} for archiving: {file_error}")
                         continue
 
-            logger.info(f"7z file created at: {archive_path}")
-            return archive_path
-        except Exception as e:
-            logger.error(f"Error creating artifacts 7z file: {e}")
-            raise e
+            # Invoke the native 7z binary. "." archives everything in the staging
+            # directory, preserving the relative paths we just created.
+            cmd = ["7z", "a", str(archive_path), ".", "-mx=3", "-mmt=on"]
+            result = subprocess.run(cmd, cwd=staging_dir, capture_output=True, text=True)
+
+            if result.returncode != 0:
+                logger.error(f"Error creating artifacts 7z file: {result.stderr}")
+                raise RuntimeError(f"7z failed with exit code {result.returncode}: {result.stderr}")
+
+        logger.info(f"7z file created at: {archive_path}")
+        return archive_path
 
 
 class ArtifactsArchiver:
