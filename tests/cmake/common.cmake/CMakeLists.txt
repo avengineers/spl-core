@@ -19,6 +19,32 @@ if(NOT string_with_underscore STREQUAL "abc_def_ghi")
     message(FATAL_ERROR "Failing Test case: string_with_slashes = ${string_with_slashes}.")
 endif()
 
+# ## test: _spl_source_doc_name (source doc name collision avoidance) #########
+# given two sources sharing a basename in different sub-directories of a component
+
+# when
+_spl_source_doc_name(doc_name_a "${CMAKE_CURRENT_LIST_DIR}/component/src/foo.c" "${CMAKE_CURRENT_LIST_DIR}/component")
+_spl_source_doc_name(doc_name_b "${CMAKE_CURRENT_LIST_DIR}/component/test/foo.c" "${CMAKE_CURRENT_LIST_DIR}/component")
+
+# then: doc names keep the relative path, so they stay distinct instead of both becoming "foo.c"
+if(NOT doc_name_a STREQUAL "src/foo.c")
+    message(FATAL_ERROR "Failing Test case: expected 'src/foo.c' but got '${doc_name_a}'.")
+endif()
+
+if(NOT doc_name_b STREQUAL "test/foo.c")
+    message(FATAL_ERROR "Failing Test case: expected 'test/foo.c' but got '${doc_name_b}'.")
+endif()
+
+if(doc_name_a STREQUAL doc_name_b)
+    message(FATAL_ERROR "Failing Test case: source doc names collide for same-basename files.")
+endif()
+
+# and: a source outside the component directory falls back to its basename
+_spl_source_doc_name(doc_name_ext "${CMAKE_CURRENT_LIST_DIR}/other/bar.c" "${CMAKE_CURRENT_LIST_DIR}/component")
+if(NOT doc_name_ext STREQUAL "bar.c")
+    message(FATAL_ERROR "Failing Test case: expected 'bar.c' but got '${doc_name_ext}'.")
+endif()
+
 # ## test: _spl_get_absolute_path #########
 # when
 _spl_get_absolute_path(absolute_path "${PROJECT_SOURCE_DIR}/some_dir")
