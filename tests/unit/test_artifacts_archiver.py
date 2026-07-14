@@ -116,7 +116,7 @@ def test_simple_archive_creation(test_dir, test_files):
     # Assert
     assert archive_path.exists(), "Archive file should be created"
     assert archive_path.name == archive_filename, "Archive should have the correct filename"
-    assert archive_path.parent == output_dir, "Archive should be in the correct output directory"
+    assert archive_path.parent == output_dir.resolve(), "Archive should be in the correct output directory"
     assert archive_path.stat().st_size > 0, "Archive file should not be empty"
     assert len(test_files) == 5, "Should have 5 test files"
 
@@ -213,6 +213,33 @@ def test_create_archive_preserves_internal_archive_paths(test_dir):
     assert "application.log" in stored_paths, "External file should be flattened to its name"
 
 
+def test_create_archive_with_relative_out_dir_writes_to_correct_location(test_dir, test_files, monkeypatch):
+    """Regression test: a relative out_dir must still produce the archive on disk.
+
+    The 7z subprocess runs with ``cwd`` set to an internal temporary staging
+    directory. If the archive path is relative, 7z resolves it against that temp
+    dir and the archive is deleted when the temp dir is cleaned up. Resolving the
+    path to an absolute location guards against this. Here we run with the current
+    working directory set to ``test_dir`` and pass a *relative* output directory.
+    """
+    # Arrange: work from test_dir and use a relative output directory.
+    monkeypatch.chdir(test_dir)
+    relative_output_dir = Path("output")
+
+    archiver = ArtifactsArchiver()
+    archiver.add_archive(relative_output_dir, "relative.7z")
+    archiver.register(test_files)
+
+    # Act
+    archive_path = archiver.create_archive()
+
+    # Assert: the archive must actually exist at the expected absolute location.
+    expected_path = (test_dir / "output" / "relative.7z").resolve()
+    assert archive_path == expected_path, "Archive path should be resolved to an absolute location"
+    assert archive_path.exists(), "Archive file must exist on disk, not lost in the temp staging directory"
+    assert archive_path.stat().st_size > 0, "Archive file should not be empty"
+
+
 
 @pytest.mark.parametrize(
     "jenkins_url,change_id,branch_name,tag_name,build_number,expected_branch,expected_build,expected_retention",
@@ -290,7 +317,7 @@ def test_multiple_archives_with_target_repos(test_dir, test_files, monkeypatch, 
         archive_path = archive_paths_dict[archive_name]
         assert archive_path.exists(), f"Archive {config['filename']} should be created"
         assert archive_path.name == config["filename"], f"Archive should have correct filename {config['filename']}"
-        assert archive_path.parent == output_dir, f"Archive {config['filename']} should be in output directory"
+        assert archive_path.parent == output_dir.resolve(), f"Archive {config['filename']} should be in output directory"
         assert archive_path.stat().st_size > 0, f"Archive {config['filename']} should not be empty"
 
     # Verify rt-upload JSON was created and has correct content
