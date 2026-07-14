@@ -93,7 +93,7 @@ For the variant `reports` target, `_spl_create_reports_target()` in
 `common.cmake` writes one wrapper document per component that has documentation
 into the reports output directory (`{reports_output_dir}/{name}_index.md`):
 
-```markdown
+````markdown
 # <component long name or name>
 
 ```{toctree}
@@ -104,7 +104,7 @@ into the reports output directory (`{reports_output_dir}/{name}_index.md`):
 /<reports_output_dir>/unit_test_results
 /<reports_output_dir>/coverage
 ```
-```
+````
 
 The report pages (`unit_test_spec`, `unit_test_results`, `coverage`) are only
 linked when the component has reports (`has_reports`). The files live in the
