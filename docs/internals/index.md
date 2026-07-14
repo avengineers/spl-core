@@ -1,5 +1,13 @@
 # 📚 Internals
 
+```{toctree}
+:maxdepth: 1
+:caption: Internals
+
+architecture/report_generation
+decisions/index
+```
+
 ## SPL Project Structure
 
 ```{mermaid}

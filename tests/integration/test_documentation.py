@@ -13,10 +13,12 @@ class TestDocumentation(SplKickstartProjectIntegrationTestBase):
         result = self.spl_project.build(variant, "reports")
         assert result is not None and result.returncode == 0, "Execution shall not fail."
 
-        # Expected clanguru-generated RST source docs per component
+        # Expected clanguru-generated RST source docs per component.
+        # Doc names mirror the source path relative to the component so that files
+        # sharing a basename in different sub-directories do not collide.
         expected_source_docs: dict[str, list[str]] = {
-            "src/main": ["main.c.rst"],
-            "src/greeter": ["greeter.c.rst", "test_greeter.cc.rst"],
+            "src/main": ["src/main.c.rst"],
+            "src/greeter": ["src/greeter.c.rst", "test/test_greeter.cc.rst"],
         }
 
         # Check all generated artifacts
@@ -72,6 +74,50 @@ class TestDocumentation(SplKickstartProjectIntegrationTestBase):
 
                 # Coverage detail page existence — at least one detail file per component with tests
                 self._assert_coverage_detail_pages(reports_dir)
+
+        # Per-component sidebar hierarchy (issue #332): under the PyData theme a flat
+        # heading-based components page collapses into a single "Components" node.
+        # common.cmake generates one wrapper page per component with docs so each becomes
+        # its own collapsible sidebar node; verify the wrappers exist and nest correctly.
+        reports_output_dir = build_dir / "reports"
+        components_index_html = build_dir / "reports/html/doc/components/index.html"
+        assert components_index_html.exists(), "Variant report components index not found"
+        components_index_soup = BeautifulSoup(components_index_html.read_text(encoding="utf-8"), "html.parser")
+        components_index_hrefs = [a.get("href", "") for a in components_index_soup.find_all("a")]
+
+        # All fixture components have docs, so the generated wrapper set must match exactly.
+        # This also guards the "no wrapper page for components without docs" requirement.
+        wrapper_files = sorted(p.name for p in reports_output_dir.glob("*_index.md"))
+        expected_wrappers = sorted(f"{component_path.replace('/', '_')}_index.md" for component_path in self.spl_project.components)
+        assert wrapper_files == expected_wrappers, f"Generated wrapper pages {wrapper_files} do not match components with docs {expected_wrappers}"
+
+        for component_path in self.spl_project.components:
+            component_name = component_path.replace("/", "_")
+
+            # Configure-time wrapper page: level-1 title plus a toctree linking the component doc.
+            wrapper_md = (reports_output_dir / f"{component_name}_index.md").read_text(encoding="utf-8")
+            assert wrapper_md.lstrip().startswith("# "), f"Wrapper {component_name}_index.md must start with an H1 title"
+            assert "toctree" in wrapper_md and f"/{component_path}/doc/index" in wrapper_md, f"Wrapper {component_name}_index.md must link the component doc"
+
+            # The components index links to the wrapper page (a real document = sidebar node),
+            # instead of emitting a flat heading.
+            assert any(f"{component_name}_index.html" in href for href in components_index_hrefs), f"Components index does not link the wrapper page for {component_path}"
+
+            # The built wrapper page nests the component doc (and report pages when the component has tests).
+            wrapper_html = build_dir / f"reports/html/{rel_build_dir}/reports/{component_name}_index.html"
+            assert wrapper_html.exists(), f"Wrapper HTML not built for {component_path}"
+            wrapper_soup = BeautifulSoup(wrapper_html.read_text(encoding="utf-8"), "html.parser")
+            wrapper_hrefs = [a.get("href", "") for a in wrapper_soup.find_all("a")]
+            assert any(href.endswith("doc/index.html") for href in wrapper_hrefs), f"Wrapper page for {component_path} does not nest the component doc"
+
+            # clanguru source docs are report content and must be nested under the component
+            # (via the generated __source_docs/index), not left as orphaned documents.
+            assert any(href.endswith("__source_docs/index.html") for href in wrapper_hrefs), f"Wrapper page for {component_path} does not nest the source docs index"
+
+            has_tests = bool(list(self.spl_project.artifacts.project_root_dir.joinpath(component_path).glob("test/*")))
+            if has_tests:
+                for report_page in ["unit_test_spec.html", "unit_test_results.html", "coverage.html"]:
+                    assert any(href.endswith(report_page) for href in wrapper_hrefs), f"Wrapper page for {component_path} does not nest {report_page}"
 
     @staticmethod
     def _assert_needs_have_link_option(html_file: Path, need_type_class: str, link_span_class: str) -> bool:
