@@ -116,7 +116,7 @@ class ArtifactsArchive:
             Exception: If there is an error creating the 7z file.
         """
         # Construct the full archive path
-        archive_path = self.out_dir / self.archive_name
+        archive_path = (self.out_dir / self.archive_name).resolve()
 
         # Create output directory if it doesn't exist
         archive_path.parent.mkdir(parents=True, exist_ok=True)
