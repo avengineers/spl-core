@@ -9,7 +9,7 @@ dependencies = [
     "spl-core (>=7,<8)",
     "pypeline-runner>=1,<2",
     "pytest>=8,<9",
-    "pip_system_certs>=4.0,<5",
+    "pip_system_certs>=5.0,<6",
     "myst-parser>=4.0,<5",
     "pypeline-semantic-release (>=0.5,<1.0)",
 ]
