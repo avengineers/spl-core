@@ -273,7 +273,8 @@ macro(spl_create_component)
 \"has_docs\": \"\",
 \"docs_output_dir\": \"\",
 \"has_reports\": \"\",
-\"reports_output_dir\": \"\"
+\"reports_output_dir\": \"\",
+\"source_docs_dir\": \"\"
 }")
     set(_component_is_header_only FALSE)
 
@@ -422,12 +423,24 @@ Code Coverage
                 _spl_generate_clanguru_source_docs(${component_name} "${_clanguru_all_sources}")
             endif()
 
+            # Store the source docs directory so the variant report wrapper page can
+            # nest it under the component (see _spl_create_reports_target).
+            if(_COMPONENT_SOURCE_DOCS_INCLUDE_PATTERN)
+                string(JSON _component_info SET "${_component_info}" source_docs_dir "\"${_rel_clanguru_docs_out_dir}\"")
+            endif()
+
             # Collect all component sphinx include pattern to be used in the variant targets (docs, reports)
             list(APPEND COMPONENTS_SPHINX_INCLUDE_PATTERNS "${_rel_component_doc_dir}/**" "${_rel_component_docs_out_dir}/**" "${_rel_component_reports_out_dir}/**")
-            if(_COMPONENT_SOURCE_DOCS_INCLUDE_PATTERN)
-                list(APPEND COMPONENTS_SPHINX_INCLUDE_PATTERNS "${_COMPONENT_SOURCE_DOCS_INCLUDE_PATTERN}")
-            endif()
             set(COMPONENTS_SPHINX_INCLUDE_PATTERNS ${COMPONENTS_SPHINX_INCLUDE_PATTERNS} PARENT_SCOPE)
+
+            # Source docs (clanguru detailed design generated from source files) are report
+            # content only. Keep them in a separate list so they are added to the variant
+            # reports build but not to the variant docs build, where they would otherwise
+            # appear as documents that are not part of any toctree.
+            if(_COMPONENT_SOURCE_DOCS_INCLUDE_PATTERN)
+                list(APPEND COMPONENTS_SOURCE_DOCS_INCLUDE_PATTERNS "${_COMPONENT_SOURCE_DOCS_INCLUDE_PATTERN}")
+                set(COMPONENTS_SOURCE_DOCS_INCLUDE_PATTERNS ${COMPONENTS_SOURCE_DOCS_INCLUDE_PATTERNS} PARENT_SCOPE)
+            endif()
         endif(EXISTS ${_component_doc_dir}/index.rst OR EXISTS ${_component_doc_dir}/index.md)
     endif(BUILD_KIT STREQUAL prod)
 
@@ -507,8 +520,9 @@ macro(_spl_create_reports_target)
     list(JOIN COMPONENTS_INFO "," _components_info_json)
     set(_components_info_json "[${_components_info_json}]")
 
-    # Add the variant specific rst files (e.g, coverage.rst) to the include patterns
-    list(APPEND COMPONENTS_SPHINX_INCLUDE_PATTERNS "${_rel_reports_output_dir}/**")
+    # Add the variant specific rst files (e.g, coverage.rst) and the component source
+    # docs (report content only) to the include patterns
+    list(APPEND COMPONENTS_SPHINX_INCLUDE_PATTERNS "${_rel_reports_output_dir}/**" ${COMPONENTS_SOURCE_DOCS_INCLUDE_PATTERNS})
     list(JOIN COMPONENTS_SPHINX_INCLUDE_PATTERNS "\",\"" _components_sphinx_include_patterns_json)
     set(_components_sphinx_include_patterns_json "[\"${_components_sphinx_include_patterns_json}\"]")
     file(WRITE ${_reports_config_json} "{
@@ -517,6 +531,64 @@ macro(_spl_create_reports_target)
     \"reports_output_dir\": \"${_rel_reports_output_dir}\",
     \"components_info\": ${_components_info_json}
 }")
+
+    # Generate one wrapper page per component with documentation. The PyData Sphinx
+    # Theme only renders actual documents (toctree targets) as sidebar nodes, not
+    # Markdown headings. A wrapper document (title + toctree) therefore makes each
+    # component appear as its own collapsible node in the variant report sidebar.
+    # See docs/internals/decisions/0001-report-navigation-is-jinja-driven.md.
+    #
+    # Remove wrapper pages from previous configurations first, so a renamed or
+    # removed component does not leave an orphaned page behind that Sphinx would
+    # flag as not being part of any toctree on incremental reconfigures.
+    file(GLOB _stale_wrapper_pages "${_reports_output_dir}/*_index.md")
+    if(_stale_wrapper_pages)
+        file(REMOVE ${_stale_wrapper_pages})
+    endif()
+
+    foreach(component_info ${COMPONENTS_INFO})
+        string(JSON _wrapper_has_docs GET ${component_info} has_docs)
+        if(NOT _wrapper_has_docs)
+            continue()
+        endif()
+
+        string(JSON _wrapper_name GET ${component_info} name)
+        string(JSON _wrapper_long_name GET ${component_info} long_name)
+        string(JSON _wrapper_path GET ${component_info} path)
+        string(JSON _wrapper_has_reports GET ${component_info} has_reports)
+        string(JSON _wrapper_reports_output_dir GET ${component_info} reports_output_dir)
+        string(JSON _wrapper_source_docs_dir GET ${component_info} source_docs_dir)
+
+        if(NOT _wrapper_long_name STREQUAL "")
+            set(_wrapper_title "${_wrapper_long_name}")
+        else()
+            set(_wrapper_title "${_wrapper_name}")
+        endif()
+
+        set(_wrapper_content "# ${_wrapper_title}
+
+```{toctree}
+:maxdepth: 2
+
+/${_wrapper_path}/doc/index
+")
+        if(_wrapper_has_reports)
+            string(APPEND _wrapper_content "/${_wrapper_reports_output_dir}/unit_test_spec
+/${_wrapper_reports_output_dir}/unit_test_results
+/${_wrapper_reports_output_dir}/coverage
+")
+        endif()
+        if(_wrapper_source_docs_dir)
+            string(APPEND _wrapper_content "/${_wrapper_source_docs_dir}/index
+")
+        endif()
+        string(APPEND _wrapper_content "```
+")
+
+        set(_wrapper_file ${_reports_output_dir}/${_wrapper_name}_index.md)
+        file(WRITE ${_wrapper_file} "${_wrapper_content}")
+        set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_wrapper_file})
+    endforeach()
 
     # create the variant code coverage rst file
     set(_coverage_rst ${_reports_output_dir}/coverage.rst)
@@ -789,6 +861,18 @@ macro(_spl_add_test_suite COMPONENT_NAME PROD_SRC TEST_SOURCES)
     )
 endmacro(_spl_add_test_suite)
 
+function(_spl_source_doc_name out_var src_file base_dir)
+    # Derive a document name for a source file's generated docs from its path
+    # relative to the component, so files that share a basename in different
+    # sub-directories (e.g. src/foo.c and test/foo.c) do not collide.
+    file(RELATIVE_PATH _rel "${base_dir}" "${src_file}")
+    if(_rel MATCHES "^\\.\\.")
+        # Source outside the component directory: fall back to the basename.
+        get_filename_component(_rel "${src_file}" NAME)
+    endif()
+    set(${out_var} "${_rel}" PARENT_SCOPE)
+endfunction()
+
 macro(_spl_generate_clanguru_source_docs COMPONENT_NAME SRC_FILES)
     if(NOT CLANGURU_EXECUTABLE)
         find_program(CLANGURU_EXECUTABLE clanguru)
@@ -800,12 +884,14 @@ macro(_spl_generate_clanguru_source_docs COMPONENT_NAME SRC_FILES)
 
     set(_clanguru_docs_out_dir ${CMAKE_CURRENT_BINARY_DIR}/__source_docs)
     set(_clanguru_doc_outputs "")
+    set(_clanguru_doc_names "")
     foreach(_src_file ${SRC_FILES})
-        get_filename_component(_src_name ${_src_file} NAME)
-        set(_doc_output ${_clanguru_docs_out_dir}/${_src_name}.rst)
+        _spl_source_doc_name(_src_doc_name "${_src_file}" "${CMAKE_CURRENT_SOURCE_DIR}")
+        set(_doc_output ${_clanguru_docs_out_dir}/${_src_doc_name}.rst)
+        get_filename_component(_doc_output_dir ${_doc_output} DIRECTORY)
         add_custom_command(
             OUTPUT ${_doc_output}
-            COMMAND ${CMAKE_COMMAND} -E make_directory ${_clanguru_docs_out_dir}
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${_doc_output_dir}
             COMMAND ${CLANGURU_EXECUTABLE} docs
                 --source-file ${_src_file}
                 --output-file ${_doc_output}
@@ -813,9 +899,10 @@ macro(_spl_generate_clanguru_source_docs COMPONENT_NAME SRC_FILES)
                 --format rst
                 --jinja-raw-tags
             DEPENDS ${_src_file}
-            COMMENT "Generating RST docs for ${_src_name} (${COMPONENT_NAME})"
+            COMMENT "Generating RST docs for ${_src_doc_name} (${COMPONENT_NAME})"
         )
         list(APPEND _clanguru_doc_outputs ${_doc_output})
+        list(APPEND _clanguru_doc_names ${_src_doc_name})
     endforeach()
 
     if(_clanguru_doc_outputs)
@@ -824,6 +911,22 @@ macro(_spl_generate_clanguru_source_docs COMPONENT_NAME SRC_FILES)
             DEPENDS ${_clanguru_doc_outputs}
         )
         add_dependencies(source_docs ${COMPONENT_NAME}_source_docs)
+
+        # Generate an index.rst so the per-file source docs are reachable via a toctree
+        # (otherwise Sphinx reports them as documents not included in any toctree). The
+        # index is linked from the component's variant report wrapper page.
+        set(_source_docs_index_content "Source Files
+============
+
+.. toctree::
+   :maxdepth: 1
+
+")
+        foreach(_src_doc_name ${_clanguru_doc_names})
+            string(APPEND _source_docs_index_content "   ${_src_doc_name}
+")
+        endforeach()
+        file(WRITE ${_clanguru_docs_out_dir}/index.rst "${_source_docs_index_content}")
 
         # Expose source_docs directory for Sphinx include patterns
         file(RELATIVE_PATH _rel_clanguru_docs_out_dir ${PROJECT_SOURCE_DIR} ${_clanguru_docs_out_dir})
