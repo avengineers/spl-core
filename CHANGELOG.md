@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v8.4.0 (2026-07-14)
+
+### Features
+
+- Replace py7zr with native 7z for artifact archiving and update tests
+  ([`261e571`](https://github.com/avengineers/spl-core/commit/261e571ca1e169063453cb62803b34374dba6812))
+
+
 ## v8.3.0 (2026-07-02)
 
 ### Bug Fixes
