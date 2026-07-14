@@ -1,6 +1,60 @@
 # CHANGELOG
 
 
+## v8.5.0 (2026-07-14)
+
+### Documentation
+
+- Explain CMake-generated report wrapper pages
+  ([#332](https://github.com/avengineers/spl-core/pull/332),
+  [`50f063d`](https://github.com/avengineers/spl-core/commit/50f063d093bfb2a81530f42e1bf26f9841a37acb))
+
+Reverse ADR 0001 to Option C (per-component wrapper pages generated in common.cmake) and explain why
+  they are required under the PyData Sphinx Theme. Recreate report_generation.md and wire the
+  internals sub-pages into a toctree.
+
+- Fix nested code fence; revert poetry.lock churn
+  ([#332](https://github.com/avengineers/spl-core/pull/332),
+  [`463d33e`](https://github.com/avengineers/spl-core/commit/463d33e88a9c2a290dc0b4199405960e40d0d8af))
+
+Use a 4-backtick outer fence around the wrapper-page example in report_generation.md so the inner
+  ```{toctree}``` block no longer terminates it early and the example renders correctly.
+
+Revert the unrelated poetry.lock change (dropped lxml win_arm64 wheels) back to develop to keep
+  platform wheel coverage intact.
+
+Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
+
+### Features
+
+- Restore per-component sidebar hierarchy in variant reports
+  ([#332](https://github.com/avengineers/spl-core/pull/332),
+  [`5654e4a`](https://github.com/avengineers/spl-core/commit/5654e4afebbc58adbb1adb8eeb1c18b2f2de1f69))
+
+The PyData Sphinx Theme only renders actual documents (toctree targets) as sidebar nodes, not
+  Markdown headings, so the flat components page collapsed into a single "Components" node.
+
+Generate one wrapper page per component with documentation at CMake configure time (title + toctree)
+  and link them from doc/components/index.md, so each component becomes its own collapsible sidebar
+  node. Nest the clanguru source docs under the component via a generated __source_docs/index and
+  keep them in a reports-only include list so they are no longer documents outside any toctree.
+
+Source doc names are derived from the component-relative path so files sharing a basename in
+  different sub-directories do not collide. Stale wrapper pages from previous configurations are
+  removed before regeneration, and the wrapper title falls back to the component name only when
+  long_name is empty.
+
+### Testing
+
+- Verify report sidebar hierarchy and source doc naming
+  ([#332](https://github.com/avengineers/spl-core/pull/332),
+  [`a920acb`](https://github.com/avengineers/spl-core/commit/a920acb24dd0a4865f7b89eb196178b940cd5b47))
+
+Assert wrapper pages are generated only for components with docs and that each wrapper nests the
+  component doc, report pages and the source docs index. Add a CMake unit test for
+  _spl_source_doc_name covering the same-basename collision case.
+
+
 ## v8.4.0 (2026-07-14)
 
 ### Features
