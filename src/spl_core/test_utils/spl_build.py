@@ -105,7 +105,9 @@ class SplBuild:
 
         Args:
             target: The build target.
-            additional_args: Extra arguments appended verbatim to the command.
+            additional_args: Extra arguments appended verbatim (raw passthrough to
+                the inner build tool, e.g. ``["-j", "4"]``; single-dash on both
+                platforms). Do not pass the wrapper's own semantic flags here.
 
         Returns:
             The command as a list suitable for ``SubprocessExecutor``.
@@ -152,7 +154,8 @@ class SplBuild:
 
         Args:
             target: The target to build, optional, defaults to value given in the constructor.
-            additional_args: Additional arguments to pass to the build command.
+            additional_args: Extra arguments passed verbatim to the build command
+                (raw passthrough to the inner build tool; single-dash on both platforms).
 
         Returns:
             int: 0 in case of success.
