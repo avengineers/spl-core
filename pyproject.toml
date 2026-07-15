@@ -88,7 +88,7 @@ match = "(?!develop$)"
 prerelease = true
 
 [tool.pytest.ini_options]
-addopts = " -vv --capture=tee-sys --junitxml=out/test-report.xml"
+addopts = " -vv --capture=tee-sys --junitxml=out/test-report.xml --cov=spl_core --cov-report=xml:out/coverage.xml --cov-report=term-missing"
 pythonpath = ["src", "tests"]
 testpaths = ["tests"]
 junit_logging = "all"
@@ -99,6 +99,14 @@ markers = [
 
 [tool.coverage.run]
 branch = true
+source = ["spl_core"]
+relative_files = true
+
+# Map the installed package back to the source tree so Codecov shows coverage
+# against src/spl_core regardless of whether tests import the editable checkout
+# or the copy Poetry installs into the venv's site-packages.
+[tool.coverage.paths]
+source = ["src/spl_core", "*/site-packages/spl_core", "*\\site-packages\\spl_core"]
 
 [tool.coverage.report]
 exclude_lines = [

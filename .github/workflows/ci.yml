@@ -74,6 +74,23 @@ jobs:
                   files: |
                       out/test-report.xml
 
+            - name: Upload coverage to Codecov
+              uses: codecov/codecov-action@v5
+              if: always()
+              with:
+                  files: out/coverage.xml
+                  fail_ci_if_error: true
+                  token: ${{ secrets.CODECOV_TOKEN }}
+
+            - name: Upload test results to Codecov
+              uses: codecov/codecov-action@v5
+              if: always()
+              with:
+                  files: out/test-report.xml
+                  report_type: test_results
+                  fail_ci_if_error: true
+                  token: ${{ secrets.CODECOV_TOKEN }}
+
     release:
         needs:
             - test
