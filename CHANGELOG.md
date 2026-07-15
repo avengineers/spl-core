@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v8.5.1 (2026-07-15)
+
+### Bug Fixes
+
+- Resolve archive path to absolute location
+  ([`91397e0`](https://github.com/avengineers/spl-core/commit/91397e02e3a3313b85f316efe773cbb458c07fec))
+
+
 ## v8.5.0 (2026-07-14)
 
 ### Documentation
