@@ -1,0 +1,24 @@
+# Codecov configuration — https://docs.codecov.com/docs/codecovyml-reference
+# Quality gate: every line a PR adds or changes must be covered by tests.
+coverage:
+    status:
+        # Patch = coverage of the lines touched by this PR. This is the gate
+        # that rejects PRs which introduce untested code.
+        patch:
+            default:
+                target: 100% # every new/changed line must be covered
+                threshold: 0% # no tolerance
+                informational: false # hard failure, not just a warning
+        # Project = overall repository coverage. Enforced as a hard gate too:
+        # total coverage may not drop below the base commit (target: auto,
+        # zero tolerance).
+        project:
+            default:
+                target: auto
+                threshold: 0%
+                informational: false
+
+# Only lines that coverage.py actually measures are counted. Code reachable
+# solely through the integration tests (which run `please` as a subprocess and
+# are intentionally NOT measured) reads as uncovered here — cover such code with
+# unit tests, or mark genuinely unreachable lines with `# pragma: no cover`.
