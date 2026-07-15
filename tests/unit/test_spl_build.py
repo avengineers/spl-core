@@ -67,16 +67,28 @@ def test_build_dir(variant: str, build_kit: str, build_type: str | None, target:
     assert spl_build.build_dir == Path(expected_path)
 
 
-def test_execute_success() -> None:
+@pytest.mark.parametrize(
+    "platform_name,build_type,expected_command",
+    [
+        # Windows drives the build through build.bat with PowerShell-style flags.
+        ("win32", None, ["build.bat", "-build", "-buildKit", "my_build_kit", "-variants", "my_var", "-target", "all", "-reconfigure"]),
+        ("win32", "Debug", ["build.bat", "-build", "-buildKit", "my_build_kit", "-variants", "my_var", "-target", "all", "-reconfigure", "-buildType", "Debug"]),
+        # Linux/macOS drive the build through build.sh with long-option flags.
+        ("linux", None, ["bash", "./build.sh", "--build", "--build-kit", "my_build_kit", "--variant", "my_var", "--target", "all", "--reconfigure"]),
+        ("darwin", None, ["bash", "./build.sh", "--build", "--build-kit", "my_build_kit", "--variant", "my_var", "--target", "all", "--reconfigure"]),
+        ("linux", "Release", ["bash", "./build.sh", "--build", "--build-kit", "my_build_kit", "--variant", "my_var", "--target", "all", "--reconfigure", "--build-type", "Release"]),
+    ],
+)
+def test_execute_builds_platform_specific_command(platform_name: str, build_type: str | None, expected_command: list[str]) -> None:
     # Arrange
-    spl_build = SplBuild(variant="my_var", build_kit="my_build_kit")
+    spl_build = SplBuild(variant="my_var", build_kit="my_build_kit", build_type=build_type)
 
-    # Call the method
-    with mock_command_execution() as (mock_constructor, mock_executor):
+    # Act
+    with patch("spl_core.test_utils.spl_build.sys.platform", platform_name), mock_command_execution() as (mock_constructor, mock_executor):
         result = spl_build.execute(target="all")
 
-        # Assertions
-        mock_constructor.assert_called_once_with(command=["build.bat", "-build", "-buildKit", "my_build_kit", "-variants", "my_var", "-target", "all", "-reconfigure"])
+        # Assert
+        mock_constructor.assert_called_once_with(command=expected_command)
         mock_executor.assert_called_once_with(handle_errors=False)
         assert result == 0, "Expected execute to return 0 on success"
 
@@ -86,7 +98,7 @@ def test_execute_with_target_from_constructor() -> None:
     spl_build = SplBuild(variant="my_var", build_kit="my_build_kit", target="my_target")
 
     # Call the method
-    with mock_command_execution() as (mock_constructor, mock_executor):
+    with patch("spl_core.test_utils.spl_build.sys.platform", "win32"), mock_command_execution() as (mock_constructor, mock_executor):
         result = spl_build.execute()
 
         # Assertions
@@ -96,7 +108,7 @@ def test_execute_with_target_from_constructor() -> None:
 
 
 def test_execute_retry_on_license_issue(spl_build: SplBuild) -> None:
-    with patch("time.sleep") as mock_sleep:
+    with patch("time.sleep") as mock_sleep, patch("spl_core.test_utils.spl_build.sys.platform", "win32"):
         # Setup mock outputs to simulate license failure and then success
         failure_output = MagicMock(returncode=1, stdout="No valid floating license")
         success_output = MagicMock(returncode=0)
@@ -112,14 +124,21 @@ def test_execute_retry_on_license_issue(spl_build: SplBuild) -> None:
             assert mock_sleep.call_count == 1
 
 
-def test_execute_with_additional_args(spl_build: SplBuild) -> None:
-    with mock_command_execution() as (mock_constructor, mock_executor):
+@pytest.mark.parametrize(
+    "platform_name,expected_command",
+    [
+        ("win32", ["build.bat", "-build", "-buildKit", "defaultKit", "-variants", "my_var", "-target", "all", "-reconfigure", "-j", "4"]),
+        ("linux", ["bash", "./build.sh", "--build", "--build-kit", "defaultKit", "--variant", "my_var", "--target", "all", "--reconfigure", "-j", "4"]),
+    ],
+)
+def test_execute_with_additional_args(spl_build: SplBuild, platform_name: str, expected_command: list[str]) -> None:
+    with patch("spl_core.test_utils.spl_build.sys.platform", platform_name), mock_command_execution() as (mock_constructor, mock_executor):
         # Call the method
         additional_args = ["-j", "4"]
         spl_build.execute(target="all", additional_args=additional_args)
 
         # Assertions
-        mock_constructor.assert_called_once_with(command=["build.bat", "-build", "-buildKit", "defaultKit", "-variants", "my_var", "-target", "all", "-reconfigure", "-j", "4"])
+        mock_constructor.assert_called_once_with(command=expected_command)
         mock_executor.assert_called_once_with(handle_errors=False)
 
 
