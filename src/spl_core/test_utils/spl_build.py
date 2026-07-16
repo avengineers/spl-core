@@ -1,4 +1,5 @@
 import json
+import sys
 import time
 import zipfile
 from collections.abc import Callable
@@ -46,7 +47,9 @@ class SplBuild:
     """
     Class for building an SPL repository.
 
-    Relies on build.bat in the root of the SPL repository.
+    Drives the repository build wrapper: ``build.bat`` on Windows and
+    ``build.sh`` on Linux/macOS, so that consumer test suites run unchanged
+    on every platform.
     """
 
     @dataclass
@@ -92,6 +95,56 @@ class SplBuild:
             return Path(f"build/{self.variant}/{self.build_kit}/{self.build_type}")
         return Path(f"build/{self.variant}/{self.build_kit}")
 
+    def _create_build_command(self, target: str, additional_args: list[str] | None = None) -> list[str | Path]:
+        """
+        Create the platform-specific build command.
+
+        On Windows the build is driven by ``build.bat`` (PowerShell-style flags);
+        on Linux/macOS by ``build.sh`` (long-option flags). Both wrappers accept
+        the same semantic options so the resulting build behaves identically.
+
+        Args:
+            target: The build target.
+            additional_args: Extra arguments appended verbatim to the command.
+
+        Returns:
+            The command as a list suitable for ``SubprocessExecutor``.
+
+        """
+        cmd: list[str | Path]
+        if sys.platform.startswith("win"):
+            cmd = [
+                "build.bat",
+                "-build",
+                "-buildKit",
+                self.build_kit,
+                "-variants",
+                self.variant,
+                "-target",
+                target,
+                "-reconfigure",
+            ]
+            if self.build_type:
+                cmd.extend(["-buildType", self.build_type])
+        else:
+            cmd = [
+                "bash",
+                "./build.sh",
+                "--build",
+                "--build-kit",
+                self.build_kit,
+                "--variant",
+                self.variant,
+                "--target",
+                target,
+                "--reconfigure",
+            ]
+            if self.build_type:
+                cmd.extend(["--build-type", self.build_type])
+        if additional_args:
+            cmd.extend(additional_args)
+        return cmd
+
     @time_it()
     def execute(self, target: str | None = None, additional_args: list[str] | None = None) -> int:
         """
@@ -109,22 +162,7 @@ class SplBuild:
             target = self.target if self.target else "all"
         return_code = -1
         while True:
-            cmd: list[str | Path] = [
-                "build.bat",
-                "-build",
-                "-buildKit",
-                self.build_kit,
-                "-variants",
-                self.variant,
-                "-target",
-                target,
-                "-reconfigure",
-            ]
-            if self.build_type:
-                cmd.extend(["-buildType", self.build_type])
-            if additional_args:
-                cmd.extend(additional_args)
-            # Cast to Union[str, List[Union[str, Path]]] to satisfy SubprocessExecutor type
+            cmd = self._create_build_command(target, additional_args)
             result = SubprocessExecutor(command=cmd).execute(handle_errors=False)
             if result is None:
                 return_code = -1
