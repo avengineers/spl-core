@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v8.6.0-rc.1 (2026-07-15)
+
+### Features
+
+- **test_utils**: Make SplBuild.execute platform-aware
+  ([`2b56ade`](https://github.com/avengineers/spl-core/commit/2b56ade6e8b0921b2cd26000c5237e1de08ff933))
+
+SplBuild now drives build.bat on Windows and build.sh on Linux/macOS, so consumer variant test
+  suites run unchanged on every platform instead of being hard-wired to the Windows batch wrapper.
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+
+
 ## v8.5.1 (2026-07-15)
 
 ### Bug Fixes
