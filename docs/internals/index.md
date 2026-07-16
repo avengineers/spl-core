@@ -5,6 +5,7 @@
 :caption: Internals
 
 architecture/report_generation
+release_integration
 decisions/index
 ```
 

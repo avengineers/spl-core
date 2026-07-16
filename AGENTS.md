@@ -136,6 +136,25 @@ The build pipeline is defined in `pypeline.yaml` and executed by `pypeline-runne
 - Version tracked in: `pyproject.toml`, `src/spl_core/__init__.py`, `docs/conf.py`
 - Changelog excludes `chore*` and `ci*` commits
 
+### RC integration testing with SPLED
+
+spl-core CI runs **only unit tests** — it cannot build a real SPL end-to-end
+(e.g. no `build.sh` lives here). Consumer-facing changes (anything touching
+`SplBuild`, `gcov_maid`, the CMake modules, the kickstart template, or the
+build-wrapper contract) are validated against a real SPL (**SPLED**) using a
+**release candidate** before the official release:
+
+1. spl-core feature branch, unit tests green → the branch builds an RC
+   (e.g. `8.6.0-rc.1`).
+2. A SPLED integration branch pins that RC and runs SPLED's full variant
+   self-tests + coverage — this is the real integration gate.
+3. On green, merge the spl-core PR to `develop` (official release).
+4. Repin the SPLED PR to the official version and merge to SPLED `develop`, so
+   SPLED `develop` always tracks the newest official spl-core.
+
+SPLED never pins an RC on its `develop`. See
+`docs/internals/release_integration.md` for the full process.
+
 ## Common Patterns
 
 ### CMake Build Flow
@@ -165,6 +184,17 @@ spl-core already uses a pattern for passing config files to external tools (e.g.
 - Generate/locate a config file (JSON or INI)
 - Pass the file path via CMake variable or environment variable
 - Use `${CMAKE_COMMAND} -E env VAR=value` in `add_custom_command()`
+
+### Build Wrapper Contract (`SplBuild.execute`)
+
+`SplBuild.execute()` drives a repo-level wrapper, not CMake directly:
+`build.bat` (`-flag` style) on Windows, `bash ./build.sh` (`--flag` style) on
+Linux/macOS. The wrapper is owned by the **SPL consumer repo** — spl-core does
+**not** ship `build.sh` (not even in the kickstart template); it only defines the
+command contract each SPL must honour. `additional_args` are passed through
+verbatim (raw passthrough to the inner build tool). See
+`docs/internals/decisions/0002-build-wrapper-lives-in-the-spl.md` for the flag
+mapping and rationale.
 
 ### Variant Structure
 
