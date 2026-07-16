@@ -41,6 +41,34 @@ def test_wipe_gcno_files(temp_dir):
     assert obj_files[1].exists()
 
 
+def test_wipe_gcno_files_keeps_notes_with_unix_object(temp_dir):
+    # On Unix/Linux CMake names object files ".o" (not ".obj").
+    # A .gcno with a sibling .o object must be considered valid and kept.
+    gcno_files = [
+        temp_dir / "file1.c.gcno",
+        temp_dir / "subdir/file2.c.gcno",
+        temp_dir / "orphan.c.gcno",
+    ]
+    obj_files = [temp_dir / "file1.c.o", temp_dir / "subdir/file2.c.o"]
+
+    for file in gcno_files + obj_files:
+        os.makedirs(file.parent, exist_ok=True)
+    for file in gcno_files + obj_files:
+        file.touch()
+
+    wipe_gcno_files(temp_dir)
+
+    # gcno files with a corresponding .o object are kept
+    assert gcno_files[0].exists()
+    assert gcno_files[1].exists()
+    # the orphan (no object at all) is removed
+    assert not gcno_files[2].exists()
+
+    # object files are never touched
+    assert obj_files[0].exists()
+    assert obj_files[1].exists()
+
+
 def test_wipe_gcda_files(temp_dir):
     # Create some gcda files in the temporary directory
     gcda_files = [
