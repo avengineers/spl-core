@@ -1,6 +1,28 @@
 # CHANGELOG
 
 
+## v8.6.0-rc.2 (2026-07-16)
+
+### Bug Fixes
+
+- **gcov_maid**: Recognize Unix .o objects when pruning orphaned gcno
+  ([`cfcef4b`](https://github.com/avengineers/spl-core/commit/cfcef4ba89401d4c2a131ef818d17ef4d205b9d4))
+
+wipe_gcno_files only checked for a sibling .obj object file. CMake names compiled objects .obj on
+  Windows but .o on Unix/Linux, so on Linux every .gcno was treated as orphaned and deleted before
+  gcovr ran, causing 'cannot open notes file' and 'could not infer a working directory' coverage
+  failures. Now accept both .obj and .o.
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+
+### Documentation
+
+- **test_utils**: Clarify additional_args is raw passthrough to inner build tool
+  ([`160e07d`](https://github.com/avengineers/spl-core/commit/160e07d804c8688a48888e40a352101b0a074827))
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+
+
 ## v8.6.0-rc.1 (2026-07-15)
 
 ### Features
