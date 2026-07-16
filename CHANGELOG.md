@@ -1,12 +1,12 @@
 # CHANGELOG
 
 
-## v8.6.0-rc.2 (2026-07-16)
+## v8.6.0 (2026-07-16)
 
 ### Bug Fixes
 
 - **gcov_maid**: Recognize Unix .o objects when pruning orphaned gcno
-  ([`cfcef4b`](https://github.com/avengineers/spl-core/commit/cfcef4ba89401d4c2a131ef818d17ef4d205b9d4))
+  ([`7dde58d`](https://github.com/avengineers/spl-core/commit/7dde58d4a44f8f43624d1aac99120058ae5cd833))
 
 wipe_gcno_files only checked for a sibling .obj object file. CMake names compiled objects .obj on
   Windows but .o on Unix/Linux, so on Linux every .gcno was treated as orphaned and deleted before
@@ -18,22 +18,36 @@ Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
 ### Documentation
 
 - **test_utils**: Clarify additional_args is raw passthrough to inner build tool
-  ([`160e07d`](https://github.com/avengineers/spl-core/commit/160e07d804c8688a48888e40a352101b0a074827))
+  ([`5a5bbc5`](https://github.com/avengineers/spl-core/commit/5a5bbc5ac480c18b6ffbad8d4e45aa87a1a1405b))
 
 Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
 
-
-## v8.6.0-rc.1 (2026-07-15)
-
 ### Features
 
+- **docs**: Add release integration testing process with SPLED and update decision records
+  ([`bbc7ed1`](https://github.com/avengineers/spl-core/commit/bbc7ed150bc4d5ab40fa08897f30ff437497db30))
+
 - **test_utils**: Make SplBuild.execute platform-aware
-  ([`2b56ade`](https://github.com/avengineers/spl-core/commit/2b56ade6e8b0921b2cd26000c5237e1de08ff933))
+  ([`b601357`](https://github.com/avengineers/spl-core/commit/b60135742f140dd9bf465d483fe049635f272560))
 
 SplBuild now drives build.bat on Windows and build.sh on Linux/macOS, so consumer variant test
   suites run unchanged on every platform instead of being hard-wired to the Windows batch wrapper.
 
 Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+
+### Testing
+
+- **ci**: Add Codecov coverage upload and hard merge gate
+  ([`4521ed7`](https://github.com/avengineers/spl-core/commit/4521ed7686c5668cffa4951b384450ec566ace69))
+
+Generate coverage.xml during pytest (--cov=spl_core) and upload it plus the JUnit report to Codecov
+  from the Windows test job, mirroring the sple-skills setup. Add codecov.yml enforcing coverage as
+  a hard gate (informational: false): patch requires 100% coverage of changed lines, project forbids
+  the overall coverage from dropping below the base commit. Map src/spl_core to the venv
+  site-packages copy so Codecov attributes coverage to the source tree.
+
+Code covered only by the subprocess-based integration tests is not measured and must be unit-tested
+  or marked pragma: no cover.
 
 
 ## v8.5.1 (2026-07-15)
