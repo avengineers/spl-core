@@ -10,6 +10,8 @@
         "charliermarsh.ruff",
         "github.copilot-chat",
         "ms-vscode.cpptools-themes",
-        "ms-vscode.cpptools"
+        "ms-vscode.cpptools",
+        "bierner.markdown-mermaid",
+        "shd101wyy.markdown-preview-enhanced"
     ]
 }
