@@ -33,9 +33,11 @@ def wipe_gcda_files(working_dir: Path) -> None:
 
 
 def wipe_gcno_files(working_dir: Path) -> None:
+    # CMake names compiled objects ".obj" on Windows and ".o" on Unix/Linux.
+    # A .gcno is only orphaned when no object file exists under either name.
+    object_suffixes = (".obj", ".o")
     for file in working_dir.glob("**/*.gcno"):
-        obj_file = file.with_suffix(".obj")
-        if not obj_file.exists():
+        if not any(file.with_suffix(suffix).exists() for suffix in object_suffixes):
             print(f"Deleting obsolete coverage notes file: {file}")
             file.unlink()
 
