@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v8.7.0-rc.1 (2026-07-17)
+
+### Features
+
+- Add build properties to artifacts-archiver and extract tag_name from release branches/tags
+  ([`4edb794`](https://github.com/avengineers/spl-core/commit/4edb7941399402e68e9e7abfbd9966018b1395f8))
+
+Adds branch, tag_name, and further metadata to the generated rt_upload.json properties. For release
+  branches/tags using the variant#tag syntax, the tag is extracted into tag_name while the original
+  branch/tag name (including the literal '#') is preserved unchanged for the deploy path and branch
+  property.
+
+
 ## v8.6.0 (2026-07-16)
 
 ### Bug Fixes
