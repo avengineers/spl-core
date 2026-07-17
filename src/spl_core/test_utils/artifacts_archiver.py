@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -22,12 +23,14 @@ class BuildMetadata:
         build_number: The build number or "local_build"
         is_tag: Whether this is a tag build
         pr_number: The PR number (without "PR-" prefix) for pull request builds, None otherwise
+        tag_name: The git tag name for tag builds, None otherwise
     """
 
     branch_name: str
     build_number: str
     is_tag: bool
     pr_number: str | None
+    tag_name: str | None = None
 
 
 @dataclass
@@ -259,7 +262,8 @@ class ArtifactsArchiver:
         metadata = self._get_build_metadata()
 
         # Construct the URL following the same pattern as create_rt_upload_json
-        archive_url = f"{self.artifactory_base_url}/{target_repo}/{metadata.branch_name}/{metadata.build_number}/{archive.archive_name}"
+        deploy_branch = self._sanitize_branch_for_path(metadata.branch_name)
+        archive_url = f"{self.artifactory_base_url}/{target_repo}/{deploy_branch}/{metadata.build_number}/{archive.archive_name}"
 
         return archive_url
 
@@ -319,6 +323,7 @@ class ArtifactsArchiver:
         build_number = "local_build"
         is_tag = False
         pr_number = None
+        tag_name_value: str | None = None
 
         if os.environ.get("JENKINS_URL"):
             change_id = os.environ.get("CHANGE_ID")
@@ -331,12 +336,22 @@ class ArtifactsArchiver:
                 branch_name = f"PR-{change_id}"
                 pr_number = change_id
             elif tag_name:
-                # Tag build case
-                branch_name = tag_name
                 is_tag = True
+                branch_name = tag_name
+                if "#" in tag_name and tag_name.startswith("release/"):
+                    # Release tag with embedded variant in variant#tag syntax (e.g. release/Disco#ci_test_v3).
+                    match = re.search(r"#([^#/]+)", tag_name)
+                    tag_name_value = match.group(1).strip() if match else tag_name
+                else:
+                    # Pure git tag build: TAG_NAME set, BRANCH_NAME equals the tag
+                    tag_name_value = tag_name
             elif jenkins_branch_name:
-                # Regular branch case
                 branch_name = jenkins_branch_name
+                if "#" in jenkins_branch_name and jenkins_branch_name.startswith("release/"):
+                    # Release branch with embedded tag in variant#tag syntax (e.g. release/Disco#ci_test_v3).
+                    match = re.search(r"#([^#/]+)", jenkins_branch_name)
+                    if match:
+                        tag_name_value = match.group(1).strip()
 
             if jenkins_build_number:
                 build_number = jenkins_build_number
@@ -346,7 +361,24 @@ class ArtifactsArchiver:
             build_number=build_number,
             is_tag=is_tag,
             pr_number=pr_number,
+            tag_name=tag_name_value,
         )
+
+    @staticmethod
+    def _sanitize_branch_for_path(branch_name: str) -> str:
+        """
+        Rejoin a variant#tag or variant/#tag release ref (e.g. "release/Disco#ci_test_v3")
+        with a plain '/' so it never contains a literal '#' when used to build an
+        Artifactory upload path or URL. A literal '#' is unsafe there since it is
+        interpreted as a URL fragment separator.
+
+        The unmodified branch_name (with the '#') is still used for the "branch=" prop,
+        so the original ref stays visible in the artifact's metadata for traceability.
+        """
+        match = re.match(r"^(?P<variant>[^#]+?)/?#(?P<tag>.*)$", branch_name)
+        if match:
+            return f"{match.group('variant')}/{match.group('tag')}"
+        return branch_name
 
     @staticmethod
     def _get_git_metadata() -> GitMetadata:
@@ -415,6 +447,44 @@ class ArtifactsArchiver:
             repository_url=repository_url,
         )
 
+    @staticmethod
+    def _build_commit_link(repository_url: str | None, commit_id: str | None) -> str | None:
+        """
+        Build a web link to a specific commit from the git remote URL and commit SHA.
+
+        Supports Bitbucket Server (HTTPS and SSH), GitHub, and GitLab remote URL patterns.
+
+        Args:
+            repository_url: The git remote URL (e.g. from GIT_URL or git config remote.origin.url)
+            commit_id: The full git commit SHA
+
+        Returns:
+            A browsable web URL for the commit, or None if the URL pattern is not recognised
+        """
+        if not repository_url or not commit_id:
+            return None
+        # Bitbucket Server HTTPS: https://host/scm/org/repo[.git]
+        match = re.match(r"(https?://[^/]+)/scm/([^/]+)/([^/?#]+?)(?:\.git)?/?$", repository_url, re.IGNORECASE)
+        if match:
+            base_url, org, repo = match.groups()
+            return f"{base_url}/projects/{org.upper()}/repos/{repo}/commits/{commit_id}"
+        # Bitbucket Server SSH: ssh://git@host[:port]/org/repo[.git]
+        match = re.match(r"ssh://[^@]+@([^:/]+)(?::\d+)?/([^/]+)/([^/?#]+?)(?:\.git)?/?$", repository_url, re.IGNORECASE)
+        if match:
+            host, org, repo = match.groups()
+            return f"https://{host}/projects/{org.upper()}/repos/{repo}/commits/{commit_id}"
+        # GitLab HTTPS: https://gitlab.com/org/repo[.git]  (must be checked before GitHub generic pattern)
+        match = re.match(r"(https?://[^/]*gitlab[^/]*)/(.+?)(?:\.git)?/?$", repository_url, re.IGNORECASE)
+        if match:
+            base_url, path = match.groups()
+            return f"{base_url}/{path}/-/commit/{commit_id}"
+        # GitHub / generic HTTPS: https://host/org/repo[.git]
+        match = re.match(r"(https?://[^/]+)/(.+?)(?:\.git)?/?$", repository_url, re.IGNORECASE)
+        if match:
+            base_url, path = match.groups()
+            return f"{base_url}/{path}/commit/{commit_id}"
+        return None
+
     def create_rt_upload_json(self, out_dir: Path) -> Path:
         """
         Create a single rt-upload.json file containing all archives.
@@ -431,9 +501,28 @@ class ArtifactsArchiver:
         """
         # Get build metadata from environment or defaults
         metadata = self._get_build_metadata()
+        git_metadata = self._get_git_metadata()
+        deploy_branch = self._sanitize_branch_for_path(metadata.branch_name)
 
         # Calculate retention period based on branch/tag
         retention_period = self.calculate_retention_period(metadata.branch_name, metadata.is_tag)
+
+        # Build the props string with all available VCS metadata
+        props_parts = [f"retention_period={retention_period}"]
+        if git_metadata.commit_id:
+            props_parts.append(f"commit_id={git_metadata.commit_id}")
+        if metadata.is_tag:
+            props_parts.append(f"tag_name={metadata.tag_name}")
+        elif metadata.pr_number:
+            props_parts.append(f"pull_request={metadata.pr_number}")
+        else:
+            props_parts.append(f"branch={metadata.branch_name}")
+            if metadata.tag_name:
+                props_parts.append(f"tag_name={metadata.tag_name}")
+        commit_link = self._build_commit_link(git_metadata.repository_url, git_metadata.commit_id)
+        if commit_link:
+            props_parts.append(f"commit_link={commit_link}")
+        props = ";".join(props_parts)
 
         # Create the files array for Artifactory upload format
         files_array = []
@@ -443,9 +532,8 @@ class ArtifactsArchiver:
                 target_repo = self._target_repos[archive_name]
 
                 # Construct the RT target path
-                rt_target = f"{target_repo}/{metadata.branch_name}/{metadata.build_number}/"
+                rt_target = f"{target_repo}/{deploy_branch}/{metadata.build_number}/"
 
-                # Add this archive to the files array with retention_period property
                 files_array.append(
                     {
                         "pattern": archive.archive_name,
@@ -453,7 +541,7 @@ class ArtifactsArchiver:
                         "recursive": "false",
                         "flat": "false",
                         "regexp": "false",
-                        "props": f"retention_period={retention_period}",
+                        "props": props,
                     }
                 )
 
@@ -521,11 +609,13 @@ class ArtifactsArchiver:
             # Pull request build
             artifacts_data["pull_request"] = build_metadata.pr_number
         elif build_metadata.is_tag:
-            # Tag build
-            artifacts_data["tag"] = build_metadata.branch_name
+            # Pure git tag build: only the tag
+            artifacts_data["tag"] = build_metadata.tag_name
         else:
-            # Regular branch build (or local build)
+            # Branch build (regular or with embedded tag)
             artifacts_data["branch"] = build_metadata.branch_name
+            if build_metadata.tag_name:
+                artifacts_data["tag"] = build_metadata.tag_name
 
         # Add git metadata if available
         if git_metadata.commit_id:

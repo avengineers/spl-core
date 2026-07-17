@@ -302,12 +302,14 @@ def test_multiple_archives_with_target_repos(test_dir, test_files, monkeypatch, 
         },
     ]
 
-    # Act
-    for config in archives_config:
-        archiver.add_archive(output_dir, config["filename"], archive_name=config["name"], target_repo=config["target_repo"])
-        archiver.register(config["files"], archive_name=config["name"])
-    archive_paths_dict = archiver.create_all_archives()
-    rt_upload_path = archiver.create_rt_upload_json(output_dir)
+    # Isolate from real git metadata so props only contain build/retention info
+    with patch.object(ArtifactsArchiver, "_get_git_metadata", return_value=MagicMock(commit_id=None, repository_url=None)):
+        # Act
+        for config in archives_config:
+            archiver.add_archive(output_dir, config["filename"], archive_name=config["name"], target_repo=config["target_repo"])
+            archiver.register(config["files"], archive_name=config["name"])
+        archive_paths_dict = archiver.create_all_archives()
+        rt_upload_path = archiver.create_rt_upload_json(output_dir)
 
     # Assert
     assert len(archive_paths_dict) == 3, "Should have created 3 archives"
@@ -332,6 +334,16 @@ def test_multiple_archives_with_target_repos(test_dir, test_files, monkeypatch, 
     # Should have exactly 2 entries (only archives with target repos)
     assert len(files_list) == 2, "rt-upload.json should contain exactly 2 files"
 
+    # Build expected props: retention + branch context (no git metadata in this test)
+    is_tag = tag_name is not None and jenkins_url is not None
+    is_pr = change_id is not None and jenkins_url is not None
+    if is_tag:
+        expected_props = f"retention_period={expected_retention};tag_name={expected_branch}"
+    elif is_pr:
+        expected_props = f"retention_period={expected_retention};pull_request={change_id}"
+    else:
+        expected_props = f"retention_period={expected_retention};branch={expected_branch}"
+
     # Expected JSON structure with the expected target paths from test parameters
     expected_json = {
         "files": [
@@ -341,7 +353,7 @@ def test_multiple_archives_with_target_repos(test_dir, test_files, monkeypatch, 
                 "recursive": "false",
                 "flat": "false",
                 "regexp": "false",
-                "props": f"retention_period={expected_retention}",
+                "props": expected_props,
             },
             {
                 "pattern": "configuration.7z",
@@ -349,7 +361,7 @@ def test_multiple_archives_with_target_repos(test_dir, test_files, monkeypatch, 
                 "recursive": "false",
                 "flat": "false",
                 "regexp": "false",
-                "props": f"retention_period={expected_retention}",
+                "props": expected_props,
             },
         ]
     }
@@ -380,6 +392,192 @@ def testcalculate_retention_period(branch_name, is_tag, expected_retention):
 
     # Assert
     assert retention_period == expected_retention, f"Retention period for {branch_name} (is_tag={is_tag}) should be {expected_retention}, got {retention_period}"
+
+
+# =============================================================================
+# Tests for _build_commit_link
+# =============================================================================
+
+
+@pytest.mark.parametrize(
+    "repository_url,commit_id,expected_link",
+    [
+        # Bitbucket Server HTTPS
+        (
+            "https://git.example.de/scm/sple/my_project.git",
+            "abc123def456",
+            "https://git.example.de/projects/SPLE/repos/my_project/commits/abc123def456",
+        ),
+        # Bitbucket Server HTTPS without .git suffix
+        (
+            "https://git.example.de/scm/myorg/myrepo",
+            "abc123",
+            "https://git.example.de/projects/MYORG/repos/myrepo/commits/abc123",
+        ),
+        # Bitbucket Server SSH
+        (
+            "ssh://git@git.example.de:7999/sple/my_project.git",
+            "abc123def456",
+            "https://git.example.de/projects/SPLE/repos/my_project/commits/abc123def456",
+        ),
+        # GitHub HTTPS
+        (
+            "https://github.com/myorg/myrepo.git",
+            "abc123",
+            "https://github.com/myorg/myrepo/commit/abc123",
+        ),
+        # GitHub HTTPS without .git suffix
+        (
+            "https://github.com/myorg/myrepo",
+            "abc123",
+            "https://github.com/myorg/myrepo/commit/abc123",
+        ),
+        # GitLab HTTPS
+        (
+            "https://gitlab.com/myorg/myrepo.git",
+            "abc123",
+            "https://gitlab.com/myorg/myrepo/-/commit/abc123",
+        ),
+        # Self-hosted GitLab
+        (
+            "https://gitlab.example.com/myorg/myrepo.git",
+            "abc123",
+            "https://gitlab.example.com/myorg/myrepo/-/commit/abc123",
+        ),
+        # None inputs
+        (None, "abc123", None),
+        ("https://github.com/org/repo.git", None, None),
+        (None, None, None),
+    ],
+)
+def test_build_commit_link(repository_url, commit_id, expected_link):
+    """Test commit link construction for various git hosting platforms."""
+    result = ArtifactsArchiver._build_commit_link(repository_url, commit_id)
+    assert result == expected_link
+
+
+def test_create_rt_upload_json_includes_vcs_props(test_dir, test_files, monkeypatch):
+    """Test that rt-upload.json props include commit_id, branch, and commit_link when git metadata is available."""
+    # Arrange
+    for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER", "GIT_COMMIT", "GIT_URL"]:
+        monkeypatch.delenv(env_var, raising=False)
+
+    monkeypatch.setenv("JENKINS_URL", "http://jenkins.example.com")
+    monkeypatch.setenv("BRANCH_NAME", "develop")
+    monkeypatch.setenv("BUILD_NUMBER", "42")
+    monkeypatch.setenv("GIT_COMMIT", "9e13adc68c86ef962e15563bcdc8791439b61551")
+    monkeypatch.setenv("GIT_URL", "https://git.example.de/scm/sple/spled.git")
+
+    archiver = ArtifactsArchiver()
+    output_dir = test_dir / "output"
+    archiver.add_archive(output_dir, "result.7z", target_repo="my-repo/results")
+    archiver.register(test_files[:2])
+    archiver.create_archive()
+
+    # Act
+    rt_upload_path = archiver.create_rt_upload_json(output_dir)
+
+    # Assert
+    with open(rt_upload_path) as f:
+        data = json.load(f)
+
+    props = data["files"][0]["props"]
+    assert "retention_period=84" in props
+    assert "commit_id=9e13adc68c86ef962e15563bcdc8791439b61551" in props
+    assert "branch=develop" in props
+    assert "commit_link=https://git.example.de/projects/SPLE/repos/spled/commits/9e13adc68c86ef962e15563bcdc8791439b61551" in props
+
+
+def test_create_rt_upload_json_tag_build_props(test_dir, test_files, monkeypatch):
+    """Test that rt-upload.json props include tag_name instead of branch for tag builds."""
+    for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER", "GIT_COMMIT", "GIT_URL"]:
+        monkeypatch.delenv(env_var, raising=False)
+
+    monkeypatch.setenv("JENKINS_URL", "http://jenkins.example.com")
+    monkeypatch.setenv("BRANCH_NAME", "v1.2.3")
+    monkeypatch.setenv("TAG_NAME", "v1.2.3")
+    monkeypatch.setenv("BUILD_NUMBER", "99")
+    monkeypatch.setenv("GIT_COMMIT", "deadbeef")
+    monkeypatch.setenv("GIT_URL", "https://github.com/myorg/myrepo.git")
+
+    archiver = ArtifactsArchiver()
+    output_dir = test_dir / "output"
+    archiver.add_archive(output_dir, "release.7z", target_repo="my-repo/releases")
+    archiver.register(test_files[:1])
+    archiver.create_archive()
+
+    rt_upload_path = archiver.create_rt_upload_json(output_dir)
+
+    with open(rt_upload_path) as f:
+        data = json.load(f)
+
+    props = data["files"][0]["props"]
+    assert "tag_name=v1.2.3" in props
+    assert "branch=" not in props
+    assert "commit_id=deadbeef" in props
+    assert "commit_link=https://github.com/myorg/myrepo/commit/deadbeef" in props
+
+
+def test_create_rt_upload_json_branch_with_embedded_tag(test_dir, test_files, monkeypatch):
+    """Test that for a branch with variant#tag syntax, the deploy path has the '#'
+    replaced with '/', while props still carry the original branch and extracted tag,
+    without TAG_NAME needing to be set."""
+    for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER", "GIT_COMMIT", "GIT_URL"]:
+        monkeypatch.delenv(env_var, raising=False)
+
+    monkeypatch.setenv("JENKINS_URL", "http://jenkins.example.com")
+    monkeypatch.setenv("BRANCH_NAME", "release/Disco#ci_test_v3")
+    monkeypatch.setenv("BUILD_NUMBER", "42")
+
+    archiver = ArtifactsArchiver()
+    output_dir = test_dir / "output"
+    archiver.add_archive(output_dir, "result.7z", target_repo="my-repo/results")
+    archiver.register(test_files[:1])
+    archiver.create_archive()
+
+    with patch.object(ArtifactsArchiver, "_get_git_metadata", return_value=MagicMock(commit_id=None, repository_url=None)):
+        rt_upload_path = archiver.create_rt_upload_json(output_dir)
+
+    with open(rt_upload_path) as f:
+        data = json.load(f)
+
+    file_entry = data["files"][0]
+    # The deploy path has the '#' replaced with '/' so it's safe to use in Artifactory/URLs
+    assert file_entry["target"] == "my-repo/results/release/Disco/ci_test_v3/42/"
+    # Props carry the original branch name (with the literal #tag) and the extracted tag
+    assert "branch=release/Disco#ci_test_v3" in file_entry["props"]
+    assert "tag_name=ci_test_v3" in file_entry["props"]
+
+
+def test_create_rt_upload_json_branch_with_embedded_tag_no_double_slash(test_dir, test_files, monkeypatch):
+    """Test that a branch name with /# does not produce a double slash once sanitized."""
+    for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER", "GIT_COMMIT", "GIT_URL", "SPL_DEPLOY_BRANCH"]:
+        monkeypatch.delenv(env_var, raising=False)
+
+    monkeypatch.setenv("JENKINS_URL", "http://jenkins.example.com")
+    # User wrote /# explicitly in the branch name
+    monkeypatch.setenv("BRANCH_NAME", "release/Disco/#ci_test_v3")
+    monkeypatch.setenv("BUILD_NUMBER", "7")
+
+    archiver = ArtifactsArchiver()
+    output_dir = test_dir / "output"
+    archiver.add_archive(output_dir, "result.7z", target_repo="my-repo/results")
+    archiver.register(test_files[:1])
+    archiver.create_archive()
+
+    with patch.object(ArtifactsArchiver, "_get_git_metadata", return_value=MagicMock(commit_id=None, repository_url=None)):
+        rt_upload_path = archiver.create_rt_upload_json(output_dir)
+
+    with open(rt_upload_path) as f:
+        data = json.load(f)
+
+    file_entry = data["files"][0]
+    # Sanitized deploy path — no double slashes introduced
+    assert "//" not in file_entry["target"]
+    assert file_entry["target"] == "my-repo/results/release/Disco/ci_test_v3/7/"
+    # Props carry the original branch name (with the literal /#tag) and the extracted tag
+    assert "branch=release/Disco/#ci_test_v3" in file_entry["props"]
+    assert "tag_name=ci_test_v3" in file_entry["props"]
 
 
 # =============================================================================
@@ -549,6 +747,27 @@ def test_get_archive_url_special_characters_in_branch(test_dir, monkeypatch):
 
     # Assert
     expected_url = f"{ARTIFACTORY_BASE_URL}/my-repo/results/feature/JIRA-123-special_fix/999/result.7z"
+    assert url == expected_url, f"Expected {expected_url}, got {url}"
+
+
+def test_get_archive_url_branch_with_embedded_tag(test_dir, monkeypatch):
+    """Test that get_archive_url replaces the '#' from a variant#tag branch with '/'."""
+    # Arrange
+    for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER"]:
+        monkeypatch.delenv(env_var, raising=False)
+
+    monkeypatch.setenv("JENKINS_URL", "http://jenkins.example.com")
+    monkeypatch.setenv("BRANCH_NAME", "release/Disco#ci_test_v3")
+    monkeypatch.setenv("BUILD_NUMBER", "42")
+
+    archiver = ArtifactsArchiver(artifactory_base_url=ARTIFACTORY_BASE_URL)
+    archiver.add_archive(test_dir, "result.7z", target_repo="my-repo/results")
+
+    # Act
+    url = archiver.get_archive_url()
+
+    # Assert
+    expected_url = f"{ARTIFACTORY_BASE_URL}/my-repo/results/release/Disco/ci_test_v3/42/result.7z"
     assert url == expected_url, f"Expected {expected_url}, got {url}"
 
 
