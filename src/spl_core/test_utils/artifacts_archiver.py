@@ -340,7 +340,8 @@ class ArtifactsArchiver:
                 branch_name = tag_name
                 if "#" in tag_name and tag_name.startswith("release/"):
                     # Release tag with embedded variant in variant#tag syntax (e.g. release/Disco#ci_test_v3).
-                    match = re.search(r"#([^#/]+)", tag_name)
+                    # Everything after the '#' is the tag name, slashes included.
+                    match = re.search(r"#(.+)$", tag_name)
                     tag_name_value = match.group(1).strip() if match else tag_name
                 else:
                     # Pure git tag build: TAG_NAME set, BRANCH_NAME equals the tag
@@ -349,7 +350,8 @@ class ArtifactsArchiver:
                 branch_name = jenkins_branch_name
                 if "#" in jenkins_branch_name and jenkins_branch_name.startswith("release/"):
                     # Release branch with embedded tag in variant#tag syntax (e.g. release/Disco#ci_test_v3).
-                    match = re.search(r"#([^#/]+)", jenkins_branch_name)
+                    # Everything after the '#' is the tag name, slashes included.
+                    match = re.search(r"#(.+)$", jenkins_branch_name)
                     if match:
                         tag_name_value = match.group(1).strip()
 

@@ -580,6 +580,34 @@ def test_create_rt_upload_json_branch_with_embedded_tag_no_double_slash(test_dir
     assert "tag_name=ci_test_v3" in file_entry["props"]
 
 
+def test_create_rt_upload_json_branch_with_embedded_tag_containing_slashes(test_dir, test_files, monkeypatch):
+    """Test that everything after '#' is taken as the tag name, including slashes.
+
+    Slashes are explicitly allowed after the '#' and must not be truncated."""
+    for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER", "GIT_COMMIT", "GIT_URL"]:
+        monkeypatch.delenv(env_var, raising=False)
+
+    monkeypatch.setenv("JENKINS_URL", "http://jenkins.example.com")
+    monkeypatch.setenv("BRANCH_NAME", "release/Disco/#tag_name/with/slashes")
+    monkeypatch.setenv("BUILD_NUMBER", "42")
+
+    archiver = ArtifactsArchiver()
+    output_dir = test_dir / "output"
+    archiver.add_archive(output_dir, "result.7z", target_repo="my-repo/results")
+    archiver.register(test_files[:1])
+    archiver.create_archive()
+
+    with patch.object(ArtifactsArchiver, "_get_git_metadata", return_value=MagicMock(commit_id=None, repository_url=None)):
+        rt_upload_path = archiver.create_rt_upload_json(output_dir)
+
+    with open(rt_upload_path) as f:
+        data = json.load(f)
+
+    file_entry = data["files"][0]
+    # The full tag name, including slashes, must be preserved (not truncated at the first slash)
+    assert "tag_name=tag_name/with/slashes" in file_entry["props"]
+
+
 # =============================================================================
 # Tests for get_archive_url
 # =============================================================================
