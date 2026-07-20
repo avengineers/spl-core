@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v8.7.0-rc.2 (2026-07-20)
+
+### Bug Fixes
+
+- Bugfix for tag name in build properties
+  ([`858f0e8`](https://github.com/avengineers/spl-core/commit/858f0e8c6914257ac2d729ecd866f66202e42678))
+
+
 ## v8.7.0-rc.1 (2026-07-17)
 
 ### Features
