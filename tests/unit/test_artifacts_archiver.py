@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from spl_core.test_utils.artifacts_archiver import ArtifactsArchiver
+from spl_core.test_utils.artifacts_archiver import ArtifactsArchive, ArtifactsArchiver
 
 # Artifactory base URL constant for tests
 ARTIFACTORY_BASE_URL = "https://artifactory.example.com/artifactory"
@@ -240,7 +240,6 @@ def test_create_archive_with_relative_out_dir_writes_to_correct_location(test_di
     assert archive_path.stat().st_size > 0, "Archive file should not be empty"
 
 
-
 @pytest.mark.parametrize(
     "jenkins_url,change_id,branch_name,tag_name,build_number,expected_branch,expected_build,expected_retention",
     [
@@ -302,12 +301,14 @@ def test_multiple_archives_with_target_repos(test_dir, test_files, monkeypatch, 
         },
     ]
 
-    # Act
-    for config in archives_config:
-        archiver.add_archive(output_dir, config["filename"], archive_name=config["name"], target_repo=config["target_repo"])
-        archiver.register(config["files"], archive_name=config["name"])
-    archive_paths_dict = archiver.create_all_archives()
-    rt_upload_path = archiver.create_rt_upload_json(output_dir)
+    # Isolate from real git metadata so props only contain build/retention info
+    with patch.object(ArtifactsArchiver, "_get_git_metadata", return_value=MagicMock(commit_id=None, repository_url=None)):
+        # Act
+        for config in archives_config:
+            archiver.add_archive(output_dir, config["filename"], archive_name=config["name"], target_repo=config["target_repo"])
+            archiver.register(config["files"], archive_name=config["name"])
+        archive_paths_dict = archiver.create_all_archives()
+        rt_upload_path = archiver.create_rt_upload_json(output_dir)
 
     # Assert
     assert len(archive_paths_dict) == 3, "Should have created 3 archives"
@@ -332,6 +333,16 @@ def test_multiple_archives_with_target_repos(test_dir, test_files, monkeypatch, 
     # Should have exactly 2 entries (only archives with target repos)
     assert len(files_list) == 2, "rt-upload.json should contain exactly 2 files"
 
+    # Build expected props: retention + branch context (no git metadata in this test)
+    is_tag = tag_name is not None and jenkins_url is not None
+    is_pr = change_id is not None and jenkins_url is not None
+    if is_tag:
+        expected_props = f"retention_period={expected_retention};tag_name={expected_branch}"
+    elif is_pr:
+        expected_props = f"retention_period={expected_retention};pull_request={change_id}"
+    else:
+        expected_props = f"retention_period={expected_retention};branch={expected_branch}"
+
     # Expected JSON structure with the expected target paths from test parameters
     expected_json = {
         "files": [
@@ -341,7 +352,7 @@ def test_multiple_archives_with_target_repos(test_dir, test_files, monkeypatch, 
                 "recursive": "false",
                 "flat": "false",
                 "regexp": "false",
-                "props": f"retention_period={expected_retention}",
+                "props": expected_props,
             },
             {
                 "pattern": "configuration.7z",
@@ -349,7 +360,7 @@ def test_multiple_archives_with_target_repos(test_dir, test_files, monkeypatch, 
                 "recursive": "false",
                 "flat": "false",
                 "regexp": "false",
-                "props": f"retention_period={expected_retention}",
+                "props": expected_props,
             },
         ]
     }
@@ -380,6 +391,277 @@ def testcalculate_retention_period(branch_name, is_tag, expected_retention):
 
     # Assert
     assert retention_period == expected_retention, f"Retention period for {branch_name} (is_tag={is_tag}) should be {expected_retention}, got {retention_period}"
+
+
+# =============================================================================
+# Tests for _build_commit_link
+# =============================================================================
+
+
+@pytest.mark.parametrize(
+    "repository_url,commit_id,expected_link",
+    [
+        # Bitbucket Server HTTPS
+        (
+            "https://git.example.de/scm/sple/my_project.git",
+            "abc123def456",
+            "https://git.example.de/projects/SPLE/repos/my_project/commits/abc123def456",
+        ),
+        # Bitbucket Server HTTPS without .git suffix
+        (
+            "https://git.example.de/scm/myorg/myrepo",
+            "abc123",
+            "https://git.example.de/projects/MYORG/repos/myrepo/commits/abc123",
+        ),
+        # Bitbucket Server SSH
+        (
+            "ssh://git@git.example.de:7999/sple/my_project.git",
+            "abc123def456",
+            "https://git.example.de/projects/SPLE/repos/my_project/commits/abc123def456",
+        ),
+        # GitHub HTTPS
+        (
+            "https://github.com/myorg/myrepo.git",
+            "abc123",
+            "https://github.com/myorg/myrepo/commit/abc123",
+        ),
+        # GitHub HTTPS without .git suffix
+        (
+            "https://github.com/myorg/myrepo",
+            "abc123",
+            "https://github.com/myorg/myrepo/commit/abc123",
+        ),
+        # GitLab HTTPS
+        (
+            "https://gitlab.com/myorg/myrepo.git",
+            "abc123",
+            "https://gitlab.com/myorg/myrepo/-/commit/abc123",
+        ),
+        # Self-hosted GitLab
+        (
+            "https://gitlab.example.com/myorg/myrepo.git",
+            "abc123",
+            "https://gitlab.example.com/myorg/myrepo/-/commit/abc123",
+        ),
+        # None inputs
+        (None, "abc123", None),
+        ("https://github.com/org/repo.git", None, None),
+        (None, None, None),
+    ],
+)
+def test_build_commit_link(repository_url, commit_id, expected_link):
+    """Test commit link construction for various git hosting platforms."""
+    result = ArtifactsArchiver._build_commit_link(repository_url, commit_id)
+    assert result == expected_link
+
+
+def test_create_rt_upload_json_includes_vcs_props(test_dir, test_files, monkeypatch):
+    """Test that rt-upload.json props include commit_id, branch, and commit_link when git metadata is available."""
+    # Arrange
+    for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER", "GIT_COMMIT", "GIT_URL"]:
+        monkeypatch.delenv(env_var, raising=False)
+
+    monkeypatch.setenv("JENKINS_URL", "http://jenkins.example.com")
+    monkeypatch.setenv("BRANCH_NAME", "develop")
+    monkeypatch.setenv("BUILD_NUMBER", "42")
+    monkeypatch.setenv("GIT_COMMIT", "9e13adc68c86ef962e15563bcdc8791439b61551")
+    monkeypatch.setenv("GIT_URL", "https://git.example.de/scm/sple/spled.git")
+
+    archiver = ArtifactsArchiver()
+    output_dir = test_dir / "output"
+    archiver.add_archive(output_dir, "result.7z", target_repo="my-repo/results")
+    archiver.register(test_files[:2])
+    archiver.create_archive()
+
+    # Act
+    rt_upload_path = archiver.create_rt_upload_json(output_dir)
+
+    # Assert
+    with open(rt_upload_path) as f:
+        data = json.load(f)
+
+    props = data["files"][0]["props"]
+    assert "retention_period=84" in props
+    assert "commit_id=9e13adc68c86ef962e15563bcdc8791439b61551" in props
+    assert "branch=develop" in props
+    assert "commit_link=https://git.example.de/projects/SPLE/repos/spled/commits/9e13adc68c86ef962e15563bcdc8791439b61551" in props
+
+
+def test_create_rt_upload_json_tag_build_props(test_dir, test_files, monkeypatch):
+    """Test that rt-upload.json props include tag_name instead of branch for tag builds."""
+    for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER", "GIT_COMMIT", "GIT_URL"]:
+        monkeypatch.delenv(env_var, raising=False)
+
+    monkeypatch.setenv("JENKINS_URL", "http://jenkins.example.com")
+    monkeypatch.setenv("BRANCH_NAME", "v1.2.3")
+    monkeypatch.setenv("TAG_NAME", "v1.2.3")
+    monkeypatch.setenv("BUILD_NUMBER", "99")
+    monkeypatch.setenv("GIT_COMMIT", "deadbeef")
+    monkeypatch.setenv("GIT_URL", "https://github.com/myorg/myrepo.git")
+
+    archiver = ArtifactsArchiver()
+    output_dir = test_dir / "output"
+    archiver.add_archive(output_dir, "release.7z", target_repo="my-repo/releases")
+    archiver.register(test_files[:1])
+    archiver.create_archive()
+
+    rt_upload_path = archiver.create_rt_upload_json(output_dir)
+
+    with open(rt_upload_path) as f:
+        data = json.load(f)
+
+    props = data["files"][0]["props"]
+    assert "tag_name=v1.2.3" in props
+    assert "branch=" not in props
+    assert "commit_id=deadbeef" in props
+    assert "commit_link=https://github.com/myorg/myrepo/commit/deadbeef" in props
+
+
+def test_create_rt_upload_json_branch_with_embedded_tag(test_dir, test_files, monkeypatch):
+    """Test that for a branch with variant#tag syntax, the deploy path has the '#'
+    replaced with '/', while props still carry the original branch and extracted tag,
+    without TAG_NAME needing to be set."""
+    for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER", "GIT_COMMIT", "GIT_URL"]:
+        monkeypatch.delenv(env_var, raising=False)
+
+    monkeypatch.setenv("JENKINS_URL", "http://jenkins.example.com")
+    monkeypatch.setenv("BRANCH_NAME", "release/Disco#ci_test_v3")
+    monkeypatch.setenv("BUILD_NUMBER", "42")
+
+    archiver = ArtifactsArchiver()
+    output_dir = test_dir / "output"
+    archiver.add_archive(output_dir, "result.7z", target_repo="my-repo/results")
+    archiver.register(test_files[:1])
+    archiver.create_archive()
+
+    with patch.object(ArtifactsArchiver, "_get_git_metadata", return_value=MagicMock(commit_id=None, repository_url=None)):
+        rt_upload_path = archiver.create_rt_upload_json(output_dir)
+
+    with open(rt_upload_path) as f:
+        data = json.load(f)
+
+    file_entry = data["files"][0]
+    # The deploy path has the '#' replaced with '/' so it's safe to use in Artifactory/URLs
+    assert file_entry["target"] == "my-repo/results/release/Disco/ci_test_v3/42/"
+    # Props carry the original branch name (with the literal #tag) and the extracted baseline label
+    assert "branch=release/Disco#ci_test_v3" in file_entry["props"]
+    assert "baseline_label=ci_test_v3" in file_entry["props"]
+
+
+def test_create_rt_upload_json_branch_with_embedded_tag_no_double_slash(test_dir, test_files, monkeypatch):
+    """Test that a branch name with /# does not produce a double slash once sanitized."""
+    for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER", "GIT_COMMIT", "GIT_URL", "SPL_DEPLOY_BRANCH"]:
+        monkeypatch.delenv(env_var, raising=False)
+
+    monkeypatch.setenv("JENKINS_URL", "http://jenkins.example.com")
+    # User wrote /# explicitly in the branch name
+    monkeypatch.setenv("BRANCH_NAME", "release/Disco/#ci_test_v3")
+    monkeypatch.setenv("BUILD_NUMBER", "7")
+
+    archiver = ArtifactsArchiver()
+    output_dir = test_dir / "output"
+    archiver.add_archive(output_dir, "result.7z", target_repo="my-repo/results")
+    archiver.register(test_files[:1])
+    archiver.create_archive()
+
+    with patch.object(ArtifactsArchiver, "_get_git_metadata", return_value=MagicMock(commit_id=None, repository_url=None)):
+        rt_upload_path = archiver.create_rt_upload_json(output_dir)
+
+    with open(rt_upload_path) as f:
+        data = json.load(f)
+
+    file_entry = data["files"][0]
+    # Sanitized deploy path — no double slashes introduced
+    assert "//" not in file_entry["target"]
+    assert file_entry["target"] == "my-repo/results/release/Disco/ci_test_v3/7/"
+    # Props carry the original branch name (with the literal /#tag) and the extracted baseline label
+    assert "branch=release/Disco/#ci_test_v3" in file_entry["props"]
+    assert "baseline_label=ci_test_v3" in file_entry["props"]
+
+
+def test_create_rt_upload_json_branch_with_embedded_tag_containing_slashes(test_dir, test_files, monkeypatch):
+    """Test that everything after '#' is taken as the tag name, including slashes.
+
+    Slashes are explicitly allowed after the '#' and must not be truncated."""
+    for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER", "GIT_COMMIT", "GIT_URL"]:
+        monkeypatch.delenv(env_var, raising=False)
+
+    monkeypatch.setenv("JENKINS_URL", "http://jenkins.example.com")
+    monkeypatch.setenv("BRANCH_NAME", "release/Disco/#tag_name/with/slashes")
+    monkeypatch.setenv("BUILD_NUMBER", "42")
+
+    archiver = ArtifactsArchiver()
+    output_dir = test_dir / "output"
+    archiver.add_archive(output_dir, "result.7z", target_repo="my-repo/results")
+    archiver.register(test_files[:1])
+    archiver.create_archive()
+
+    with patch.object(ArtifactsArchiver, "_get_git_metadata", return_value=MagicMock(commit_id=None, repository_url=None)):
+        rt_upload_path = archiver.create_rt_upload_json(output_dir)
+
+    with open(rt_upload_path) as f:
+        data = json.load(f)
+
+    file_entry = data["files"][0]
+    # The full tag name, including slashes, must be preserved (not truncated at the first slash)
+    assert "baseline_label=tag_name/with/slashes" in file_entry["props"]
+
+
+def test_create_rt_upload_json_release_branch_with_trailing_hash_has_no_baseline_label(test_dir, test_files, monkeypatch):
+    """A release branch ending in '#' (no tag after it) yields no baseline_label."""
+    for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER", "GIT_COMMIT", "GIT_URL"]:
+        monkeypatch.delenv(env_var, raising=False)
+
+    monkeypatch.setenv("JENKINS_URL", "http://jenkins.example.com")
+    monkeypatch.setenv("BRANCH_NAME", "release/Disco#")
+    monkeypatch.setenv("BUILD_NUMBER", "42")
+
+    archiver = ArtifactsArchiver()
+    output_dir = test_dir / "output"
+    archiver.add_archive(output_dir, "result.7z", target_repo="my-repo/results")
+    archiver.register(test_files[:1])
+    archiver.create_archive()
+
+    with patch.object(ArtifactsArchiver, "_get_git_metadata", return_value=MagicMock(commit_id=None, repository_url=None)):
+        rt_upload_path = archiver.create_rt_upload_json(output_dir)
+
+    with open(rt_upload_path) as f:
+        data = json.load(f)
+
+    file_entry = data["files"][0]
+    # No tag after '#', so no baseline_label is emitted; the original branch is still carried
+    assert "branch=release/Disco#" in file_entry["props"]
+    assert "baseline_label=" not in file_entry["props"]
+
+
+def test_create_rt_upload_json_release_tag_with_embedded_label(test_dir, test_files, monkeypatch):
+    """Test that for a release tag with variant#label syntax, props carry the full tag ref
+    via tag_name and the derived label via baseline_label."""
+    for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER", "GIT_COMMIT", "GIT_URL"]:
+        monkeypatch.delenv(env_var, raising=False)
+
+    monkeypatch.setenv("JENKINS_URL", "http://jenkins.example.com")
+    monkeypatch.setenv("BRANCH_NAME", "release/Disco#ci_test_v3")
+    monkeypatch.setenv("TAG_NAME", "release/Disco#ci_test_v3")
+    monkeypatch.setenv("BUILD_NUMBER", "42")
+
+    archiver = ArtifactsArchiver()
+    output_dir = test_dir / "output"
+    archiver.add_archive(output_dir, "result.7z", target_repo="my-repo/results")
+    archiver.register(test_files[:1])
+    archiver.create_archive()
+
+    with patch.object(ArtifactsArchiver, "_get_git_metadata", return_value=MagicMock(commit_id=None, repository_url=None)):
+        rt_upload_path = archiver.create_rt_upload_json(output_dir)
+
+    with open(rt_upload_path) as f:
+        data = json.load(f)
+
+    file_entry = data["files"][0]
+    # tag_name carries the full git tag ref, baseline_label the derived label
+    assert "tag_name=release/Disco#ci_test_v3" in file_entry["props"]
+    assert "baseline_label=ci_test_v3" in file_entry["props"]
+    assert "branch=" not in file_entry["props"]
 
 
 # =============================================================================
@@ -552,6 +834,27 @@ def test_get_archive_url_special_characters_in_branch(test_dir, monkeypatch):
     assert url == expected_url, f"Expected {expected_url}, got {url}"
 
 
+def test_get_archive_url_branch_with_embedded_tag(test_dir, monkeypatch):
+    """Test that get_archive_url replaces the '#' from a variant#tag branch with '/'."""
+    # Arrange
+    for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER"]:
+        monkeypatch.delenv(env_var, raising=False)
+
+    monkeypatch.setenv("JENKINS_URL", "http://jenkins.example.com")
+    monkeypatch.setenv("BRANCH_NAME", "release/Disco#ci_test_v3")
+    monkeypatch.setenv("BUILD_NUMBER", "42")
+
+    archiver = ArtifactsArchiver(artifactory_base_url=ARTIFACTORY_BASE_URL)
+    archiver.add_archive(test_dir, "result.7z", target_repo="my-repo/results")
+
+    # Act
+    url = archiver.get_archive_url()
+
+    # Assert
+    expected_url = f"{ARTIFACTORY_BASE_URL}/my-repo/results/release/Disco/ci_test_v3/42/result.7z"
+    assert url == expected_url, f"Expected {expected_url}, got {url}"
+
+
 def test_get_archive_url_without_artifactory_base_url(test_dir, monkeypatch):
     """Test get_archive_url returns None when archiver is initialized without artifactory_base_url."""
     # Arrange
@@ -570,6 +873,173 @@ def test_get_archive_url_without_artifactory_base_url(test_dir, monkeypatch):
 
     # Assert
     assert url is None, "Should return None when artifactory_base_url is not configured"
+
+
+def test_get_archive_url_returns_none_for_unknown_archive(test_dir):
+    """Test get_archive_url returns None when archive name does not exist."""
+    archiver = ArtifactsArchiver(artifactory_base_url=ARTIFACTORY_BASE_URL)
+    url = archiver.get_archive_url("nonexistent")
+    assert url is None
+
+
+def test_get_archive_url_returns_none_without_target_repo(test_dir, monkeypatch):
+    """Test get_archive_url returns None when archive has no target_repo configured."""
+    for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER"]:
+        monkeypatch.delenv(env_var, raising=False)
+
+    archiver = ArtifactsArchiver(artifactory_base_url=ARTIFACTORY_BASE_URL)
+    archiver.add_archive(test_dir, "result.7z")  # No target_repo
+
+    url = archiver.get_archive_url()
+    assert url is None
+
+
+def test_register_raises_key_error_for_unknown_archive():
+    """Test register raises KeyError when archive name does not exist."""
+    archiver = ArtifactsArchiver()
+    with pytest.raises(KeyError, match="nonexistent"):
+        archiver.register([Path("some_file.txt")], archive_name="nonexistent")
+
+
+def test_get_archive_raises_key_error_for_unknown_archive():
+    """Test get_archive raises KeyError when archive name does not exist."""
+    archiver = ArtifactsArchiver()
+    with pytest.raises(KeyError, match="nonexistent"):
+        archiver.get_archive("nonexistent")
+
+
+def test_create_archive_deletes_existing_archive(test_dir):
+    """Test that create_archive deletes the archive if it already exists before recreating it."""
+    archiver = ArtifactsArchiver()
+    output_dir = test_dir / "output"
+    output_dir.mkdir()
+    archive_path = output_dir / "test.7z"
+
+    # Pre-create a dummy file at the archive path
+    archive_path.write_text("old content")
+    assert archive_path.exists()
+
+    archiver.add_archive(output_dir, "test.7z")
+    # Create archive with no artifacts (placeholder will be created)
+    result_path = archiver.create_archive()
+
+    assert result_path.exists()
+    # The file should have been replaced, not be the old dummy file
+    assert result_path.stat().st_size > 0
+
+
+def test_create_archive_skips_nonexistent_artifact(test_dir):
+    """Test that create_archive skips artifacts that do not exist on disk."""
+    archiver = ArtifactsArchiver()
+    output_dir = test_dir / "output"
+    output_dir.mkdir()
+
+    # Register an artifact that does not exist
+    nonexistent = output_dir / "does_not_exist.txt"
+    archiver.add_archive(output_dir, "test.7z")
+    archiver.register([nonexistent])
+
+    # Should not raise; the missing artifact is skipped → placeholder is written
+    archive_path = archiver.create_archive()
+    assert archive_path.exists()
+
+
+def test_create_archive_with_directory_artifact(test_dir):
+    """Test that a directory artifact is staged correctly (copytree path)."""
+    output_dir = test_dir / "output"
+    output_dir.mkdir()
+
+    artifact_dir = output_dir / "reports"
+    artifact_dir.mkdir()
+    (artifact_dir / "file.html").write_text("<html/>")
+
+    archiver = ArtifactsArchiver()
+    archiver.add_archive(output_dir, "test.7z")
+    archiver.register([artifact_dir])
+
+    archive_path = archiver.create_archive()
+    assert archive_path.exists()
+    stored = _list_archive_paths(archive_path)
+    assert "reports/file.html" in stored
+
+
+def test_create_archive_raises_on_7z_failure(test_dir, test_files):
+    """Test that create_archive raises RuntimeError when 7z returns a non-zero exit code."""
+    archiver = ArtifactsArchiver()
+    output_dir = test_dir / "output"
+    archiver.add_archive(output_dir, "test.7z")
+    archiver.register(test_files[:1])
+
+    with patch("spl_core.test_utils.artifacts_archiver.subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(returncode=1, stderr="7z error occurred", stdout="")
+        with pytest.raises(RuntimeError, match="7z failed"):
+            archiver.create_archive()
+
+
+def test_build_commit_link_returns_none_for_unrecognized_url():
+    """Test that _build_commit_link returns None for an SSH URL that doesn't match any known pattern."""
+    # Plain SCP-style git SSH (git@host:org/repo.git) is not matched by any pattern
+    result = ArtifactsArchiver._build_commit_link("git@github.com:myorg/myrepo.git", "abc123")
+    assert result is None
+
+
+def test_get_git_metadata_ignores_blank_env_vars(monkeypatch):
+    """Test that blank GIT_COMMIT and GIT_URL env vars are treated as None."""
+    for env_var in ["GIT_COMMIT", "GIT_URL"]:
+        monkeypatch.delenv(env_var, raising=False)
+
+    monkeypatch.setenv("GIT_COMMIT", "   ")  # whitespace only
+    monkeypatch.setenv("GIT_URL", "   ")  # whitespace only
+
+    # Patch git fallback commands to return None so we test only the env var handling
+    with patch("spl_core.test_utils.artifacts_archiver.SubprocessExecutor") as mock_exec_cls:
+        mock_instance = MagicMock()
+        mock_instance.execute.return_value = MagicMock(returncode=1, stdout="")
+        mock_exec_cls.return_value = mock_instance
+
+        from spl_core.test_utils.artifacts_archiver import ArtifactsArchiver as AA
+
+        metadata = AA._get_git_metadata()
+
+    assert metadata.commit_id is None
+    assert metadata.repository_url is None
+
+
+def test_get_git_metadata_handles_git_command_exceptions(monkeypatch):
+    """Test that _get_git_metadata handles exceptions from git commands gracefully."""
+    for env_var in ["GIT_COMMIT", "GIT_URL"]:
+        monkeypatch.delenv(env_var, raising=False)
+
+    with patch("spl_core.test_utils.artifacts_archiver.SubprocessExecutor") as mock_exec_cls:
+        mock_instance = MagicMock()
+        mock_instance.execute.side_effect = Exception("git not found")
+        mock_exec_cls.return_value = mock_instance
+
+        from spl_core.test_utils.artifacts_archiver import ArtifactsArchiver as AA
+
+        metadata = AA._get_git_metadata()
+
+    assert metadata.commit_id is None
+    assert metadata.commit_message is None
+    assert metadata.repository_url is None
+
+
+def test_create_artifacts_json_with_build_url(test_dir, monkeypatch):
+    """Test that create_artifacts_json includes build_url when BUILD_URL env var is set."""
+    for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER", "BUILD_URL", "GIT_COMMIT", "GIT_URL"]:
+        monkeypatch.delenv(env_var, raising=False)
+
+    monkeypatch.setenv("BUILD_URL", "http://jenkins.example.com/job/my-job/42/")
+
+    with patch.object(ArtifactsArchiver, "_get_git_metadata", return_value=MagicMock(commit_id=None, commit_message=None, repository_url=None)):
+        archiver = ArtifactsArchiver()
+        json_path = archiver.create_artifacts_json("MyVariant", test_dir)
+
+    with open(json_path) as f:
+        data = json.load(f)
+
+    assert "build_url" in data
+    assert data["build_url"] == "http://jenkins.example.com/job/my-job/42/"
 
 
 def test_get_archive_url_custom_artifactory_base_url(test_dir, monkeypatch):
@@ -685,6 +1155,49 @@ def test_create_artifacts_json_environment_detection(test_dir, monkeypatch, jenk
         assert data["branch"] == expected_branch, f"Branch should be {expected_branch}"
         assert "pull_request" not in data, "JSON should not contain 'pull_request' key for branch builds"
         assert "tag" not in data, "JSON should not contain 'tag' key for branch builds"
+
+
+def test_create_artifacts_json_release_tag_with_embedded_label(test_dir, monkeypatch):
+    """For a release tag with variant#label syntax, 'tag' carries the full git tag ref
+    and 'baseline_label' carries the derived label."""
+    for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER"]:
+        monkeypatch.delenv(env_var, raising=False)
+
+    monkeypatch.setenv("JENKINS_URL", "http://jenkins.example.com")
+    monkeypatch.setenv("BRANCH_NAME", "release/Disco#ci_test_v3")
+    monkeypatch.setenv("TAG_NAME", "release/Disco#ci_test_v3")
+    monkeypatch.setenv("BUILD_NUMBER", "42")
+
+    archiver = ArtifactsArchiver()
+    artifacts_json_path = archiver.create_artifacts_json("TestVariant", test_dir)
+
+    with open(artifacts_json_path) as f:
+        data = json.load(f)
+
+    assert data["tag"] == "release/Disco#ci_test_v3", "tag should be the full git tag ref"
+    assert data["baseline_label"] == "ci_test_v3", "baseline_label should be the derived label"
+    assert "branch" not in data
+
+
+def test_create_artifacts_json_branch_with_embedded_label(test_dir, monkeypatch):
+    """For a branch with variant#label syntax, 'branch' carries the full branch name
+    and 'baseline_label' carries the derived label."""
+    for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER"]:
+        monkeypatch.delenv(env_var, raising=False)
+
+    monkeypatch.setenv("JENKINS_URL", "http://jenkins.example.com")
+    monkeypatch.setenv("BRANCH_NAME", "release/Disco#ci_test_v3")
+    monkeypatch.setenv("BUILD_NUMBER", "42")
+
+    archiver = ArtifactsArchiver()
+    artifacts_json_path = archiver.create_artifacts_json("TestVariant", test_dir)
+
+    with open(artifacts_json_path) as f:
+        data = json.load(f)
+
+    assert data["branch"] == "release/Disco#ci_test_v3", "branch should be the full branch name"
+    assert data["baseline_label"] == "ci_test_v3", "baseline_label should be the derived label"
+    assert "tag" not in data
 
 
 def test_create_artifacts_json_structure(test_dir, monkeypatch):
@@ -1237,3 +1750,96 @@ def test_create_artifacts_json_with_git_from_commands(mock_subprocess, test_dir,
     # Verify local defaults
     assert data["branch"] == "local_branch"
     assert data["build_number"] == "local_build"
+
+
+def test_create_archive_skips_artifact_that_is_neither_file_nor_dir(test_dir):
+    """An artifact that exists but is neither a file nor a directory is silently skipped."""
+    archive = ArtifactsArchive(out_dir=test_dir / "out", archive_name="weird.7z")
+    fake_artifact = MagicMock()
+    fake_artifact.absolute_path.exists.return_value = True
+    fake_artifact.absolute_path.is_file.return_value = False
+    fake_artifact.absolute_path.is_dir.return_value = False
+    fake_artifact.archive_path = Path("weird_artifact")
+    archive.archive_artifacts = [fake_artifact]
+
+    result = archive.create_archive()
+
+    assert result.exists()
+
+
+def test_create_archive_logs_and_continues_when_staging_fails(test_dir, test_files):
+    """If copying an artifact into the staging dir fails, it is logged and skipped."""
+    archive = ArtifactsArchive(out_dir=test_dir / "out", archive_name="fail.7z")
+    archive.register([test_files[0]])
+
+    with patch("spl_core.test_utils.artifacts_archiver.shutil.copy2", side_effect=OSError("boom")):
+        result = archive.create_archive()
+
+    assert result.exists()
+
+
+def test_get_archive_raises_keyerror_for_unknown_name():
+    """get_archive raises KeyError when the requested archive does not exist."""
+    archiver = ArtifactsArchiver()
+    with pytest.raises(KeyError):
+        archiver.get_archive("does_not_exist")
+
+
+def test_get_archive_returns_registered_archive(test_dir):
+    """get_archive returns the ArtifactsArchive instance for a known name."""
+    archiver = ArtifactsArchiver()
+    added = archiver.add_archive(test_dir / "out", "a.7z")
+
+    assert archiver.get_archive("default") is added
+
+
+def test_get_build_metadata_jenkins_without_branch_or_build_number(monkeypatch):
+    """On Jenkins without CHANGE_ID/TAG_NAME/BRANCH_NAME/BUILD_NUMBER, local defaults are kept."""
+    for env_var in ["JENKINS_URL", "CHANGE_ID", "BRANCH_NAME", "TAG_NAME", "BUILD_NUMBER"]:
+        monkeypatch.delenv(env_var, raising=False)
+    monkeypatch.setenv("JENKINS_URL", "http://jenkins.example.com")
+
+    metadata = ArtifactsArchiver._get_build_metadata()
+
+    assert metadata.branch_name == "local_branch"
+    assert metadata.build_number == "local_build"
+    assert metadata.is_tag is False
+    assert metadata.pr_number is None
+    assert metadata.baseline_label is None
+
+
+@patch("spl_core.test_utils.artifacts_archiver.SubprocessExecutor")
+def test_get_git_metadata_handles_failed_git_commands(mock_subprocess, monkeypatch):
+    """When git commands fail (non-zero return code), all metadata fields stay None."""
+    for env_var in ["GIT_COMMIT", "GIT_URL"]:
+        monkeypatch.delenv(env_var, raising=False)
+    mock_subprocess.return_value.execute.return_value = MagicMock(returncode=1, stdout="")
+
+    metadata = ArtifactsArchiver._get_git_metadata()
+
+    assert metadata.commit_id is None
+    assert metadata.commit_message is None
+    assert metadata.repository_url is None
+
+
+def test_update_artifacts_json_raises_valueerror_on_os_error(sample_artifacts_json):
+    """An OSError while reading artifacts.json is wrapped in a ValueError."""
+    with patch("builtins.open", side_effect=OSError("disk error")):
+        with pytest.raises(ValueError, match=r"Could not read artifacts\.json"):
+            ArtifactsArchiver().update_artifacts_json("cat", {"a": "b"}, sample_artifacts_json)
+
+
+def test_list_archives_returns_registered_names(test_dir):
+    """list_archives returns the names of all registered archives."""
+    archiver = ArtifactsArchiver()
+    archiver.add_archive(test_dir / "out", "a.7z")
+    archiver.add_archive(test_dir / "out", "b.7z", archive_name="second")
+
+    assert set(archiver.list_archives()) == {"default", "second"}
+
+
+def test_create_archive_convenience_raises_keyerror_for_unknown():
+    """The convenience create_archive raises KeyError for an unknown archive name."""
+    archiver = ArtifactsArchiver()
+    with pytest.raises(KeyError):
+        archiver.create_archive("unknown")

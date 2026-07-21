@@ -171,6 +171,37 @@ def test_create_artifacts_archive_inside_spl_build(spl_build: SplBuild) -> None:
     assert dict(json.loads(archive_json.read_text())) == {"variant": "my_var", "build_kit": "defaultKit", "artifacts": expected_artifacts}
 
 
+def test_execute_returns_minus_one_when_subprocess_returns_none(spl_build: SplBuild) -> None:
+    """Test that execute returns -1 when SubprocessExecutor.execute returns None."""
+    with patch("spl_core.test_utils.spl_build.sys.platform", "win32"), mock_command_execution(return_values=None) as (_mock_constructor, mock_executor):
+        mock_executor.return_value = None
+        result = spl_build.execute(target="all")
+    assert result == -1
+
+
+def test_execute_breaks_on_failure_without_stdout(spl_build: SplBuild) -> None:
+    """Test that execute breaks and returns non-zero when stdout is empty on failure."""
+    with patch("spl_core.test_utils.spl_build.sys.platform", "win32"):
+        failure_no_stdout = MagicMock(returncode=1, stdout="")
+        with mock_command_execution(return_values=failure_no_stdout) as (_, mock_executor):
+            result = spl_build.execute(target="all")
+    assert result == 1
+    assert mock_executor.call_count == 1
+
+
+def test_create_artifacts_json_with_build_type(tmp_path_factory: pytest.TempPathFactory) -> None:
+    """Test create_artifacts_json includes build_type in JSON when set."""
+    os.chdir(tmp_path_factory.mktemp("spl_build_type"))
+    spl_build = SplBuild(variant="my_var", build_kit="prod", build_type="Debug")
+    spl_build.build_dir.mkdir(parents=True, exist_ok=True)
+
+    json_path = spl_build.create_artifacts_json([])
+    assert json_path.exists()
+
+    content = dict(json.loads(json_path.read_text()))
+    assert content.get("build_type") == "Debug"
+
+
 def test_create_artifacts_archive_outside_spl_build(spl_build: SplBuild, tmp_path: Path) -> None:
     """
     Test the creation of artifacts archive and json for artifacts outsice of the spl_build folder

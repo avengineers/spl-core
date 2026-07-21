@@ -439,6 +439,29 @@ class TestArchiveArtifactsCollection:
         json_content = json.loads(json_path.read_text())
         assert json_content["artifacts"] == []
 
+    def test_init_with_directory_outside_build_dir(self, tmp_path):
+        """Test directory artifact outside build_dir: files are flattened to their name."""
+        # Arrange
+        build_dir = tmp_path / "build"
+        build_dir.mkdir()
+
+        # External directory (not inside build_dir)
+        external_dir = tmp_path / "external"
+        external_dir.mkdir()
+        file1 = external_dir / "ext_file1.txt"
+        file1.write_text("external content 1")
+        file2 = external_dir / "ext_file2.txt"
+        file2.write_text("external content 2")
+
+        # Act
+        collection = ArchiveArtifactsCollection([external_dir], build_dir)
+
+        # Assert - files outside build_dir in a directory are stored by filename only
+        assert len(collection.archive_artifacts) == 2
+        archive_paths = {artifact.archive_path for artifact in collection.archive_artifacts}
+        assert Path("ext_file1.txt") in archive_paths
+        assert Path("ext_file2.txt") in archive_paths
+
     def test_mixed_files_and_directories(self, tmp_path):
         """Test initialization with a mix of files and directories."""
         # Arrange
