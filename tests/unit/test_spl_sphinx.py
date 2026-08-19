@@ -28,7 +28,7 @@ class TestSplSphinxExtensions:
     def test_myst_enable_extensions_present(self):
         assert "myst_enable_extensions" in SplSphinx.default_extension_configs
         myst_exts = SplSphinx.default_extension_configs["myst_enable_extensions"]
-        for ext in ["colon_fence", "deflist", "html_admonition", "html_image"]:
+        for ext in ["colon_fence", "deflist", "html_admonition", "html_image", "dollarmath"]:
             assert ext in myst_exts, f"Missing MyST extension: {ext}"
 
     def test_source_suffix_includes_rst_and_md(self):
