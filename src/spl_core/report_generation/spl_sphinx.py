@@ -92,6 +92,7 @@ class SplSphinx:
             "deflist",
             "html_admonition",
             "html_image",
+            "dollarmath",
         ],
         "source_suffix": [
             ".rst",
