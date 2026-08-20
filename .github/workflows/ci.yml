@@ -92,6 +92,7 @@ jobs:
                   token: ${{ secrets.CODECOV_TOKEN }}
 
     release:
+        if: github.actor != 'dependabot[bot]'
         needs:
             - test
             - lint
