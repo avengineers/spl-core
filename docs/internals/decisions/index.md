@@ -16,4 +16,5 @@ Conventions:
 template
 0001-report-navigation-is-jinja-driven
 0002-build-wrapper-lives-in-the-spl
+0003-release-job-uses-the-bot-identity-only-for-real-releases
 ```

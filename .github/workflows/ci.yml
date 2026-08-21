@@ -92,7 +92,6 @@ jobs:
                   token: ${{ secrets.CODECOV_TOKEN }}
 
     release:
-        if: github.actor != 'dependabot[bot]'
         needs:
             - test
             - lint
@@ -105,18 +104,27 @@ jobs:
             contents: write
 
         steps:
+            # The bot identity exists only to push the version bump past the
+            # "Protect develop" ruleset. Pull requests always run --noop and write
+            # nothing, and fork or Dependabot pull requests never receive secrets,
+            # so they fall back to the automatic token. See ADR 0003.
             - name: Generate Release Bot Token
               id: app-token
+              if: github.event_name != 'pull_request'
               uses: actions/create-github-app-token@v2
               with:
                   app-id: ${{ secrets.APP_ID }}
                   private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
+            # A fork's head branch does not exist in this repository, so the head
+            # repository has to be named explicitly. Outside a pull request the
+            # expression is empty and falls back to this repository.
             - uses: actions/checkout@v6
               with:
                   fetch-depth: 0
+                  repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
                   ref: ${{ github.event.inputs.target_branch || github.head_ref || github.ref_name }}
-                  token: ${{ steps.app-token.outputs.token }}
+                  token: ${{ steps.app-token.outputs.token || github.token }}
 
             - name: Setup Python
               uses: actions/setup-python@v6
@@ -153,7 +161,7 @@ jobs:
                   root_options: ${{ env.semantic_release_root_options }}
                   prerelease_token: ${{ github.event.inputs.prerelease_token }}
                   prerelease: ${{ env.prerelease }}
-                  github_token: ${{ steps.app-token.outputs.token }}
+                  github_token: ${{ steps.app-token.outputs.token || github.token }}
 
             - name: Publish package distributions to PyPI
               uses: pypa/gh-action-pypi-publish@release/v1
