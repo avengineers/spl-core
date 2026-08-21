@@ -1,6 +1,17 @@
 # CHANGELOG
 
 
+## v8.8.0 (2026-08-21)
+
+### Features
+
+- **report_generation**: Enable `dollarmath` MyST extension
+  ([`9f93eed`](https://github.com/avengineers/spl-core/commit/9f93eedffc9d3767cb574bb8c1f4f416229dc82f))
+
+Add the `dollarmath` extension to enable `$...$` and `$$...$$` LaTeX math delimiter recognition in
+  Markdown documents processed by Sphinx with MyST parser.
+
+
 ## v8.7.0 (2026-07-28)
 
 ### Features
