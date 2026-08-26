@@ -74,26 +74,41 @@ class ArtifactsArchive:
         self.archive_name: str = archive_name
         self.archive_artifacts: list[ArtifactsArchive.ArchiveArtifact] = []
 
-    def register(self, artifacts: list[Path]) -> None:
+    def register(self, artifacts: list[Path | tuple[Path, str]]) -> None:
         """
         Register artifacts for archiving.
         Args:
-            artifacts: List of paths to artifacts (files or directories) to be archived.
+            artifacts: List of artifacts to be archived. Each entry is either:
+                - a Path (file or directory), archived under its name/relative path
+                  as before, or
+                - a (Path, archive_name) tuple, where ``archive_name`` overrides the
+                  path/name the artifact is stored under inside the archive. This
+                  allows renaming files per artifact (e.g. link_out.elf -> application.elf).
         """
         for artifact in artifacts:
-            self._add_artifact(artifact)
+            if isinstance(artifact, tuple):
+                source, archive_name = artifact
+                self._add_artifact(source, archive_path_override=archive_name)
+            else:
+                self._add_artifact(artifact)
 
-    def _add_artifact(self, artifact_path: Path) -> None:
+    def _add_artifact(self, artifact_path: Path, archive_path_override: str | Path | None = None) -> None:
         """
         Add an artifact (file or directory) to the archive list.
         Args:
             artifact_path: path to the artifact to be archived.
+            archive_path_override: optional path/name (relative to the archive root)
+                to store the artifact under. When provided, it takes precedence over
+                the path derived from out_dir. When None, the previous behavior is
+                preserved.
         """
         # Convert to absolute path first
         absolute_path = artifact_path.resolve() if not artifact_path.is_absolute() else artifact_path
 
         # Calculate the relative path from out_dir for the archive
-        if absolute_path.is_relative_to(self.out_dir.absolute()):
+        if archive_path_override is not None:
+            archive_path = Path(archive_path_override)
+        elif absolute_path.is_relative_to(self.out_dir.absolute()):
             archive_path = absolute_path.relative_to(self.out_dir.absolute())
         else:
             # If not relative to out_dir, just use the name
@@ -201,12 +216,14 @@ class ArtifactsArchiver:
             self._target_repos[archive_name] = target_repo
         return archive
 
-    def register(self, artifacts: list[Path], archive_name: str = "default") -> None:
+    def register(self, artifacts: list[Path | tuple[Path, str]], archive_name: str = "default") -> None:
         """
         Register artifacts for archiving to a specific archive.
 
         Args:
-            artifacts: List of paths to artifacts (files or directories) to be archived.
+            artifacts: List of artifacts (files or directories) to be archived. Each
+                entry is either a Path or a (Path, archive_name) tuple to store the
+                artifact under a custom name/relative path inside the archive.
             archive_name: Name of the archive to register artifacts to (defaults to "default")
 
         Raises:
