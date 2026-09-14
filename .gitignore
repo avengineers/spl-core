@@ -1,10 +1,6 @@
 # Output directory of tests
 /out
 
-# Local planning roadmap (not for version control)
-/ROADMAP.md
-/REVIEW.md
-
 # Any log directory
 **/[Ll][Oo][Gg]/*
 
@@ -164,3 +160,6 @@ cython_debug/
 
 # Draw.io backup files
 *.drawio.bkp
+
+# MSYS2 / Git Bash crash dumps
+*.stackdump
