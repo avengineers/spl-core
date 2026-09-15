@@ -26,7 +26,7 @@ junit_merger = "spl_core.test_utils.junit_merger:main"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.14"
-py-app-dev = "^2.1"
+py-app-dev = "^2.23"
 cookiecutter = "==2.7.1"
 gcovr = "^8.6"
 hammocking = "^1.0"
