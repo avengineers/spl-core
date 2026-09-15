@@ -2934,14 +2934,14 @@ test = ["psleak", "pytest", "pytest-instafail", "pytest-xdist", "pywin32 ; os_na
 
 [[package]]
 name = "py-app-dev"
-version = "2.22.1"
+version = "2.23.0"
 description = "My application development modules."
 optional = false
 python-versions = "<4.0,>=3.10"
 groups = ["main"]
 files = [
-    {file = "py_app_dev-2.22.1-py3-none-any.whl", hash = "sha256:30702e20bff555b298c2411d69e893a4a89a381850a3eba4d61a9470800efe47"},
-    {file = "py_app_dev-2.22.1.tar.gz", hash = "sha256:62b9273ccc5c48eae55f764f59657b77a880171242945710f1e65008fb377975"},
+    {file = "py_app_dev-2.23.0-py3-none-any.whl", hash = "sha256:e8a8c589818ea75b6d5a3076ab1f2cc90b9c40696f4879290c5a8c8e181ee775"},
+    {file = "py_app_dev-2.23.0.tar.gz", hash = "sha256:51864d8875f9b61944e567e301301645c4c77cdeacd182e1474618d69ac327b0"},
 ]
 
 [package.dependencies]
@@ -4846,4 +4846,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.14"
-content-hash = "96608fad364dc51a43158ffb02fa5249d65d42817912b4e32aeda83bac7cbef7"
+content-hash = "fb9828b6987a27e6f92b6d1ef9a2cffb73892add2a1dac345c051ce544b847a3"
