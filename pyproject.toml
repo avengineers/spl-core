@@ -20,6 +20,12 @@ packages = [{ include = "spl_core", from = "src" }]
 please = "spl_core.main:main"
 junit_merger = "spl_core.test_utils.junit_merger:main"
 
+# Loaded automatically by pytest because spl-core is installed. It configures the
+# console logger of the session; consumers switch it off in their own pytest.ini.
+# See docs/internals/decisions/0004-pytest-runs-get-a-configured-console-logger.md
+[tool.poetry.plugins.pytest11]
+spl_core = "spl_core.test_utils.pytest_plugin"
+
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/avengineers/spl-core/issues"
 "Changelog" = "https://github.com/avengineers/spl-core/blob/develop/CHANGELOG.md"
