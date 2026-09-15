@@ -1,6 +1,32 @@
 # CHANGELOG
 
 
+## v8.9.0-rc.1 (2026-09-15)
+
+### Features
+
+- Configure the console logger for pytest sessions
+  ([#358](https://github.com/avengineers/spl-core/pull/358),
+  [`c1ac8e0`](https://github.com/avengineers/spl-core/commit/c1ac8e0224738450d5953c0a0f13c9ad6394c0d2))
+
+Nobody configured loguru in a pytest process, so its built-in default format applied and every line
+  a build streams carried the module, function and line number of the logging call. A CMake build
+  writes thousands of them.
+
+A pytest11 entry point loads the plugin because spl-core is installed, so consumers need no edit of
+  their own. It defines no format: it calls setup_logger() from py_app_dev, the same function the
+  please CLI uses.
+
+Two ini options steer it from the consumer's existing pytest.ini. spl_log_code_location = true puts
+  the prefix back for debugging and keeps the configured sink, so the output stays on stdout.
+  spl_setup_logger = false steps aside entirely, for a project that configures loguru itself.
+
+The guard test pins the rule this records -- an application configures logging, a library only logs
+  -- across src/spl_core and the repository's own pypeline steps, which pypeline already configures.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+
+
 ## v8.8.0 (2026-08-21)
 
 ### Features
