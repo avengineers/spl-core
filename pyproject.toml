@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "spl-core"
-version = "8.8.0"
+version = "8.9.0-rc.1"
 description = "Software Product Line Support for CMake"
 authors = ["Avengineers <karsten.guenther@kamg.de>"]
 license = "MIT"
@@ -20,13 +20,19 @@ packages = [{ include = "spl_core", from = "src" }]
 please = "spl_core.main:main"
 junit_merger = "spl_core.test_utils.junit_merger:main"
 
+# Loaded automatically by pytest because spl-core is installed. It configures the
+# console logger of the session; consumers switch it off in their own pytest.ini.
+# See docs/internals/decisions/0004-pytest-runs-get-a-configured-console-logger.md
+[tool.poetry.plugins.pytest11]
+spl_core = "spl_core.test_utils.pytest_plugin"
+
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/avengineers/spl-core/issues"
 "Changelog" = "https://github.com/avengineers/spl-core/blob/develop/CHANGELOG.md"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.14"
-py-app-dev = "^2.1"
+py-app-dev = "^2.23"
 cookiecutter = "==2.7.1"
 gcovr = "^8.6"
 hammocking = "^1.0"
@@ -56,7 +62,9 @@ junitparser = "*"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=7,<10"
-pytest-cov = ">=4,<8"
+# Used directly by the RunPytest step, not through pytest-cov. The `toml` extra
+# lets it read its configuration from pyproject.toml on Python 3.10.
+coverage = { extras = ["toml"], version = ">=7.10,<8" }
 pre-commit = ">=3.1.1,<5.0.0"
 ruff = ">=0,<1"
 jinja2 = "^3.1"
@@ -88,7 +96,9 @@ match = "(?!develop$)"
 prerelease = true
 
 [tool.pytest.ini_options]
-addopts = " -vv --capture=tee-sys --junitxml=out/test-report.xml --cov=spl_core --cov-report=xml:out/coverage.xml --cov-report=term-missing"
+# No --cov here: coverage is started by `coverage run -m pytest` (see steps/build.py),
+# because pytest imports the spl_core pytest plugin before pytest-cov can measure anything.
+addopts = " -vv --capture=tee-sys --junitxml=out/test-report.xml"
 pythonpath = ["src", "tests"]
 testpaths = ["tests"]
 junit_logging = "all"
@@ -101,6 +111,8 @@ markers = [
 branch = true
 source = ["spl_core"]
 relative_files = true
+# Each process the tests start writes its own data file, merged by `coverage combine`.
+parallel = true
 
 # Map the installed package back to the source tree so Codecov shows coverage
 # against src/spl_core regardless of whether tests import the editable checkout
