@@ -59,7 +59,7 @@ src/spl_core/
 - **Build System:** CMake + Ninja (for C/C++ variants)
 - **Key dependencies:** kconfiglib (feature models), hammocking (mock generation),
   gcovr (coverage), cookiecutter (templates), Sphinx (docs), pypeline-runner (build pipeline)
-- **Testing:** pytest + pytest-cov
+- **Testing:** pytest; coverage measured by coverage.py, started by `coverage run`
 - **Linting:** ruff, mypy (strict), pre-commit hooks, codespell
 - **CI/CD:** GitHub Actions → python-semantic-release → PyPI
 - **System deps:** MinGW with LLVM (via Scoop on Windows)
@@ -82,7 +82,18 @@ poetry run pytest
 # Run specific test categories
 poetry run pytest -m unit
 poetry run pytest -m integration
+
+# Run tests with coverage, the way CI does it
+poetry run coverage run -m pytest
+poetry run coverage combine
+poetry run coverage report --show-missing
 ```
+
+Coverage is started by `coverage run`, never by `pytest --cov`. pytest imports the
+`pytest11` entry point of `spl_core` while it starts up, which is before a pytest
+plugin can begin measuring; with `--cov` every import-time line of that plugin and
+of `src/spl_core/__init__.py` reads as uncovered. Codecov enforces 100% coverage of
+the lines a pull request changes, so such a gap blocks the merge.
 
 The build pipeline is defined in `pypeline.yaml` and executed by `pypeline-runner`:
 1. Create virtual environment (Python 3.11)
