@@ -1,13 +1,13 @@
 # CHANGELOG
 
 
-## v8.9.0-rc.1 (2026-09-15)
+## v8.9.0 (2026-09-22)
 
 ### Features
 
 - Configure the console logger for pytest sessions
   ([#358](https://github.com/avengineers/spl-core/pull/358),
-  [`c1ac8e0`](https://github.com/avengineers/spl-core/commit/c1ac8e0224738450d5953c0a0f13c9ad6394c0d2))
+  [`a3ec490`](https://github.com/avengineers/spl-core/commit/a3ec49073e296ec904746f44d0aced505b7c007c))
 
 Nobody configured loguru in a pytest process, so its built-in default format applied and every line
   a build streams carried the module, function and line number of the logging call. A CMake build
