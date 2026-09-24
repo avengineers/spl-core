@@ -21,6 +21,22 @@ Example — set a minimum coverage threshold:
 set(GCOVR_ADDITIONAL_OPTIONS "--fail-under-line=80")
 ```
 
+(SPL_SOURCE_DOCS_JINJA_RAW_TAGS)=
+
+## SPL_SOURCE_DOCS_JINJA_RAW_TAGS
+
+Whether clanguru wraps each code listing it generates under `__source_docs` in
+Jinja `{% raw %}` and `{% endraw %}` lines. The markers protect the C code from a
+Jinja `source-read` hook that renders every document, as the kickstart template's
+`conf.py` does. A project without such a hook turns the option off; otherwise the
+two markers appear as text on every listing page.
+
+**Default:** `ON`
+
+```cmake
+set(SPL_SOURCE_DOCS_JINJA_RAW_TAGS OFF)
+```
+
 ## COMPONENT_NAMES
 
 ## PROD_SOURCES
