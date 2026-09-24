@@ -37,6 +37,25 @@ two markers appear as text on every listing page.
 set(SPL_SOURCE_DOCS_JINJA_RAW_TAGS OFF)
 ```
 
+(SPL_VARIANT_DATA_FILE_DOCS)=
+
+## SPL_VARIANT_DATA_FILE_DOCS and SPL_VARIANT_DATA_FILE_REPORTS
+
+The sphinx-needs variant data file for the `docs` and the `reports` Sphinx builds,
+including the per-component ones. When set, `sphinx-build` gets
+`-D needs_variant_data_file=<path>`. sphinx-needs keeps a command-line override
+even when the file named by `needs_from_toml` sets another one, so each build
+evaluates its `{if}` directives and variant conditions against the data for its
+own shape, with no code in `conf.py`. It is the same key `ubc` overrides with
+`-c "needs.variant_data_file = '<path>'"`.
+
+**Default:** empty (the build reads whatever the project configures)
+
+```cmake
+set(SPL_VARIANT_DATA_FILE_DOCS ${CMAKE_SOURCE_DIR}/build/variants/${VARIANT}/${BUILD_KIT}/docs.json)
+set(SPL_VARIANT_DATA_FILE_REPORTS ${CMAKE_SOURCE_DIR}/build/variants/${VARIANT}/${BUILD_KIT}/reports.json)
+```
+
 ## COMPONENT_NAMES
 
 ## PROD_SOURCES

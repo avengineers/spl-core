@@ -99,6 +99,48 @@ endif()
 # cleanup
 unset(SPL_SOURCE_DOCS_JINJA_RAW_TAGS)
 
+# ## test: _spl_sphinx_build_command (variant data file per build shape) #########
+# given a project that configures no variant data file
+set(AUTOCONF_JSON /build/kconfig/autoconf.json)
+
+# when
+_spl_sphinx_build_command(sphinx_plain_command SHAPE reports CONFIG /build/reports/config.json OUTPUT_DIR /build/reports/html)
+
+# then: the command is exactly the one the targets have always run
+set(expected_sphinx_plain_command
+    ${CMAKE_COMMAND} -E env
+    SPHINX_BUILD_CONFIGURATION_FILE=/build/reports/config.json
+    AUTOCONF_JSON_FILE=/build/kconfig/autoconf.json
+    VARIANT=mytestvariant
+    -- sphinx-build -E -b html ${PROJECT_SOURCE_DIR} /build/reports/html
+)
+if(NOT sphinx_plain_command STREQUAL expected_sphinx_plain_command)
+    message(FATAL_ERROR "Failing Test case: expected '${expected_sphinx_plain_command}' but got '${sphinx_plain_command}'.")
+endif()
+
+# given a variant data file for each build shape
+set(SPL_VARIANT_DATA_FILE_DOCS /variants/docs.json)
+set(SPL_VARIANT_DATA_FILE_REPORTS /variants/reports.json)
+
+# when
+_spl_sphinx_build_command(sphinx_docs_command SHAPE docs CONFIG /build/docs/config.json OUTPUT_DIR /build/docs/html)
+_spl_sphinx_build_command(sphinx_reports_command SHAPE reports CONFIG /build/reports/config.json OUTPUT_DIR /build/reports/html)
+
+# then: each build is given its own file, and only that one, as a sphinx-build
+# option in front of the source and output directories
+if(NOT sphinx_docs_command MATCHES ";-D;needs_variant_data_file=/variants/docs\\.json;[^;]+;/build/docs/html$" OR sphinx_docs_command MATCHES "reports\\.json")
+    message(FATAL_ERROR "Failing Test case: the docs build must get the docs variant data file only, got '${sphinx_docs_command}'.")
+endif()
+
+if(NOT sphinx_reports_command MATCHES ";-D;needs_variant_data_file=/variants/reports\\.json;[^;]+;/build/reports/html$" OR sphinx_reports_command MATCHES "docs\\.json")
+    message(FATAL_ERROR "Failing Test case: the reports build must get the reports variant data file only, got '${sphinx_reports_command}'.")
+endif()
+
+# cleanup
+unset(AUTOCONF_JSON)
+unset(SPL_VARIANT_DATA_FILE_DOCS)
+unset(SPL_VARIANT_DATA_FILE_REPORTS)
+
 # ## test: _spl_get_absolute_path #########
 # when
 _spl_get_absolute_path(absolute_path "${PROJECT_SOURCE_DIR}/some_dir")
