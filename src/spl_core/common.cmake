@@ -310,19 +310,16 @@ macro(spl_create_component)
         set(_component_docs_out_dir ${CMAKE_CURRENT_BINARY_DIR}/docs)
         set(_component_reports_out_dir ${CMAKE_CURRENT_BINARY_DIR}/reports)
 
-        # The Sphinx source directory is ALWAYS the project root
-        set(_sphinx_source_dir ${PROJECT_SOURCE_DIR})
-
         # Create component docs target if there is an index.rst file in the component's doc directory
         if(EXISTS ${_component_doc_dir}/index.rst OR EXISTS ${_component_doc_dir}/index.md)
-            file(RELATIVE_PATH _rel_component_docs_out_dir ${_sphinx_source_dir} ${_component_docs_out_dir})
+            _spl_sphinx_relative_path(_rel_component_docs_out_dir ${_component_docs_out_dir})
             string(JSON _component_info SET "${_component_info}" docs_output_dir "\"${_rel_component_docs_out_dir}\"")
             string(JSON _component_info SET "${_component_info}" has_docs "\"True\"")
             set(_component_docs_html_out_dir ${_component_docs_out_dir}/html)
 
             # create the config.json file. This is exported as SPHINX_BUILD_CONFIGURATION_FILE env variable
             set(_docs_config_json ${_component_docs_out_dir}/config.json)
-            file(RELATIVE_PATH _rel_component_doc_dir ${_sphinx_source_dir} ${_component_doc_dir})
+            _spl_sphinx_relative_path(_rel_component_doc_dir ${_component_doc_dir})
             file(WRITE ${_docs_config_json} "{
                 \"component_info\": ${_component_info},
                 \"include_patterns\": [\"${_rel_component_doc_dir}/**\",\"${_rel_component_docs_out_dir}/**\"]
@@ -343,7 +340,7 @@ macro(spl_create_component)
             )
 
             if(TEST_SOURCES)
-                file(RELATIVE_PATH _rel_component_reports_out_dir ${_sphinx_source_dir} ${_component_reports_out_dir})
+                _spl_sphinx_relative_path(_rel_component_reports_out_dir ${_component_reports_out_dir})
                 string(JSON _component_info SET "${_component_info}" reports_output_dir "\"${_rel_component_reports_out_dir}\"")
                 string(JSON _component_info SET "${_component_info}" has_reports "\"True\"")
                 set(_component_reports_html_out_dir ${_component_reports_out_dir}/html)
@@ -491,6 +488,27 @@ Code Coverage
     set(COMPONENTS_INFO ${COMPONENTS_INFO} PARENT_SCOPE)
 endmacro()
 
+# The directory sphinx-build reads its documents and conf.py from: SPL_SPHINX_SOURCE_DIR
+# when the project sets it, the project root otherwise. A relative path is taken
+# relative to the project root.
+function(_spl_sphinx_source_dir out_var)
+    if(SPL_SPHINX_SOURCE_DIR)
+        get_filename_component(_source_dir "${SPL_SPHINX_SOURCE_DIR}" ABSOLUTE BASE_DIR "${PROJECT_SOURCE_DIR}")
+    else()
+        set(_source_dir "${PROJECT_SOURCE_DIR}")
+    endif()
+    set(${out_var} "${_source_dir}" PARENT_SCOPE)
+endfunction()
+
+# A path as Sphinx names it: relative to the Sphinx source directory. This is the
+# form spl-core writes into include patterns, the component information and the
+# generated toctrees, and the one a document name is derived from.
+function(_spl_sphinx_relative_path out_var path)
+    _spl_sphinx_source_dir(_source_dir)
+    file(RELATIVE_PATH _relative_path "${_source_dir}" "${path}")
+    set(${out_var} "${_relative_path}" PARENT_SCOPE)
+endfunction()
+
 # The command that runs one Sphinx build, for the variant targets and the
 # per-component targets alike.
 #
@@ -514,12 +532,13 @@ function(_spl_sphinx_build_command out_var)
         list(APPEND _options -D needs_variant_data_file=${_variant_data_file})
     endif()
 
+    _spl_sphinx_source_dir(_source_dir)
     set(${out_var}
         ${CMAKE_COMMAND} -E env
         SPHINX_BUILD_CONFIGURATION_FILE=${ARG_CONFIG}
         AUTOCONF_JSON_FILE=${AUTOCONF_JSON}
         VARIANT=${VARIANT}
-        -- sphinx-build ${_options} ${PROJECT_SOURCE_DIR} ${ARG_OUTPUT_DIR}
+        -- sphinx-build ${_options} ${_source_dir} ${ARG_OUTPUT_DIR}
         PARENT_SCOPE
     )
 endfunction()
@@ -553,7 +572,7 @@ endmacro()
 
 macro(_spl_create_reports_target)
     set(_reports_output_dir ${CMAKE_CURRENT_BINARY_DIR}/reports)
-    file(RELATIVE_PATH _rel_reports_output_dir ${PROJECT_SOURCE_DIR} ${_reports_output_dir})
+    _spl_sphinx_relative_path(_rel_reports_output_dir ${_reports_output_dir})
     set(_reports_html_output_dir ${_reports_output_dir}/html)
 
     # create the config.json file. This is exported as SPHINX_BUILD_CONFIGURATION_FILE env variable
@@ -1000,7 +1019,7 @@ macro(_spl_generate_clanguru_source_docs COMPONENT_NAME SRC_FILES)
         file(WRITE ${_clanguru_docs_out_dir}/index.rst "${_source_docs_index_content}")
 
         # Expose source_docs directory for Sphinx include patterns
-        file(RELATIVE_PATH _rel_clanguru_docs_out_dir ${PROJECT_SOURCE_DIR} ${_clanguru_docs_out_dir})
+        _spl_sphinx_relative_path(_rel_clanguru_docs_out_dir ${_clanguru_docs_out_dir})
         set(_COMPONENT_SOURCE_DOCS_INCLUDE_PATTERN "${_rel_clanguru_docs_out_dir}/**")
     endif()
 endmacro(_spl_generate_clanguru_source_docs)

@@ -56,6 +56,22 @@ set(SPL_VARIANT_DATA_FILE_DOCS ${CMAKE_SOURCE_DIR}/build/variants/${VARIANT}/${B
 set(SPL_VARIANT_DATA_FILE_REPORTS ${CMAKE_SOURCE_DIR}/build/variants/${VARIANT}/${BUILD_KIT}/reports.json)
 ```
 
+(SPL_SPHINX_SOURCE_DIR)=
+
+## SPL_SPHINX_SOURCE_DIR
+
+The directory `sphinx-build` reads its documents and `conf.py` from, for every docs
+and reports target. A relative path is taken relative to the project root. Every
+path spl-core writes for Sphinx, in the `config.json` include patterns, the
+component information and the generated toctrees, is relative to this directory,
+so what a build includes has to be reachable inside it.
+
+**Default:** the project root (`PROJECT_SOURCE_DIR`)
+
+```cmake
+set(SPL_SPHINX_SOURCE_DIR docs)
+```
+
 ## COMPONENT_NAMES
 
 ## PROD_SOURCES
