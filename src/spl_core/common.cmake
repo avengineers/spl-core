@@ -892,6 +892,22 @@ function(_spl_filter_own_sources out_var base_dir sources)
     set(${out_var} "${_own_sources}" PARENT_SCOPE)
 endfunction()
 
+# clanguru can wrap each code listing it generates in Jinja `{% raw %}` and
+# `{% endraw %}` lines, so that a project rendering its documents through a Jinja
+# `source-read` hook, as the kickstart template's conf.py does, does not trip over
+# braces in the C code. A project without such a hook turns this off; otherwise
+# the two markers appear as text on every listing page.
+option(SPL_SOURCE_DOCS_JINJA_RAW_TAGS "Wrap the code listings clanguru generates in Jinja raw tags" ON)
+
+# The formatting options passed to `clanguru docs`, as this project configures them.
+function(_spl_clanguru_docs_options out_var)
+    set(_options --format rst)
+    if(SPL_SOURCE_DOCS_JINJA_RAW_TAGS)
+        list(APPEND _options --jinja-raw-tags)
+    endif()
+    set(${out_var} ${_options} PARENT_SCOPE)
+endfunction()
+
 macro(_spl_generate_clanguru_source_docs COMPONENT_NAME SRC_FILES)
     if(NOT CLANGURU_EXECUTABLE)
         find_program(CLANGURU_EXECUTABLE clanguru)
@@ -904,6 +920,7 @@ macro(_spl_generate_clanguru_source_docs COMPONENT_NAME SRC_FILES)
     set(_clanguru_docs_out_dir ${CMAKE_CURRENT_BINARY_DIR}/__source_docs)
     set(_clanguru_doc_outputs "")
     set(_clanguru_doc_names "")
+    _spl_clanguru_docs_options(_clanguru_docs_options)
     foreach(_src_file ${SRC_FILES})
         _spl_source_doc_name(_src_doc_name "${_src_file}" "${CMAKE_CURRENT_SOURCE_DIR}")
         set(_doc_output ${_clanguru_docs_out_dir}/${_src_doc_name}.rst)
@@ -915,8 +932,7 @@ macro(_spl_generate_clanguru_source_docs COMPONENT_NAME SRC_FILES)
                 --source-file ${_src_file}
                 --output-file ${_doc_output}
                 --compilation-database ${CMAKE_BINARY_DIR}/compile_commands.json
-                --format rst
-                --jinja-raw-tags
+                ${_clanguru_docs_options}
             DEPENDS ${_src_file}
             COMMENT "Generating RST docs for ${_src_doc_name} (${COMPONENT_NAME})"
         )
