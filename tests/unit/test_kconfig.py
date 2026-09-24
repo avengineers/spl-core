@@ -233,6 +233,38 @@ def test_boolean_with_description():
     ]
 
 
+def test_declared_boolean_symbols_include_the_ones_config_omits(tmp_path: Path) -> None:
+    """
+    Every boolean the model declares is listed, including a promptless one that is off,
+    which the configuration data (and every file written from it) leaves out.
+    """
+    feature_model_file = tmp_path / "kconfig.txt"
+    feature_model_file.write_text(
+        """
+    config WITH_PROMPT
+        bool "You can select this"
+        default n
+    config HELPER_ON
+        bool
+        default y
+    config HELPER_OFF
+        bool
+        default n
+    config NAME
+        string "Not a boolean"
+        default "John Smith"
+    config LEVEL
+        tristate "Not a boolean either"
+        default y
+    """
+    )
+
+    iut = KConfig(feature_model_file)
+
+    assert iut.declared_boolean_symbols() == ["HELPER_OFF", "HELPER_ON", "WITH_PROMPT"]
+    assert "HELPER_OFF" not in [element.name for element in iut.config.elements]
+
+
 def test_hex():
     """
     A configuration with description can be selected by the user
