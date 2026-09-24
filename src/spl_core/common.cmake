@@ -330,14 +330,15 @@ macro(spl_create_component)
 
             # add the generated files as dependency to cmake configure step
             set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_docs_config_json})
+
+            # We do not know all dependencies for generating the docs (apart from the rst files).
+            # This might cause incremental builds to not update parts of the documentation.
+            # To avoid this the command passes -E to make sphinx-build write all files new.
+            _spl_sphinx_build_command(_spl_sphinx_build SHAPE docs CONFIG ${_docs_config_json} OUTPUT_DIR ${_component_docs_html_out_dir})
             add_custom_target(
                 ${component_name}_docs
                 COMMAND ${CMAKE_COMMAND} -E make_directory ${_component_docs_out_dir}
-
-                # We do not know all dependencies for generating the docs (apart from the rst files).
-                # This might cause incremental builds to not update parts of the documentation.
-                # To avoid this we are using the -E option to make sphinx-build writing all files new.
-                COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_docs_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -E -b html ${_sphinx_source_dir} ${_component_docs_html_out_dir}
+                COMMAND ${_spl_sphinx_build}
                 BYPRODUCTS ${_component_docs_html_out_dir}/index.html
             )
 
@@ -407,10 +408,11 @@ Code Coverage
 
                 # No OUTPUT is defined to force execution of this target every time
                 # TODO: list of dependencies is not complete
+                _spl_sphinx_build_command(_spl_sphinx_build SHAPE reports CONFIG ${_reports_config_json} OUTPUT_DIR ${_component_reports_html_out_dir})
                 add_custom_target(
                     ${component_name}_report
                     COMMAND ${CMAKE_COMMAND} -E make_directory ${_component_reports_out_dir}
-                    COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_reports_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -E -b html ${_sphinx_source_dir} ${_component_reports_html_out_dir}
+                    COMMAND ${_spl_sphinx_build}
                     BYPRODUCTS ${_component_reports_html_out_dir}/index.html
                     DEPENDS ${TEST_OUT_JUNIT} ${_cov_out_html}
                 )
@@ -489,6 +491,39 @@ Code Coverage
     set(COMPONENTS_INFO ${COMPONENTS_INFO} PARENT_SCOPE)
 endmacro()
 
+# The command that runs one Sphinx build, for the variant targets and the
+# per-component targets alike.
+#
+# SHAPE is `docs` or `reports`. A project whose documents are gated on sphinx-needs
+# variant data sets SPL_VARIANT_DATA_FILE_DOCS and SPL_VARIANT_DATA_FILE_REPORTS to
+# the file each shape reads, and the build gets it as `-D needs_variant_data_file=`.
+# sphinx-needs keeps a command-line override even when the project's
+# needs_from_toml names another file, so conf.py needs no code to select it.
+function(_spl_sphinx_build_command out_var)
+    cmake_parse_arguments(ARG "" "SHAPE;CONFIG;OUTPUT_DIR" "" ${ARGN})
+    if(ARG_SHAPE STREQUAL "docs")
+        set(_variant_data_file "${SPL_VARIANT_DATA_FILE_DOCS}")
+    elseif(ARG_SHAPE STREQUAL "reports")
+        set(_variant_data_file "${SPL_VARIANT_DATA_FILE_REPORTS}")
+    else()
+        message(FATAL_ERROR "_spl_sphinx_build_command: SHAPE must be 'docs' or 'reports', not '${ARG_SHAPE}'.")
+    endif()
+
+    set(_options -E -b html)
+    if(_variant_data_file)
+        list(APPEND _options -D needs_variant_data_file=${_variant_data_file})
+    endif()
+
+    set(${out_var}
+        ${CMAKE_COMMAND} -E env
+        SPHINX_BUILD_CONFIGURATION_FILE=${ARG_CONFIG}
+        AUTOCONF_JSON_FILE=${AUTOCONF_JSON}
+        VARIANT=${VARIANT}
+        -- sphinx-build ${_options} ${PROJECT_SOURCE_DIR} ${ARG_OUTPUT_DIR}
+        PARENT_SCOPE
+    )
+endfunction()
+
 macro(_spl_create_docs_target)
     set(_docs_out_dir ${CMAKE_CURRENT_BINARY_DIR}/docs)
     set(_docs_html_out_dir ${_docs_out_dir}/html)
@@ -507,10 +542,11 @@ macro(_spl_create_docs_target)
 
     # add the generated files as dependency to cmake configure step
     set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_docs_config_json})
+    _spl_sphinx_build_command(_spl_sphinx_build SHAPE docs CONFIG ${_docs_config_json} OUTPUT_DIR ${_docs_html_out_dir})
     add_custom_target(
         docs
         COMMAND ${CMAKE_COMMAND} -E make_directory ${_docs_out_dir}
-        COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_docs_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -E -b html ${PROJECT_SOURCE_DIR} ${_docs_html_out_dir}
+        COMMAND ${_spl_sphinx_build}
         BYPRODUCTS ${_docs_html_out_dir}/index.html
     )
 endmacro()
@@ -646,13 +682,13 @@ Code Coverage
     set(COV_OUT_VARIANT_JSON variant-coverage.json)
     set(JUNIT_OUT_VARIANT_XML variant-junit.xml)
 
+    # The command passes -E to sphinx-build to make sure all files are regenerated.
+    _spl_sphinx_build_command(_spl_sphinx_build SHAPE reports CONFIG ${_reports_config_json} OUTPUT_DIR ${_reports_html_output_dir})
     add_custom_target(
         reports
         ALL
         COMMAND ${CMAKE_COMMAND} -E make_directory ${_reports_output_dir}
-
-        # We need to call sphinx-build with -E to make sure all files are regenerated.
-        COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_reports_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -E -b html ${PROJECT_SOURCE_DIR} ${_reports_html_output_dir}
+        COMMAND ${_spl_sphinx_build}
         BYPRODUCTS ${_reports_html_output_dir}/index.html
         DEPENDS ${JUNIT_OUT_VARIANT_XML} ${COV_OUT_VARIANT_JSON} _components_variant_coverage_html_target source_docs
     )
