@@ -89,6 +89,27 @@ set(SPL_SPHINX_OPTIONS -D spl_selection=${CMAKE_BINARY_DIR}/selection/@SHAPE@.to
 set(SPL_SPHINX_COMPONENT_OPTIONS -D spl_selection=${CMAKE_BINARY_DIR}/selection/@COMPONENT_PATH@/@SHAPE@.toml)
 ```
 
+(SPL_TEST_RESULTS_AS_NEEDS)=
+
+## SPL_TEST_RESULTS_AS_NEEDS
+
+When `ON`, a component's unit test results page is written after each test run
+from its JUnit XML, instead of at configure time with sphinx-test-reports'
+`test-report` directive. `spl_core.test_report.junit_to_needs` converts the JUnit
+XML into `unit_test_results.needs.json`, with the same needs, IDs and fields the
+directive creates, and writes a page that imports it with `needimport`. The page
+also carries the `results` links of the component's test specifications as
+`needextend` blocks: a specification links every test case whose name equals its
+title, or matches it as a regular expression when the title contains `*`. Every
+reader of needs.json sees the results, not only Sphinx, and the project can drop
+the `sphinxcontrib.test_reports` extension and the `sple_tr_link` needs function.
+
+**Default:** `OFF`
+
+```cmake
+set(SPL_TEST_RESULTS_AS_NEEDS ON)
+```
+
 ## COMPONENT_NAMES
 
 ## PROD_SOURCES

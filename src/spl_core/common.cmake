@@ -361,9 +361,11 @@ Unit Test Specification
 
 ")
 
-                # create the test results rst file
+                # create the test results rst file. With SPL_TEST_RESULTS_AS_NEEDS the page is
+                # written after the test run instead, together with its needs.json (see below).
                 set(_unit_test_results_rst ${_component_reports_out_dir}/unit_test_results.rst)
-                file(WRITE ${_unit_test_results_rst} "
+                if(NOT SPL_TEST_RESULTS_AS_NEEDS)
+                    file(WRITE ${_unit_test_results_rst} "
 Unit Test Results
 =================
 
@@ -372,6 +374,7 @@ Unit Test Results
     :file: ${_component_test_junit_xml}
 
 ")
+                endif()
 
                 # create coverage rst file to be able to automatically link to the coverage/index.html
                 set(_coverage_rst ${_component_reports_out_dir}/coverage.rst)
@@ -389,7 +392,10 @@ Code Coverage
 }")
 
                 # add the generated files as dependency to cmake configure step
-                set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_reports_config_json} ${_unit_test_spec_rst} ${_unit_test_results_rst})
+                set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_reports_config_json} ${_unit_test_spec_rst})
+                if(NOT SPL_TEST_RESULTS_AS_NEEDS)
+                    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_unit_test_results_rst})
+                endif()
 
                 set(_cov_out_html reports/html/${_rel_component_reports_out_dir}/coverage/index.html)
                 file(RELATIVE_PATH _cov_out_json ${CMAKE_CURRENT_BINARY_DIR} ${_component_coverage_json})
@@ -425,6 +431,33 @@ Code Coverage
             endif()
             if(_clanguru_all_sources)
                 _spl_generate_clanguru_source_docs(${component_name} "${_clanguru_all_sources}")
+            endif()
+
+            # Test results as needs: after each test run, convert the JUnit XML into the
+            # needs sphinx-test-reports' test-report directive would create, and write the
+            # results page that imports them. Every reader of needs.json sees them, not
+            # only Sphinx. The page also carries the `results` links of the test
+            # specifications, taken from the source listings, as needextend blocks.
+            if(SPL_TEST_RESULTS_AS_NEEDS AND TEST_SOURCES)
+                set(_unit_test_results_needs_json ${_component_reports_out_dir}/unit_test_results.needs.json)
+                add_custom_command(
+                    OUTPUT ${_unit_test_results_rst} ${_unit_test_results_needs_json}
+                    COMMAND ${CMAKE_COMMAND} -E make_directory ${_component_reports_out_dir}
+                    COMMAND ${SPL_PYTHON} -m spl_core.test_report.junit_to_needs
+                        --page ${_unit_test_results_rst}
+                        --title "Unit Test Results"
+                        --id TEST_RESULT_${component_name}
+                        --junit ${_component_test_junit_xml}
+                        --project ${PROJECT_NAME}
+                        --listings "${_clanguru_docs_out_dir}/**/*.rst"
+                    DEPENDS ${_component_test_junit_xml} ${_clanguru_doc_outputs}
+                    COMMENT "Converting the test results of ${component_name} into needs ..."
+                    VERBATIM
+                )
+                add_custom_target(${component_name}_test_results DEPENDS ${_unit_test_results_rst} ${_unit_test_results_needs_json})
+                add_dependencies(${component_name}_report ${component_name}_test_results)
+                list(APPEND SPL_TEST_RESULTS_TARGETS ${component_name}_test_results)
+                set(SPL_TEST_RESULTS_TARGETS ${SPL_TEST_RESULTS_TARGETS} PARENT_SCOPE)
             endif()
 
             # Store the source docs directory so the variant report wrapper page can
@@ -727,6 +760,9 @@ Code Coverage
         BYPRODUCTS ${_reports_html_output_dir}/index.html
         DEPENDS ${JUNIT_OUT_VARIANT_XML} ${COV_OUT_VARIANT_JSON} _components_variant_coverage_html_target source_docs
     )
+    if(SPL_TEST_RESULTS_TARGETS)
+        add_dependencies(reports ${SPL_TEST_RESULTS_TARGETS})
+    endif()
 endmacro()
 
 macro(_spl_set_coverage_create_overall_report_is_necessary)
