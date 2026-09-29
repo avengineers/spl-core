@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="MathSuite" tests="3" failures="1" errors="0" skipped="1" time="0.3">
+    <testcase classname="MathTests" name="test_addition" time="0.1"/>
+    <testcase classname="MathTests" name="test_division" time="0.2">
+      <failure message="division by zero" type="ZeroDivisionError">Traceback: division by zero</failure>
+    </testcase>
+    <testcase classname="MathTests" name="test_skip_me" time="0.0">
+      <skipped message="not implemented"/>
+    </testcase>
+  </testsuite>
+  <testsuite name="ParamSuite" tests="1" failures="0" errors="0" skipped="0" time="0.05">
+    <testcase classname="ParamTests" name="test_param[1]" time="0.05"/>
+  </testsuite>
+</testsuites>
