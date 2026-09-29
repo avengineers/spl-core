@@ -72,6 +72,23 @@ so what a build includes has to be reachable inside it.
 set(SPL_SPHINX_SOURCE_DIR docs)
 ```
 
+(SPL_SPHINX_OPTIONS)=
+
+## SPL_SPHINX_OPTIONS and SPL_SPHINX_COMPONENT_OPTIONS
+
+Options added to every `sphinx-build` spl-core runs: `SPL_SPHINX_OPTIONS` to the
+variant `docs` and `reports` builds, `SPL_SPHINX_COMPONENT_OPTIONS` to the
+per-component docs and report builds. In both, `@SHAPE@` becomes `docs` or
+`reports` and `@COMPONENT_PATH@` the component's path relative to the project
+root (empty for the variant builds), so each run can name a file of its own.
+
+**Default:** none
+
+```cmake
+set(SPL_SPHINX_OPTIONS -D spl_selection=${CMAKE_BINARY_DIR}/selection/@SHAPE@.toml)
+set(SPL_SPHINX_COMPONENT_OPTIONS -D spl_selection=${CMAKE_BINARY_DIR}/selection/@COMPONENT_PATH@/@SHAPE@.toml)
+```
+
 ## COMPONENT_NAMES
 
 ## PROD_SOURCES

@@ -331,7 +331,7 @@ macro(spl_create_component)
             # We do not know all dependencies for generating the docs (apart from the rst files).
             # This might cause incremental builds to not update parts of the documentation.
             # To avoid this the command passes -E to make sphinx-build write all files new.
-            _spl_sphinx_build_command(_spl_sphinx_build SHAPE docs CONFIG ${_docs_config_json} OUTPUT_DIR ${_component_docs_html_out_dir})
+            _spl_sphinx_build_command(_spl_sphinx_build SHAPE docs CONFIG ${_docs_config_json} OUTPUT_DIR ${_component_docs_html_out_dir} COMPONENT ${component_path})
             add_custom_target(
                 ${component_name}_docs
                 COMMAND ${CMAKE_COMMAND} -E make_directory ${_component_docs_out_dir}
@@ -405,7 +405,7 @@ Code Coverage
 
                 # No OUTPUT is defined to force execution of this target every time
                 # TODO: list of dependencies is not complete
-                _spl_sphinx_build_command(_spl_sphinx_build SHAPE reports CONFIG ${_reports_config_json} OUTPUT_DIR ${_component_reports_html_out_dir})
+                _spl_sphinx_build_command(_spl_sphinx_build SHAPE reports CONFIG ${_reports_config_json} OUTPUT_DIR ${_component_reports_html_out_dir} COMPONENT ${component_path})
                 add_custom_target(
                     ${component_name}_report
                     COMMAND ${CMAKE_COMMAND} -E make_directory ${_component_reports_out_dir}
@@ -517,8 +517,14 @@ endfunction()
 # the file each shape reads, and the build gets it as `-D needs_variant_data_file=`.
 # sphinx-needs keeps a command-line override even when the project's
 # needs_from_toml names another file, so conf.py needs no code to select it.
+#
+# COMPONENT is the component's path for the per-component builds and empty for the
+# variant builds. A project adds options of its own with SPL_SPHINX_OPTIONS (variant
+# builds) and SPL_SPHINX_COMPONENT_OPTIONS (per-component builds); `@SHAPE@` in
+# them becomes the shape and `@COMPONENT_PATH@` the component's path, so each run
+# can name a file of its own, e.g. `-D;spl_selection=<dir>/@COMPONENT_PATH@/@SHAPE@.toml`.
 function(_spl_sphinx_build_command out_var)
-    cmake_parse_arguments(ARG "" "SHAPE;CONFIG;OUTPUT_DIR" "" ${ARGN})
+    cmake_parse_arguments(ARG "" "SHAPE;CONFIG;OUTPUT_DIR;COMPONENT" "" ${ARGN})
     if(ARG_SHAPE STREQUAL "docs")
         set(_variant_data_file "${SPL_VARIANT_DATA_FILE_DOCS}")
     elseif(ARG_SHAPE STREQUAL "reports")
@@ -531,6 +537,16 @@ function(_spl_sphinx_build_command out_var)
     if(_variant_data_file)
         list(APPEND _options -D needs_variant_data_file=${_variant_data_file})
     endif()
+    if(ARG_COMPONENT)
+        set(_extra_options ${SPL_SPHINX_COMPONENT_OPTIONS})
+    else()
+        set(_extra_options ${SPL_SPHINX_OPTIONS})
+    endif()
+    foreach(_option IN LISTS _extra_options)
+        string(REPLACE "@SHAPE@" "${ARG_SHAPE}" _option "${_option}")
+        string(REPLACE "@COMPONENT_PATH@" "${ARG_COMPONENT}" _option "${_option}")
+        list(APPEND _options "${_option}")
+    endforeach()
 
     _spl_sphinx_source_dir(_source_dir)
     set(${out_var}
