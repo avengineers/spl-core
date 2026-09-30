@@ -67,6 +67,13 @@ jobs:
                   .\build.ps1
               shell: powershell
 
+            - name: Debug Scoop
+              if: always()
+              run: |
+                  & "$env:USERPROFILE\scoop\shims\scoop.ps1" --version
+                  Get-ChildItem "$env:USERPROFILE\scoop\apps\mingw-winlibs-llvm-ucrt" -Depth 1 -Filter "*.json" | Select-Object FullName
+              shell: powershell
+
             - name: Publish Test Results
               uses: EnricoMi/publish-unit-test-result-action/windows@v2
               if: always()
