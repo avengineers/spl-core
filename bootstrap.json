@@ -1,4 +1,5 @@
 {
     "scoop_ignore_scoopfile": true,
+    "scoop_installer_with_repo_arg": true,
     "python_version": "3.13"
 }
