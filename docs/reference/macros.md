@@ -223,7 +223,7 @@ to create a component as a library in the build system.
 It must be called after adding all source and test source files to the component.
 
 ```cmake
-spl_create_component([LONG_NAME <name>] [LIBRARY_TYPE <type>])
+spl_create_component([LONG_NAME <name>] [LIBRARY_TYPE <type>] [NO_FOREIGN_SOURCE_DOCS])
 ```
 
 The arguments are:
@@ -239,6 +239,14 @@ The arguments are:
   between creating an object library (which is not archived) or
   a static library.
 
+`NO_FOREIGN_SOURCE_DOCS`
+: (Optional) Generates the source documentation of the component only for the
+  source files inside the component directory. Use it for a component that compiles
+  source files of other components, for example an integration test. Without it,
+  the source documentation of those files is generated a second time, and their
+  sphinx-needs items (e.g. `impl` needs) appear twice in the report or appear in a
+  variant that does not contain the component they belong to.
+
 Example:
 
 Creating a component using the `spl_create_component` macro:
@@ -247,6 +255,16 @@ Creating a component using the `spl_create_component` macro:
 spl_add_source(src/led_driver_main.c)
 spl_add_test_source(test/test_led_driver.cc)
 spl_create_component(LONG_NAME "LED Driver" LIBRARY_TYPE STATIC)
+```
+
+Creating an integration test component that compiles the sources of other components,
+but documents only its own test source:
+
+```cmake
+spl_add_source(${PROJECT_SOURCE_DIR}/components/led_driver/src/led_driver_main.c)
+spl_add_source(${PROJECT_SOURCE_DIR}/components/button/src/button.c)
+spl_add_test_source(test_integration.cc)
+spl_create_component(LONG_NAME "Integration Tests" NO_FOREIGN_SOURCE_DOCS)
 ```
 
 Please note that this macro performs various tasks related to the component's setup, including documentation and testing, depending on the build configuration (buildKit).

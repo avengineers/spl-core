@@ -45,6 +45,35 @@ if(NOT doc_name_ext STREQUAL "bar.c")
     message(FATAL_ERROR "Failing Test case: expected 'bar.c' but got '${doc_name_ext}'.")
 endif()
 
+# ## test: _spl_filter_own_sources (source docs of NO_FOREIGN_SOURCE_DOCS components) #########
+# given sources inside the component, outside of it, and in a sibling that shares its name as prefix
+set(_own_src "${CMAKE_CURRENT_LIST_DIR}/component/src/a.c")
+set(_own_test "${CMAKE_CURRENT_LIST_DIR}/component/test/b.cc")
+set(_foreign "${CMAKE_CURRENT_LIST_DIR}/other/c.c")
+set(_sibling "${CMAKE_CURRENT_LIST_DIR}/component_b/src/d.c")
+
+# when
+_spl_filter_own_sources(own_sources "${CMAKE_CURRENT_LIST_DIR}/component" "${_own_src};${_foreign};${_own_test};${_sibling}")
+
+# then: only the sources inside the component directory remain, in their original order
+if(NOT "${own_sources}" STREQUAL "${_own_src};${_own_test}")
+    message(FATAL_ERROR "Failing Test case: expected '${_own_src};${_own_test}' but got '${own_sources}'.")
+endif()
+
+# and: a component without own sources gets an empty list
+_spl_filter_own_sources(no_own_sources "${CMAKE_CURRENT_LIST_DIR}/component" "${_foreign};${_sibling}")
+if(NOT "${no_own_sources}" STREQUAL "")
+    message(FATAL_ERROR "Failing Test case: expected an empty list but got '${no_own_sources}'.")
+endif()
+
+# and: a source on another drive is not inside the component, although no relative path to it starts with '..'
+if(WIN32)
+    _spl_filter_own_sources(other_drive_sources "C:/project/component" "Z:/elsewhere/e.c")
+    if(NOT "${other_drive_sources}" STREQUAL "")
+        message(FATAL_ERROR "Failing Test case: expected an empty list but got '${other_drive_sources}'.")
+    endif()
+endif()
+
 # ## test: _spl_get_absolute_path #########
 # when
 _spl_get_absolute_path(absolute_path "${PROJECT_SOURCE_DIR}/some_dir")
