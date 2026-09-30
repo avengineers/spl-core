@@ -191,7 +191,7 @@ endmacro(_spl_get_google_test)
 # The component name will be made "global" such that the spl_add_compoent macro can add it to the executable
 #
 macro(spl_create_component)
-    cmake_parse_arguments(CREATE_COMPONENT "" "NAME;LONG_NAME;LIBRARY_TYPE" "" ${ARGN})
+    cmake_parse_arguments(CREATE_COMPONENT "NO_FOREIGN_SOURCE_DOCS" "NAME;LONG_NAME;LIBRARY_TYPE" "" ${ARGN})
 
     # Set the default library type to OBJECT if not provided
     if(NOT CREATE_COMPONENT_LIBRARY_TYPE)
@@ -419,6 +419,11 @@ Code Coverage
             # Generate source documentation using clanguru
             set(_COMPONENT_SOURCE_DOCS_INCLUDE_PATTERN "")
             set(_clanguru_all_sources ${SOURCES} ${TEST_SOURCES})
+            if(CREATE_COMPONENT_NO_FOREIGN_SOURCE_DOCS)
+                # The component compiles sources of other components (e.g. an integration
+                # test). Documenting them here would duplicate the needs of their owners.
+                _spl_filter_own_sources(_clanguru_all_sources "${CMAKE_CURRENT_SOURCE_DIR}" "${_clanguru_all_sources}")
+            endif()
             if(_clanguru_all_sources)
                 _spl_generate_clanguru_source_docs(${component_name} "${_clanguru_all_sources}")
             endif()
@@ -871,6 +876,20 @@ function(_spl_source_doc_name out_var src_file base_dir)
         get_filename_component(_rel "${src_file}" NAME)
     endif()
     set(${out_var} "${_rel}" PARENT_SCOPE)
+endfunction()
+
+function(_spl_filter_own_sources out_var base_dir sources)
+    # Keep only the sources inside the component directory. IS_PREFIX compares whole
+    # path segments, so a sibling like component_b is not inside component, and a
+    # source on another drive is not inside it either.
+    set(_own_sources "")
+    foreach(_src_file IN LISTS sources)
+        cmake_path(IS_PREFIX base_dir "${_src_file}" NORMALIZE _is_own)
+        if(_is_own)
+            list(APPEND _own_sources "${_src_file}")
+        endif()
+    endforeach()
+    set(${out_var} "${_own_sources}" PARENT_SCOPE)
 endfunction()
 
 macro(_spl_generate_clanguru_source_docs COMPONENT_NAME SRC_FILES)
