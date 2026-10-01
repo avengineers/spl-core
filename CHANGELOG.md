@@ -1,6 +1,31 @@
 # CHANGELOG
 
 
+## v8.10.0 (2026-10-01)
+
+### Features
+
+- Add NO_FOREIGN_SOURCE_DOCS to spl_create_component
+  ([`d4e96df`](https://github.com/avengineers/spl-core/commit/d4e96df87e64864051fa816e91494d6e644491f5))
+
+A component generates its clanguru source docs from all of its sources. A component that compiles
+  sources of other components, for example an integration test, therefore documents those files a
+  second time. The report then contains their sphinx-needs items twice ("A need with ID ... already
+  exists"), or contains them in a variant that does not have the component they belong to, where
+  their links claim requirements the variant does not fulfill.
+
+With NO_FOREIGN_SOURCE_DOCS, the component generates source docs only for the sources inside its own
+  directory. The option is off by default, so existing projects are not affected: a component may
+  compile its own code from outside its directory, e.g. an exported module or generated code per
+  variant, and keeps documenting it.
+
+_spl_filter_own_sources compares whole path segments with cmake_path IS_PREFIX, so a sibling
+  directory that shares the component name as a prefix, or a file on another drive, is not treated
+  as inside the component.
+
+Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
+
+
 ## v8.9.0 (2026-09-22)
 
 ### Features
