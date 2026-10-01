@@ -204,6 +204,18 @@ class KConfig:
             self._config.load_config(k_config_file, replace=False)
         self.config = self.create_config_data(self._config)
 
+    def declared_boolean_symbols(self) -> list[str]:
+        """Names of every boolean symbol the feature model declares, sorted.
+
+        ``config`` only holds the symbols KConfig would write out, so a boolean
+        without a prompt that evaluates to n is missing from it, and from the
+        header, JSON and CMake files generated from it. A consumer that needs the
+        complete feature vector, such as a documentation build whose conditions
+        name that symbol, can default every name returned here to false before
+        applying the configured values.
+        """
+        return sorted({symbol.name for symbol in self._config.unique_defined_syms if symbol.orig_type == kconfiglib.BOOL})
+
     def create_config_data(self, config: kconfiglib.Kconfig) -> ConfigurationData:
         """- creates the ConfigurationData from the KConfig configuration"""
         elements = []

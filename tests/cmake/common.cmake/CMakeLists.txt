@@ -74,6 +74,137 @@ if(WIN32)
     endif()
 endif()
 
+# ## test: _spl_clanguru_docs_options (Jinja raw tags are optional) #########
+# given the default configuration
+
+# when
+_spl_clanguru_docs_options(clanguru_default_options)
+
+# then: listings keep their Jinja raw tags, as before the option existed
+if(NOT clanguru_default_options STREQUAL "--format;rst;--jinja-raw-tags")
+    message(FATAL_ERROR "Failing Test case: expected '--format;rst;--jinja-raw-tags' but got '${clanguru_default_options}'.")
+endif()
+
+# given a project that renders no document through Jinja
+set(SPL_SOURCE_DOCS_JINJA_RAW_TAGS OFF)
+
+# when
+_spl_clanguru_docs_options(clanguru_plain_options)
+
+# then
+if(NOT clanguru_plain_options STREQUAL "--format;rst")
+    message(FATAL_ERROR "Failing Test case: expected '--format;rst' but got '${clanguru_plain_options}'.")
+endif()
+
+# cleanup
+unset(SPL_SOURCE_DOCS_JINJA_RAW_TAGS)
+
+# ## test: _spl_sphinx_build_command (variant data file per build shape) #########
+# given a project that configures no variant data file
+set(AUTOCONF_JSON /build/kconfig/autoconf.json)
+
+# when
+_spl_sphinx_build_command(sphinx_plain_command SHAPE reports CONFIG /build/reports/config.json OUTPUT_DIR /build/reports/html)
+
+# then: the command is exactly the one the targets have always run
+set(expected_sphinx_plain_command
+    ${CMAKE_COMMAND} -E env
+    SPHINX_BUILD_CONFIGURATION_FILE=/build/reports/config.json
+    AUTOCONF_JSON_FILE=/build/kconfig/autoconf.json
+    VARIANT=mytestvariant
+    -- sphinx-build -E -b html ${PROJECT_SOURCE_DIR} /build/reports/html
+)
+if(NOT sphinx_plain_command STREQUAL expected_sphinx_plain_command)
+    message(FATAL_ERROR "Failing Test case: expected '${expected_sphinx_plain_command}' but got '${sphinx_plain_command}'.")
+endif()
+
+# given a variant data file for each build shape
+set(SPL_VARIANT_DATA_FILE_DOCS /variants/docs.json)
+set(SPL_VARIANT_DATA_FILE_REPORTS /variants/reports.json)
+
+# when
+_spl_sphinx_build_command(sphinx_docs_command SHAPE docs CONFIG /build/docs/config.json OUTPUT_DIR /build/docs/html)
+_spl_sphinx_build_command(sphinx_reports_command SHAPE reports CONFIG /build/reports/config.json OUTPUT_DIR /build/reports/html)
+
+# then: each build is given its own file, and only that one, as a sphinx-build
+# option in front of the source and output directories
+if(NOT sphinx_docs_command MATCHES ";-D;needs_variant_data_file=/variants/docs\\.json;[^;]+;/build/docs/html$" OR sphinx_docs_command MATCHES "reports\\.json")
+    message(FATAL_ERROR "Failing Test case: the docs build must get the docs variant data file only, got '${sphinx_docs_command}'.")
+endif()
+
+if(NOT sphinx_reports_command MATCHES ";-D;needs_variant_data_file=/variants/reports\\.json;[^;]+;/build/reports/html$" OR sphinx_reports_command MATCHES "docs\\.json")
+    message(FATAL_ERROR "Failing Test case: the reports build must get the reports variant data file only, got '${sphinx_reports_command}'.")
+endif()
+
+# cleanup
+unset(AUTOCONF_JSON)
+unset(SPL_VARIANT_DATA_FILE_DOCS)
+unset(SPL_VARIANT_DATA_FILE_REPORTS)
+
+# ## test: _spl_sphinx_build_command (extra options per run) #########
+# given options for the variant runs and for the per-component runs
+set(SPL_SPHINX_OPTIONS -D spl_selection=/sel/@SHAPE@.toml)
+set(SPL_SPHINX_COMPONENT_OPTIONS -D spl_selection=/sel/@COMPONENT_PATH@/@SHAPE@.toml)
+
+# when
+_spl_sphinx_build_command(sphinx_variant_command SHAPE reports CONFIG /build/reports/config.json OUTPUT_DIR /build/reports/html)
+_spl_sphinx_build_command(sphinx_component_command SHAPE docs CONFIG /build/c/docs/config.json OUTPUT_DIR /build/c/docs/html COMPONENT components/c)
+
+# then: a variant run gets the variant options, a component run the component options,
+# each with its own shape and component path filled in
+if(NOT sphinx_variant_command MATCHES ";-D;spl_selection=/sel/reports\\.toml;[^;]+;/build/reports/html$")
+    message(FATAL_ERROR "Failing Test case: the variant reports run must name its own file, got '${sphinx_variant_command}'.")
+endif()
+if(NOT sphinx_component_command MATCHES ";-D;spl_selection=/sel/components/c/docs\\.toml;[^;]+;/build/c/docs/html$" OR sphinx_component_command MATCHES "/sel/docs\\.toml")
+    message(FATAL_ERROR "Failing Test case: the component docs run must name the component's file only, got '${sphinx_component_command}'.")
+endif()
+
+# cleanup
+unset(SPL_SPHINX_OPTIONS)
+unset(SPL_SPHINX_COMPONENT_OPTIONS)
+
+# ## test: _spl_sphinx_source_dir and _spl_sphinx_relative_path #########
+# given the default configuration
+
+# when
+_spl_sphinx_source_dir(default_sphinx_source_dir)
+_spl_sphinx_relative_path(default_reports_path "${PROJECT_BINARY_DIR}/components/x/reports")
+
+# then: Sphinx reads the project root, as before the option existed
+if(NOT default_sphinx_source_dir STREQUAL PROJECT_SOURCE_DIR)
+    message(FATAL_ERROR "Failing Test case: expected '${PROJECT_SOURCE_DIR}' but got '${default_sphinx_source_dir}'.")
+endif()
+
+file(RELATIVE_PATH expected_default_reports_path "${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}/components/x/reports")
+if(NOT default_reports_path STREQUAL expected_default_reports_path)
+    message(FATAL_ERROR "Failing Test case: expected '${expected_default_reports_path}' but got '${default_reports_path}'.")
+endif()
+
+# given a project that keeps its documents in a docs folder
+set(SPL_SPHINX_SOURCE_DIR docs)
+
+# when
+_spl_sphinx_source_dir(docs_sphinx_source_dir)
+_spl_sphinx_relative_path(docs_relative_path "${PROJECT_SOURCE_DIR}/docs/doc/index.md")
+_spl_sphinx_build_command(docs_sphinx_command SHAPE docs CONFIG /build/docs/config.json OUTPUT_DIR /build/docs/html)
+
+# then: the folder is resolved against the project root, paths are named from it,
+# and sphinx-build reads it instead of the project root
+if(NOT docs_sphinx_source_dir STREQUAL "${PROJECT_SOURCE_DIR}/docs")
+    message(FATAL_ERROR "Failing Test case: expected '${PROJECT_SOURCE_DIR}/docs' but got '${docs_sphinx_source_dir}'.")
+endif()
+
+if(NOT docs_relative_path STREQUAL "doc/index.md")
+    message(FATAL_ERROR "Failing Test case: expected 'doc/index.md' but got '${docs_relative_path}'.")
+endif()
+
+if(NOT "${PROJECT_SOURCE_DIR}/docs" IN_LIST docs_sphinx_command OR "${PROJECT_SOURCE_DIR}" IN_LIST docs_sphinx_command)
+    message(FATAL_ERROR "Failing Test case: sphinx-build must read '${PROJECT_SOURCE_DIR}/docs', got '${docs_sphinx_command}'.")
+endif()
+
+# cleanup
+unset(SPL_SPHINX_SOURCE_DIR)
+
 # ## test: _spl_get_absolute_path #########
 # when
 _spl_get_absolute_path(absolute_path "${PROJECT_SOURCE_DIR}/some_dir")
