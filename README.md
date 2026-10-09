@@ -14,6 +14,9 @@
   <a href="https://codecov.io/gh/avengineers/spl-core">
     <img src="https://img.shields.io/codecov/c/github/avengineers/spl-core.svg?logo=codecov&logoColor=fff&style=flat-square" alt="Test coverage percentage">
   </a>
+  <a href="https://github.com/avengineers/spl-core/actions/workflows/mutation.yml?query=branch%3Adevelop">
+    <img src="https://img.shields.io/github/actions/workflow/status/avengineers/spl-core/mutation.yml?branch=develop&label=mutation&logo=github&style=flat-square" alt="Mutation Testing Status">
+  </a>
 </p>
 <p align="center">
   <a href="https://python-poetry.org/">

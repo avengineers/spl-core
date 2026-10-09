@@ -1,16 +1,12 @@
 name: Mutation Testing
 
-# Mutation testing is slow and its score is a trend to watch, not a merge gate,
-# so it runs weekly and on demand instead of on every pull request.
+# Mutation testing is slow, so it runs weekly and on demand instead of on every
+# pull request. The run fails when the mutation score (the share of mutants the
+# tests kill) drops below 80%.
 on:
     schedule:
         - cron: "0 3 * * 1"
     workflow_dispatch:
-        inputs:
-            fail_over:
-                description: "Fail if more than this percentage of mutants survive (100 = never fail)"
-                required: false
-                default: "100"
 
 concurrency:
     group: mutation-${{ github.ref }}
@@ -77,7 +73,7 @@ jobs:
                   path: out/mutation/
                   if-no-files-found: ignore
 
-            - name: Check survival rate
-              run: |
-                  cr-rate out/mutation/session.sqlite --fail-over ${{ github.event.inputs.fail_over || '100' }}
+            # Fails when more than 20% of the mutants survive, i.e. the mutation score is below 80%.
+            - name: Check mutation score
+              run: cr-rate out/mutation/session.sqlite --fail-over 20
               shell: pwsh
