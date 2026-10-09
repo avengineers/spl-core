@@ -1,0 +1,79 @@
+name: Mutation Testing
+
+# Mutation testing is slow, so it runs weekly and on demand instead of on every
+# pull request. The run fails when the mutation score (the share of mutants the
+# tests kill) drops below 80%.
+on:
+    schedule:
+        - cron: "0 3 * * 1"
+    workflow_dispatch:
+
+concurrency:
+    group: mutation-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    mutation:
+        name: Run Cosmic Ray
+        runs-on: windows-latest
+        timeout-minutes: 60
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@v6
+
+            # Only the Python dependencies are needed: the mutated modules are
+            # tested by unit tests, which do not build any CMake variant.
+            - name: Setup Python
+              uses: actions/setup-python@v6
+              with:
+                  python-version: "3.13"
+
+            - name: Install dependencies
+              run: |
+                  pip install "poetry>=2.1"
+                  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+                  poetry install
+                  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+                  "$PWD\.venv\Scripts" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+              shell: pwsh
+
+            - name: Run baseline
+              run: |
+                  New-Item -ItemType Directory -Force out/mutation | Out-Null
+                  cosmic-ray init cosmic-ray.toml out/mutation/session.sqlite
+                  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+                  cosmic-ray baseline cosmic-ray.toml
+                  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+              shell: pwsh
+
+            - name: Run mutants
+              run: |
+                  cosmic-ray exec cosmic-ray.toml out/mutation/session.sqlite
+                  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+              shell: pwsh
+
+            - name: Write reports
+              if: always()
+              run: |
+                  if (-not (Test-Path out/mutation/session.sqlite)) { exit 0 }
+                  cr-html out/mutation/session.sqlite | Out-File -FilePath out/mutation/report.html -Encoding utf8
+                  $summary = cr-report out/mutation/session.sqlite | Select-Object -Last 3
+                  "## Mutation testing`n" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+                  '```' | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+                  $summary | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+                  '```' | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+              shell: pwsh
+
+            - name: Upload reports
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: mutation-report
+                  path: out/mutation/
+                  if-no-files-found: ignore
+
+            # Fails when more than 20% of the mutants survive, i.e. the mutation score is below 80%.
+            - name: Check mutation score
+              run: cr-rate out/mutation/session.sqlite --fail-over 20
+              shell: pwsh

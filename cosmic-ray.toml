@@ -1,0 +1,27 @@
+# Mutation testing with Cosmic Ray (https://cosmic-ray.readthedocs.io).
+#
+# Cosmic Ray mutates the files under module-path in place and runs test-command once per
+# mutant, so keep the module small and the tests fast. Run from the repo root with the
+# project venv first on PATH:
+#
+#   $env:PATH = "$PWD\.venv\Scripts;$env:PATH"
+#   cosmic-ray init cosmic-ray.toml out/mutation/session.sqlite
+#   cosmic-ray baseline cosmic-ray.toml
+#   cosmic-ray exec cosmic-ray.toml out/mutation/session.sqlite
+#   cr-report out/mutation/session.sqlite --show-pending
+#
+# An interrupted exec resumes where it stopped when started again on the same session file.
+
+[cosmic-ray]
+module-path = "src/spl_core/test_utils/junit_merger.py"
+timeout = 60.0
+excluded-modules = []
+# -x stops at the first failing test: one failure is enough to kill a mutant.
+# addopts is cleared so that runs do not overwrite out/test-report.xml.
+# Call pytest, not "python -m pytest": on Windows the venv's python.exe is a launcher for the
+# base interpreter, and the child process would resolve "python" next to that interpreter,
+# which has no pytest installed.
+test-command = "pytest -x -q -p no:cacheprovider -o addopts= tests/unit/test_junit_merger.py"
+
+[cosmic-ray.distributor]
+name = "local"
