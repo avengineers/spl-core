@@ -273,9 +273,47 @@ def test_main_cli_with_error(temp_dir, malformed_xml_file, monkeypatch, capsys):
     exit_code = main()
 
     # Assert
-    assert exit_code != 0
+    assert exit_code == 1
     captured = capsys.readouterr()
-    assert "error" in captured.err.lower() or "warning" in captured.err.lower()
+    assert "ERROR: Failed to merge JUnit XML files" in captured.err
+
+
+@pytest.mark.parametrize("missing_option", ["--output", "--inputs"])
+def test_main_cli_requires_option(temp_dir, sample_junit_xml_1, monkeypatch, missing_option):
+    """Test CLI interface rejects a call that omits a required option"""
+    # Arrange
+    options = {"--output": [str(temp_dir / "variant-junit.xml")], "--inputs": [str(sample_junit_xml_1)]}
+    del options[missing_option]
+    test_args = ["junit_merger.py"] + [arg for option, values in options.items() for arg in [option, *values]]
+    monkeypatch.setattr("sys.argv", test_args)
+
+    # Act & Assert
+    with pytest.raises(SystemExit) as exc_info:
+        main()
+    assert exc_info.value.code == 2
+
+
+def test_merge_creates_missing_output_directories(temp_dir, sample_junit_xml_1):
+    """Test that merge creates all missing parent directories of the output file"""
+    # Arrange
+    output_path = temp_dir / "reports" / "variant" / "variant-junit.xml"
+    merger = JUnitMerger([str(sample_junit_xml_1)], str(output_path))
+
+    # Act
+    merger.merge()
+
+    # Assert
+    assert len(list(JUnitXml.fromfile(str(output_path)))) == 1
+
+
+def test_validate_output_rejects_invalid_xml(temp_dir, malformed_xml_file):
+    """Test that validation reports an output file that is not valid JUnit XML"""
+    # Arrange
+    merger = JUnitMerger([str(malformed_xml_file)], str(malformed_xml_file))
+
+    # Act & Assert
+    with pytest.raises(JUnitMergerError, match="Validation failed"):
+        merger._validate_output()
 
 
 def test_merge_validates_output(temp_dir, sample_junit_xml_1, sample_junit_xml_2):
@@ -345,6 +383,26 @@ def test_merge_mixed_testsuite_formats(temp_dir, sample_junit_xml_1, single_test
     suite_names = [suite.name for suite in suites]
     assert "Component1TestSuite" in suite_names  # from multi-testsuite file
     assert "component1" in suite_names  # from single-testsuite file (using parent directory)
+
+
+def test_merge_keeps_suite_names_other_than_empty_placeholder(temp_dir):
+    """Test that only the "(empty)" placeholder is replaced, not names that merely sort before it"""
+    # Arrange
+    component_dir = temp_dir / "component1"
+    component_dir.mkdir()
+    xml_path = component_dir / "junit.xml"
+    xml = JUnitXml()
+    xml.add_testsuite(TestSuite("#smoke"))
+    xml.write(str(xml_path))
+    output_path = temp_dir / "variant-junit.xml"
+    merger = JUnitMerger([str(xml_path)], str(output_path))
+
+    # Act
+    merger.merge()
+
+    # Assert
+    suite = next(iter(JUnitXml.fromfile(str(output_path))))
+    assert suite.name == "#smoke"
 
 
 def test_merge_with_variant_name(temp_dir, sample_junit_xml_1, sample_junit_xml_2):
