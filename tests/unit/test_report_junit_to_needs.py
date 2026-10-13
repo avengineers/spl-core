@@ -8,8 +8,10 @@ import pytest
 
 from spl_core.test_report.junit_to_needs import (
     NEEDS_FILE_NAME,
+    case_time,
     collect_specs,
     convert,
+    main,
     results_links,
     write_results,
 )
@@ -137,6 +139,22 @@ def test_collect_specs_reads_id_and_title_pairs():
 
 
 @pytest.mark.unit
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [(0.2, "0.2"), (3, "3.0"), (-1.0, "0.0"), (None, "0.0"), ("1.5", "1.5"), ("n/a", "0.0")],
+)
+def test_case_time_normalises_to_a_float_string(value, expected):
+    assert case_time(value) == expected
+
+
+@pytest.mark.unit
+def test_collect_specs_reads_a_listing_whose_name_is_not_a_valid_glob(tmp_path):
+    listing = tmp_path / "listing[1].rst"
+    listing.write_text(LISTING_FILE.read_text(encoding="utf-8"), encoding="utf-8")
+    assert collect_specs([listing]) == collect_specs([LISTING_FILE])
+
+
+@pytest.mark.unit
 def test_results_links_exact_title_and_regex(needs):
     links = results_links(needs, collect_specs([LISTING_FILE]))
     assert links == {
@@ -182,3 +200,14 @@ def test_write_results_project_name_is_configurable(tmp_path):
     write_results(page, "Unit Test Results", FILE_ID, JUNIT_FILE, [], project="SPLed")
     needs_json = json.loads((page.parent / NEEDS_FILE_NAME).read_text(encoding="utf-8"))
     assert needs_json["project"] == "SPLed"
+
+
+@pytest.mark.unit
+def test_main_writes_results_from_command_line_arguments(tmp_path):
+    page = tmp_path / "unit_test_results.rst"
+    main(["--page", str(page), "--title", "Unit Test Results", "--id", FILE_ID, "--junit", str(JUNIT_FILE), "--listings", str(LISTING_FILE), "--project", "SPLed"])
+
+    needs_json = json.loads((page.parent / NEEDS_FILE_NAME).read_text(encoding="utf-8"))
+    assert needs_json["project"] == "SPLed"
+    assert FILE_ID in needs_json["versions"][""]["needs"]
+    assert ".. needextend:: TS_ADD" in page.read_text(encoding="utf-8")
