@@ -22,7 +22,7 @@ FILE_ID = "TEST_RESULT_Demo"
 
 
 def _digest(text: str, length: int) -> str:
-    return hashlib.sha1(text.encode("UTF-8")).hexdigest().upper()[:length]
+    return hashlib.sha1(text.encode("UTF-8"), usedforsecurity=False).hexdigest().upper()[:length]
 
 
 MATH_SUITE_ID = f"{FILE_ID}_{_digest('MathSuite', 3)}"

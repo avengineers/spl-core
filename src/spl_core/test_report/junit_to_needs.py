@@ -38,7 +38,7 @@ _SPEC_RE = re.compile(r"^\.\. test:: (.+)\n\s+:id: (\S+)", re.M)
 
 
 def sha(text: str, n: int) -> str:
-    return hashlib.sha1(text.encode("UTF-8")).hexdigest().upper()[:n]
+    return hashlib.sha1(text.encode("UTF-8"), usedforsecurity=False).hexdigest().upper()[:n]
 
 
 def block(label: str, value: str) -> str:
@@ -61,17 +61,19 @@ def convert(title: str, file_id: str, junit: str) -> dict[str, dict[str, Any]]:
     suites = JUnitParser(junit).parse()
     needs: dict[str, dict[str, Any]] = {}
     tags = [file_id]
-    needs[file_id] = dict(
-        id=file_id, type="testfile", title=title, file=junit, tags=tags, links=[], content="[]",
-        suites=len(suites), cases=sum(int(s["tests"]) for s in suites), passed=sum(s["passed"] for s in suites),
-        skipped=sum(s["skips"] for s in suites), failed=sum(s["failures"] for s in suites),
-        errors=sum(s["errors"] for s in suites))
+    needs[file_id] = {
+        "id": file_id, "type": "testfile", "title": title, "file": junit, "tags": tags, "links": [], "content": "[]",
+        "suites": len(suites), "cases": sum(int(s["tests"]) for s in suites), "passed": sum(s["passed"] for s in suites),
+        "skipped": sum(s["skips"] for s in suites), "failed": sum(s["failures"] for s in suites),
+        "errors": sum(s["errors"] for s in suites),
+    }
     for suite in suites:
         suite_id = f"{file_id}_{sha(suite['name'], SUITE_LEN)}"
-        needs[suite_id] = dict(
-            id=suite_id, type="testsuite", title=suite["name"], suite=suite["name"], file=junit, tags=tags,
-            links=[file_id], content="", cases=int(suite["tests"]), passed=suite["passed"], skipped=suite["skips"],
-            failed=suite["failures"], errors=suite["errors"])
+        needs[suite_id] = {
+            "id": suite_id, "type": "testsuite", "title": suite["name"], "suite": suite["name"], "file": junit, "tags": tags,
+            "links": [file_id], "content": "", "cases": int(suite["tests"]), "passed": suite["passed"], "skipped": suite["skips"],
+            "failed": suite["failures"], "errors": suite["errors"],
+        }
         for case in suite["testcases"]:
             case_id = f"{suite_id}_{sha(case['classname'] + case['name'], CASE_LEN)}"
             groups = re.match(r"^(?P<name>[^\[]+)($|\[(?P<param>.*)?\])", case["name"])
@@ -80,11 +82,12 @@ def convert(title: str, file_id: str, junit: str) -> dict[str, dict[str, Any]]:
             for key, label in (("text", "Text"), ("message", "Message"), ("system-out", "System-out")):
                 if case.get(key):
                     content += block(label, case[key])
-            needs[case_id] = dict(
-                id=case_id, type="testcase", title=case["name"], case=case["name"], case_name=name,
-                case_parameter=param, classname=case["classname"], result=case["result"], time=case_time(case["time"]),
-                suite=suite["name"], style="tr_" + case["result"], file=junit, tags=tags,
-                links=[file_id, suite_id], content=content)
+            needs[case_id] = {
+                "id": case_id, "type": "testcase", "title": case["name"], "case": case["name"], "case_name": name,
+                "case_parameter": param, "classname": case["classname"], "result": case["result"], "time": case_time(case["time"]),
+                "suite": suite["name"], "style": "tr_" + case["result"], "file": junit, "tags": tags,
+                "links": [file_id, suite_id], "content": content,
+            }
     return needs
 
 
