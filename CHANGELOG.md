@@ -1,6 +1,21 @@
 # CHANGELOG
 
 
+## v8.10.1 (2026-10-14)
+
+### Bug Fixes
+
+- **report**: Component report does not include the test and implementation traces
+  ([`27d8ca7`](https://github.com/avengineers/spl-core/commit/27d8ca7088b66ac68240b565ef64218d52afb220))
+
+Fixes #367
+
+- **report**: Component report includes obsolete old component files
+  ([`8583264`](https://github.com/avengineers/spl-core/commit/8583264a883eff581fe2605ac02c82e602d7417a))
+
+Fixes #368
+
+
 ## v8.10.0 (2026-10-01)
 
 ### Features
