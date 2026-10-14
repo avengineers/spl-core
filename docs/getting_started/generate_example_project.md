@@ -73,7 +73,7 @@ You can provide several parameters to customize the script's behavior:
 * `install` : Install all dependencies required to build.
 * `build` : Build the target.
 * `clean` : Clean build, wipe out all build artifacts.
-* `buildKit` : Build kit to be used.
+* `buildKit` : Build kit to be used (`prod` or `test`). Without it, the script selects `test` for the targets that exist only in the test build kit, such as `reports` or `<component>_report`, and `prod` for all others. A target that does not exist in the selected build kit stops the build before Ninja runs.
 * `target` : Target to be built.
 * `variants` : Variants (of the product) to be built (List of strings, leave empty to be asked or "all" for automatic build of all variants)
 * `filter` : filter for selftests; define in pytest syntax: <https://docs.pytest.org/en/6.2.x/usage.html>; e.g. "EnglishVariant or test_EnglishVariant.py"

@@ -74,6 +74,15 @@ class TestBuild(SplKickstartProjectIntegrationTestBase):
         assert len(workspace_status.deleted_files) == 0
         assert len(workspace_status.new_files) == 0
 
+    def test_build_unknown_target_suggests_the_test_build_kit(self):
+        variant = "EnglishVariant"
+
+        "Call IUT"
+        result = self.spl_project.build(variant, "no_such_target")
+        assert result is not None and result.returncode != 0, "Execution shall fail."
+        assert "Target 'no_such_target' does not exist in the 'prod' build kit" in result.stdout
+        assert "-buildKit test" in result.stdout
+
 
 @pytest.mark.integration
 class TestHammocking(SplProjectIntegrationTestBase):
