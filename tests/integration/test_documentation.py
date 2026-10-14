@@ -129,7 +129,8 @@ class TestDocumentation(SplKickstartProjectIntegrationTestBase):
         stale_listing.write_text("Stale\n=====\n", encoding="utf-8")
         self.spl_project.artifacts.project_root_dir.joinpath("src/greeter/CMakeLists.txt").touch()
 
-        result = self.spl_project.build(variant, "src_greeter_report", build_kit="test")
+        # No build kit given: build.ps1 selects 'test' for the component report target (issue #371).
+        result = self.spl_project.build(variant, "src_greeter_report")
         assert result is not None and result.returncode == 0, "Execution shall not fail."
         assert not stale_listing.exists(), "Stale source listing not removed"
 

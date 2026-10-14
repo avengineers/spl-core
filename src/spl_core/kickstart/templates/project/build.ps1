@@ -20,8 +20,8 @@ param(
     [string]$command = "",
     [Parameter(Mandatory = $false, HelpMessage = 'Clean build, wipe out all build artifacts. (Switch, default: false)')]
     [switch]$clean = $false,
-    [Parameter(Mandatory = $false, HelpMessage = 'Build kit to be used. (String: "prod" or "test", default: "prod")')]
-    [string]$buildKit = "prod",
+    [Parameter(Mandatory = $false, HelpMessage = 'Build kit to be used. (String: "prod" or "test", default: "test" for targets that exist only in the test build kit, otherwise "prod")')]
+    [string]$buildKit = "",
     [Parameter(Mandatory = $false, HelpMessage = 'Type of build. (String, default: "Debug")')]
     [string]$buildType = "Debug",
     [Parameter(Mandatory = $false, HelpMessage = 'Target to be built. (String, default: "all")')]
@@ -66,6 +66,47 @@ function Get-ReleaseBranchPytestFilter {
     return $filter
 }
 
+# Use the given build kit. Otherwise select 'test' for the targets that spl-core creates only in the
+# 'test' build kit (the variant targets and their '<component>_' variants), and 'prod' for all others.
+function Get-BuildKit {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$target,
+        [Parameter(Mandatory = $false)]
+        [string]$buildKit = ""
+    )
+    if ($buildKit) {
+        return $buildKit
+    }
+    if ($target.Contains("unittests") -or $target.Contains("reports") -or $target.Contains("source_docs") -or ($target -match '(^|_)(report|docs|coverage)$')) {
+        return "test"
+    }
+    return "prod"
+}
+
+# Stop before the build when a target does not exist in the selected build kit
+function Assert-BuildTarget {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$buildFolder,
+        [Parameter(Mandatory = $true)]
+        [string]$target,
+        [Parameter(Mandatory = $true)]
+        [string]$buildKit
+    )
+    # Only the exit code counts: ninja's error output must not stop the script here
+    $ErrorActionPreference = "Continue"
+    $targets = @($target -split '\s+' | Where-Object { $_ })
+    ninja -C $buildFolder -t query $targets *> $null
+    if ($LASTEXITCODE -ne 0) {
+        $message = "Target '$target' does not exist in the '$buildKit' build kit."
+        if ($buildKit -eq "prod") {
+            $message += " If it is a test target, run again with '-buildKit test'."
+        }
+        throw $message
+    }
+}
+
 # Call build system with given parameters
 function Invoke-Build-System {
     param (
@@ -74,7 +115,7 @@ function Invoke-Build-System {
         [Parameter(Mandatory = $false)]
         [bool]$build = $false,
         [Parameter(Mandatory = $false)]
-        [string]$buildKit = "prod",
+        [string]$buildKit = "",
         [Parameter(Mandatory = $false)]
         [string]$buildType = "Debug",
         [Parameter(Mandatory = $true)]
@@ -125,10 +166,7 @@ function Invoke-Build-System {
         $variantsSelected = $Variants.Replace($defaultVariantsFolder, "").Replace("\", "/").Split(',') | ForEach-Object { $_.TrimEnd('/') }
     }
 
-    # Select 'test' build kit based on target
-    if ($target.Contains("unittests") -or $target.Contains("reports") -or $target.Contains("source_docs")) {
-        $buildKit = "test"
-    }
+    $buildKit = Get-BuildKit -target $target -buildKit $buildKit
     # If buildKit is 'test' then buildType is 'Debug'
     if ($buildKit -eq "test") {
         $buildType = "Debug"
@@ -161,6 +199,7 @@ function Invoke-Build-System {
             Invoke-CommandLine -CommandLine "cmake -B '$buildFolder' -G Ninja -DVARIANT='$variant' $additionalConfig"
 
             if (-Not $configureOnly) {
+                Assert-BuildTarget -buildFolder $buildFolder -target $target -buildKit $buildKit
                 $cmd = "cmake --build '$buildFolder' --config '$buildType' --target $target"
 
                 # CMake clean all dead artifacts. Required when running incremented builds to delete obsolete artifacts.
