@@ -119,6 +119,20 @@ class TestDocumentation(SplKickstartProjectIntegrationTestBase):
                 for report_page in ["unit_test_spec.html", "unit_test_results.html", "coverage.html"]:
                     assert any(href.endswith(report_page) for href in wrapper_hrefs), f"Wrapper page for {component_path} does not nest {report_page}"
 
+    def test_build_component_report(self) -> None:
+        variant = "EnglishVariant"
+        result = self.spl_project.build(variant, "src_greeter_report", build_kit="test")
+        assert result is not None and result.returncode == 0, "Execution shall not fail."
+
+        # The test specifications live in the clanguru source docs, which the component report must include (issue #367).
+        build_dir = self.spl_project.artifacts.get_build_dir(variant, "test")
+        rel_build_dir = build_dir.relative_to(self.spl_project.artifacts.project_root_dir)
+        unit_test_spec_html = build_dir / f"src/greeter/reports/html/{rel_build_dir}/src/greeter/reports/unit_test_spec.html"
+        assert unit_test_spec_html.exists(), f"Component report page {unit_test_spec_html} not found"
+        table = BeautifulSoup(unit_test_spec_html.read_text(encoding="utf-8"), "html.parser").find("table", class_="NEEDS_TABLE")
+        assert table is not None and table.tbody.find_all("tr", class_="need"), "Component report lists no test specifications"
+        self._assert_needs_table_columns_have_links(unit_test_spec_html, columns=["Tests", "Results"])
+
     @staticmethod
     def _assert_needs_have_link_option(html_file: Path, need_type_class: str, link_span_class: str) -> bool:
         """Assert that every need of the given type in the HTML file has a non-empty link option.
