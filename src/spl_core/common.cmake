@@ -341,6 +341,24 @@ macro(spl_create_component)
                 BYPRODUCTS ${_component_docs_html_out_dir}/index.html
             )
 
+            # Generate source documentation using clanguru
+            set(_COMPONENT_SOURCE_DOCS_INCLUDE_PATTERN "")
+            set(_clanguru_all_sources ${SOURCES} ${TEST_SOURCES})
+            if(CREATE_COMPONENT_NO_FOREIGN_SOURCE_DOCS)
+                # The component compiles sources of other components (e.g. an integration
+                # test). Documenting them here would duplicate the needs of their owners.
+                _spl_filter_own_sources(_clanguru_all_sources "${CMAKE_CURRENT_SOURCE_DIR}" "${_clanguru_all_sources}")
+            endif()
+            if(_clanguru_all_sources)
+                _spl_generate_clanguru_source_docs(${component_name} "${_clanguru_all_sources}")
+            endif()
+
+            # Store the source docs directory so the report pages can nest it under the
+            # component. Done before the component report config.json is written.
+            if(_COMPONENT_SOURCE_DOCS_INCLUDE_PATTERN)
+                string(JSON _component_info SET "${_component_info}" source_docs_dir "\"${_rel_clanguru_docs_out_dir}\"")
+            endif()
+
             if(TEST_SOURCES)
                 file(RELATIVE_PATH _rel_component_reports_out_dir ${_sphinx_source_dir} ${_component_reports_out_dir})
                 string(JSON _component_info SET "${_component_info}" reports_output_dir "\"${_rel_component_reports_out_dir}\"")
@@ -385,9 +403,14 @@ Code Coverage
 
 ")
 
+                # The test specifications live in the source docs, so the component report needs them.
+                set(_reports_include_patterns "\"${_rel_component_doc_dir}/**\",\"${_rel_component_reports_out_dir}/**\"")
+                if(_COMPONENT_SOURCE_DOCS_INCLUDE_PATTERN)
+                    string(APPEND _reports_include_patterns ",\"${_COMPONENT_SOURCE_DOCS_INCLUDE_PATTERN}\"")
+                endif()
                 file(WRITE ${_reports_config_json} "{
     \"component_info\": ${_component_info},
-    \"include_patterns\": [\"${_rel_component_doc_dir}/**\",\"${_rel_component_reports_out_dir}/**\"]
+    \"include_patterns\": [${_reports_include_patterns}]
 }")
 
                 # add the generated files as dependency to cmake configure step
@@ -414,25 +437,10 @@ Code Coverage
                     BYPRODUCTS ${_component_reports_html_out_dir}/index.html
                     DEPENDS ${TEST_OUT_JUNIT} ${_cov_out_html}
                 )
+                if(_COMPONENT_SOURCE_DOCS_INCLUDE_PATTERN)
+                    add_dependencies(${component_name}_report ${component_name}_source_docs)
+                endif()
             endif(TEST_SOURCES)
-
-            # Generate source documentation using clanguru
-            set(_COMPONENT_SOURCE_DOCS_INCLUDE_PATTERN "")
-            set(_clanguru_all_sources ${SOURCES} ${TEST_SOURCES})
-            if(CREATE_COMPONENT_NO_FOREIGN_SOURCE_DOCS)
-                # The component compiles sources of other components (e.g. an integration
-                # test). Documenting them here would duplicate the needs of their owners.
-                _spl_filter_own_sources(_clanguru_all_sources "${CMAKE_CURRENT_SOURCE_DIR}" "${_clanguru_all_sources}")
-            endif()
-            if(_clanguru_all_sources)
-                _spl_generate_clanguru_source_docs(${component_name} "${_clanguru_all_sources}")
-            endif()
-
-            # Store the source docs directory so the variant report wrapper page can
-            # nest it under the component (see _spl_create_reports_target).
-            if(_COMPONENT_SOURCE_DOCS_INCLUDE_PATTERN)
-                string(JSON _component_info SET "${_component_info}" source_docs_dir "\"${_rel_clanguru_docs_out_dir}\"")
-            endif()
 
             # Collect all component sphinx include pattern to be used in the variant targets (docs, reports)
             list(APPEND COMPONENTS_SPHINX_INCLUDE_PATTERNS "${_rel_component_doc_dir}/**" "${_rel_component_docs_out_dir}/**" "${_rel_component_reports_out_dir}/**")

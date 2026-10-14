@@ -47,7 +47,9 @@ depends on the target:
 
 * **Component target** (`<component>_docs` / `<component>_report`): a single
   `component_info` object with `name`, `long_name`, `path`, `has_docs`,
-  `has_reports`, `reports_output_dir`, plus `include_patterns`.
+  `has_reports`, `reports_output_dir`, plus `include_patterns`. For
+  `<component>_report`, `component_info.source_docs_dir` and `include_patterns`
+  also carry the clanguru source docs, which hold the test specifications.
 * **Variant reports target** (`reports`): `target: "reports"`,
   `reports_output_dir`, `include_patterns`, and a `components_info` array whose
   entries have the same per-component fields as above.

@@ -216,8 +216,9 @@ class IntegrationTestsSplProject:
     def bootstrap(self) -> subprocess.CompletedProcess[Any] | None:
         return SubprocessExecutor(command=f"{self.artifacts.build_script} -install", env=self.env, cwd=self.project_dir).execute(handle_errors=False)
 
-    def build(self, variant: str | Variant, target: str) -> subprocess.CompletedProcess[Any] | None:
-        return SubprocessExecutor(command=f"{self.artifacts.build_script} -build -target {target} -variants {variant}", env=self.env, cwd=self.project_dir).execute(handle_errors=False)
+    def build(self, variant: str | Variant, target: str, build_kit: str | None = None) -> subprocess.CompletedProcess[Any] | None:
+        build_kit_arg = f" -buildKit {build_kit}" if build_kit else ""
+        return SubprocessExecutor(command=f"{self.artifacts.build_script} -build -target {target} -variants {variant}{build_kit_arg}", env=self.env, cwd=self.project_dir).execute(handle_errors=False)
 
     def selftests(self) -> subprocess.CompletedProcess[Any] | None:
         return SubprocessExecutor(command=f"{self.artifacts.build_script} -build -target selftests", env=self.env, cwd=self.project_dir).execute(handle_errors=False)
