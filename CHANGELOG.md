@@ -1,6 +1,29 @@
 # CHANGELOG
 
 
+## v8.10.2 (2026-10-14)
+
+### Bug Fixes
+
+- **kickstart**: Pick the test build kit for all test-only targets
+  ([#371](https://github.com/avengineers/spl-core/pull/371),
+  [`3902962`](https://github.com/avengineers/spl-core/commit/39029620744d7d53cef9f3d4ac650507b644afd2))
+
+build.ps1 guessed the test build kit only for targets that contain unittests, reports or
+  source_docs. The component report, the docs and the coverage targets also exist only in the test
+  build kit, so building them without -buildKit test failed with "ninja: error: unknown target".
+
+Get-BuildKit now also selects test for report, docs and coverage, as a whole name or as
+  <component>_<name>. A given -buildKit wins over the guess, so a production component whose name
+  ends in one of these words can still be built in prod. Assert-BuildTarget asks ninja for the
+  target after the configure step. When the target does not exist, the build stops with a message,
+  and in prod the message suggests -buildKit test.
+
+Fixes #371
+
+Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
+
+
 ## v8.10.1 (2026-10-14)
 
 ### Bug Fixes
