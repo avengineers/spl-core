@@ -955,6 +955,15 @@ macro(_spl_generate_clanguru_source_docs COMPONENT_NAME SRC_FILES)
         endforeach()
         file(WRITE ${_clanguru_docs_out_dir}/index.rst "${_source_docs_index_content}")
 
+        # A renamed or removed source leaves its listing behind, and Sphinx would still read it.
+        # Same configure-time cleanup as the wrapper pages in _spl_create_reports_target, but the
+        # listings are build outputs, so only the stale ones are removed to avoid rerunning clanguru.
+        file(GLOB_RECURSE _stale_source_docs ${_clanguru_docs_out_dir}/*.rst)
+        list(REMOVE_ITEM _stale_source_docs ${_clanguru_doc_outputs} ${_clanguru_docs_out_dir}/index.rst)
+        if(_stale_source_docs)
+            file(REMOVE ${_stale_source_docs})
+        endif()
+
         # Expose source_docs directory for Sphinx include patterns
         file(RELATIVE_PATH _rel_clanguru_docs_out_dir ${PROJECT_SOURCE_DIR} ${_clanguru_docs_out_dir})
         set(_COMPONENT_SOURCE_DOCS_INCLUDE_PATTERN "${_rel_clanguru_docs_out_dir}/**")

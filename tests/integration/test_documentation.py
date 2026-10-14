@@ -121,11 +121,19 @@ class TestDocumentation(SplKickstartProjectIntegrationTestBase):
 
     def test_build_component_report(self) -> None:
         variant = "EnglishVariant"
+        build_dir = self.spl_project.artifacts.get_build_dir(variant, "test")
+
+        # A listing whose source no longer exists must be removed when CMake re-runs (issue #368).
+        stale_listing = build_dir / "src/greeter/__source_docs/test/test_removed.cc.rst"
+        stale_listing.parent.mkdir(parents=True, exist_ok=True)
+        stale_listing.write_text("Stale\n=====\n", encoding="utf-8")
+        self.spl_project.artifacts.project_root_dir.joinpath("src/greeter/CMakeLists.txt").touch()
+
         result = self.spl_project.build(variant, "src_greeter_report", build_kit="test")
         assert result is not None and result.returncode == 0, "Execution shall not fail."
+        assert not stale_listing.exists(), "Stale source listing not removed"
 
         # The test specifications live in the clanguru source docs, which the component report must include (issue #367).
-        build_dir = self.spl_project.artifacts.get_build_dir(variant, "test")
         rel_build_dir = build_dir.relative_to(self.spl_project.artifacts.project_root_dir)
         unit_test_spec_html = build_dir / f"src/greeter/reports/html/{rel_build_dir}/src/greeter/reports/unit_test_spec.html"
         assert unit_test_spec_html.exists(), f"Component report page {unit_test_spec_html} not found"
