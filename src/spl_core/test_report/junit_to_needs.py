@@ -34,7 +34,8 @@ SUITE_LEN, CASE_LEN = 3, 5  # sphinx-test-reports' tr_suite_id_length, tr_case_i
 NEEDS_FILE_NAME = "unit_test_results.needs.json"
 DEFAULT_PROJECT = "SPL"
 
-_SPEC_RE = re.compile(r"^\.\. test:: (.+)\n\s+:id: (\S+)", re.M)
+_SPEC_RE = re.compile(r"^[ \t]*\.\. test:: (.+)\n((?:[ \t]+.*\n?)*)", re.M)
+_ID_RE = re.compile(r"^\s*:id:[ \t]*(\S+)", re.M)
 
 
 def sha(text: str, n: int) -> str:
@@ -137,7 +138,9 @@ def collect_specs(listing_paths: Iterable[str | Path]) -> list[tuple[str, str]]:
     specs: list[tuple[str, str]] = []
     for path in _iter_listing_files(listing_paths):
         text = path.read_text(encoding="utf-8")
-        specs.extend((m.group(2), m.group(1).strip()) for m in _SPEC_RE.finditer(text))
+        for m in _SPEC_RE.finditer(text):
+            if id_match := _ID_RE.search(m.group(2)):
+                specs.append((id_match.group(1), m.group(1).strip()))
     return specs
 
 

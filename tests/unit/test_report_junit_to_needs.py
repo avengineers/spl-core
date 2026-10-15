@@ -139,6 +139,13 @@ def test_collect_specs_reads_id_and_title_pairs():
 
 
 @pytest.mark.unit
+def test_collect_specs_finds_id_after_other_options_and_in_indented_specs(tmp_path):
+    listing = tmp_path / "listing.rst"
+    listing.write_text(".. test:: a\n   :tests: S_1\n   :id: T_1\n\n  .. test:: b\n     :id: T_2\n", encoding="utf-8")
+    assert collect_specs([listing]) == [("T_1", "a"), ("T_2", "b")]
+
+
+@pytest.mark.unit
 @pytest.mark.parametrize(
     ("value", "expected"),
     [(0.2, "0.2"), (3, "3.0"), (-1.0, "0.0"), (None, "0.0"), ("1.5", "1.5"), ("n/a", "0.0")],
