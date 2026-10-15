@@ -530,55 +530,29 @@ Code Coverage
     set(COMPONENTS_INFO ${COMPONENTS_INFO} PARENT_SCOPE)
 endmacro()
 
-# The directory sphinx-build reads its documents and conf.py from: SPL_SPHINX_SOURCE_DIR
-# when the project sets it, the project root otherwise. A relative path is taken
-# relative to the project root.
-function(_spl_sphinx_source_dir out_var)
-    if(SPL_SPHINX_SOURCE_DIR)
-        get_filename_component(_source_dir "${SPL_SPHINX_SOURCE_DIR}" ABSOLUTE BASE_DIR "${PROJECT_SOURCE_DIR}")
-    else()
-        set(_source_dir "${PROJECT_SOURCE_DIR}")
-    endif()
-    set(${out_var} "${_source_dir}" PARENT_SCOPE)
-endfunction()
-
-# A path as Sphinx names it: relative to the Sphinx source directory. This is the
+# A path as Sphinx names it: relative to the Sphinx source directory (the project root). This is the
 # form spl-core writes into include patterns, the component information and the
 # generated toctrees, and the one a document name is derived from.
 function(_spl_sphinx_relative_path out_var path)
-    _spl_sphinx_source_dir(_source_dir)
-    file(RELATIVE_PATH _relative_path "${_source_dir}" "${path}")
+    file(RELATIVE_PATH _relative_path "${PROJECT_SOURCE_DIR}" "${path}")
     set(${out_var} "${_relative_path}" PARENT_SCOPE)
 endfunction()
 
 # The command that runs one Sphinx build, for the variant targets and the
 # per-component targets alike.
 #
-# SHAPE is `docs` or `reports`. A project whose documents are gated on sphinx-needs
-# variant data sets SPL_VARIANT_DATA_FILE_DOCS and SPL_VARIANT_DATA_FILE_REPORTS to
-# the file each shape reads, and the build gets it as `-D needs_variant_data_file=`.
-# sphinx-needs keeps a command-line override even when the project's
-# needs_from_toml names another file, so conf.py needs no code to select it.
-#
-# COMPONENT is the component's path for the per-component builds and empty for the
+# SHAPE is `docs` or `reports`. COMPONENT is the component's path for the per-component builds and empty for the
 # variant builds. A project adds options of its own with SPL_SPHINX_OPTIONS (variant
 # builds) and SPL_SPHINX_COMPONENT_OPTIONS (per-component builds); `@SHAPE@` in
 # them becomes the shape and `@COMPONENT_PATH@` the component's path, so each run
 # can name a file of its own, e.g. `-D;spl_selection=<dir>/@COMPONENT_PATH@/@SHAPE@.toml`.
 function(_spl_sphinx_build_command out_var)
     cmake_parse_arguments(ARG "" "SHAPE;CONFIG;OUTPUT_DIR;COMPONENT" "" ${ARGN})
-    if(ARG_SHAPE STREQUAL "docs")
-        set(_variant_data_file "${SPL_VARIANT_DATA_FILE_DOCS}")
-    elseif(ARG_SHAPE STREQUAL "reports")
-        set(_variant_data_file "${SPL_VARIANT_DATA_FILE_REPORTS}")
-    else()
+    if(NOT ARG_SHAPE MATCHES "^(docs|reports)$")
         message(FATAL_ERROR "_spl_sphinx_build_command: SHAPE must be 'docs' or 'reports', not '${ARG_SHAPE}'.")
     endif()
 
     set(_options -E -b html)
-    if(_variant_data_file)
-        list(APPEND _options -D needs_variant_data_file=${_variant_data_file})
-    endif()
     if(ARG_COMPONENT)
         set(_extra_options ${SPL_SPHINX_COMPONENT_OPTIONS})
     else()
@@ -590,13 +564,12 @@ function(_spl_sphinx_build_command out_var)
         list(APPEND _options "${_option}")
     endforeach()
 
-    _spl_sphinx_source_dir(_source_dir)
     set(${out_var}
         ${CMAKE_COMMAND} -E env
         SPHINX_BUILD_CONFIGURATION_FILE=${ARG_CONFIG}
         AUTOCONF_JSON_FILE=${AUTOCONF_JSON}
         VARIANT=${VARIANT}
-        -- sphinx-build ${_options} ${_source_dir} ${ARG_OUTPUT_DIR}
+        -- sphinx-build ${_options} ${PROJECT_SOURCE_DIR} ${ARG_OUTPUT_DIR}
         PARENT_SCOPE
     )
 endfunction()
