@@ -163,7 +163,7 @@ def write_results(
     links = results_links(needs, collect_specs(listing_paths))
     lines = ["", title, "=" * len(title), "", f".. needimport:: {NEEDS_FILE_NAME}", ""]
     for spec_id, case_ids in sorted(links.items()):
-        lines += [f".. needextend:: {spec_id}", f"   :+results: {', '.join(case_ids)}", ""]
+        lines += [f".. needextend:: id == '{spec_id}'", f"   :+results: {', '.join(case_ids)}", ""]
     page_path.write_text("\n".join(lines), encoding="utf-8")
 
 

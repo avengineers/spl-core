@@ -187,8 +187,8 @@ def test_write_results_writes_needs_json_and_page(tmp_path):
     assert "Unit Test Results\n=================" in page_text
     assert f".. needimport:: {NEEDS_FILE_NAME}" in page_text
     # needextend blocks are emitted in sorted spec-id order
-    assert page_text.index(".. needextend:: TS_ADD") < page_text.index(".. needextend:: TS_DIV")
-    assert page_text.index(".. needextend:: TS_DIV") < page_text.index(".. needextend:: TS_PARAM")
+    assert page_text.index(".. needextend:: id == 'TS_ADD'") < page_text.index(".. needextend:: id == 'TS_DIV'")
+    assert page_text.index(".. needextend:: id == 'TS_DIV'") < page_text.index(".. needextend:: id == 'TS_PARAM'")
     assert f"   :+results: {ADDITION_CASE_ID}" in page_text
     assert f"   :+results: {DIVISION_CASE_ID}" in page_text
     assert f"   :+results: {PARAM_CASE_ID}" in page_text
@@ -210,4 +210,4 @@ def test_main_writes_results_from_command_line_arguments(tmp_path):
     needs_json = json.loads((page.parent / NEEDS_FILE_NAME).read_text(encoding="utf-8"))
     assert needs_json["project"] == "SPLed"
     assert FILE_ID in needs_json["versions"][""]["needs"]
-    assert ".. needextend:: TS_ADD" in page.read_text(encoding="utf-8")
+    assert ".. needextend:: id == 'TS_ADD'" in page.read_text(encoding="utf-8")
