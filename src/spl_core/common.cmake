@@ -342,6 +342,7 @@ macro(spl_create_component)
             # Generate source documentation using clanguru
             set(_COMPONENT_SOURCE_DOCS_INCLUDE_PATTERN "")
             set(_clanguru_all_sources ${SOURCES} ${TEST_SOURCES})
+            set(_clanguru_doc_outputs "")
             if(CREATE_COMPONENT_NO_FOREIGN_SOURCE_DOCS)
                 # The component compiles sources of other components (e.g. an integration
                 # test). Documenting them here would duplicate the needs of their owners.
@@ -463,7 +464,7 @@ Code Coverage
                         --id TEST_RESULT_${component_name}
                         --junit ${_component_test_junit_xml}
                         --project ${PROJECT_NAME}
-                        --listings "${_clanguru_docs_out_dir}/**/*.rst"
+                        --listings ${_clanguru_doc_outputs}
                     DEPENDS ${_component_test_junit_xml} ${_clanguru_doc_outputs}
                     COMMENT "Converting the test results of ${component_name} into needs ..."
                     VERBATIM

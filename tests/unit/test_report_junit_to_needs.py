@@ -155,13 +155,6 @@ def test_case_time_normalises_to_a_float_string(value, expected):
 
 
 @pytest.mark.unit
-def test_collect_specs_reads_a_listing_whose_name_is_not_a_valid_glob(tmp_path):
-    listing = tmp_path / "listing[1].rst"
-    listing.write_text(LISTING_FILE.read_text(encoding="utf-8"), encoding="utf-8")
-    assert collect_specs([listing]) == collect_specs([LISTING_FILE])
-
-
-@pytest.mark.unit
 def test_results_links_exact_title_and_regex(needs):
     links = results_links(needs, collect_specs([LISTING_FILE]))
     assert links == {

@@ -20,7 +20,6 @@ The ids follow sphinx-test-reports' scheme::
 from __future__ import annotations
 
 import argparse
-import glob as glob_module
 import hashlib
 import json
 import re
@@ -122,22 +121,11 @@ def convert(title: str, file_id: str, junit: str) -> dict[str, dict[str, Any]]:
     return needs
 
 
-def _iter_listing_files(listing_paths: Iterable[str | Path]) -> Iterable[Path]:
-    for entry in listing_paths:
-        text = str(entry)
-        matches = sorted(glob_module.glob(text, recursive=True))
-        if matches:
-            for match in matches:
-                yield Path(match)
-        else:
-            yield Path(entry)
-
-
 def collect_specs(listing_paths: Iterable[str | Path]) -> list[tuple[str, str]]:
     """The (spec_id, spec_title) pairs the ``.. test::`` directives declare in RST listings."""
     specs: list[tuple[str, str]] = []
-    for path in _iter_listing_files(listing_paths):
-        text = path.read_text(encoding="utf-8")
+    for path in listing_paths:
+        text = Path(path).read_text(encoding="utf-8")
         for m in _SPEC_RE.finditer(text):
             if id_match := _ID_RE.search(m.group(2)):
                 specs.append((id_match.group(1), m.group(1).strip()))
@@ -185,7 +173,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--title", required=True, help="title for the testfile need")
     parser.add_argument("--id", required=True, dest="file_id", help="id for the testfile need")
     parser.add_argument("--junit", required=True, help="path of the JUnit XML file")
-    parser.add_argument("--listings", nargs="*", default=[], metavar="GLOB", help="RST listing files that declare test specs")
+    parser.add_argument("--listings", nargs="*", default=[], metavar="FILE", help="RST listing files that declare test specs")
     parser.add_argument("--project", default=DEFAULT_PROJECT, help="project name for the needs.json envelope")
     args = parser.parse_args(argv)
     write_results(args.page, args.title, args.file_id, args.junit, args.listings, project=args.project)
