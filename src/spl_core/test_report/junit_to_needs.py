@@ -62,17 +62,36 @@ def convert(title: str, file_id: str, junit: str) -> dict[str, dict[str, Any]]:
     needs: dict[str, dict[str, Any]] = {}
     tags = [file_id]
     needs[file_id] = {
-        "id": file_id, "type": "testfile", "title": title, "file": junit, "tags": tags, "links": [], "content": "[]",
-        "suites": len(suites), "cases": sum(int(s["tests"]) for s in suites), "passed": sum(s["passed"] for s in suites),
-        "skipped": sum(s["skips"] for s in suites), "failed": sum(s["failures"] for s in suites),
+        "id": file_id,
+        "type": "testfile",
+        "title": title,
+        "file": junit,
+        "tags": tags,
+        "links": [],
+        "content": "[]",
+        "suites": len(suites),
+        "cases": sum(int(s["tests"]) for s in suites),
+        "passed": sum(s["passed"] for s in suites),
+        "skipped": sum(s["skips"] for s in suites),
+        "failed": sum(s["failures"] for s in suites),
         "errors": sum(s["errors"] for s in suites),
     }
     for suite in suites:
         suite_id = f"{file_id}_{sha(suite['name'], SUITE_LEN)}"
         needs[suite_id] = {
-            "id": suite_id, "type": "testsuite", "title": suite["name"], "suite": suite["name"], "file": junit, "tags": tags,
-            "links": [file_id], "content": "", "cases": int(suite["tests"]), "passed": suite["passed"], "skipped": suite["skips"],
-            "failed": suite["failures"], "errors": suite["errors"],
+            "id": suite_id,
+            "type": "testsuite",
+            "title": suite["name"],
+            "suite": suite["name"],
+            "file": junit,
+            "tags": tags,
+            "links": [file_id],
+            "content": "",
+            "cases": int(suite["tests"]),
+            "passed": suite["passed"],
+            "skipped": suite["skips"],
+            "failed": suite["failures"],
+            "errors": suite["errors"],
         }
         for case in suite["testcases"]:
             case_id = f"{suite_id}_{sha(case['classname'] + case['name'], CASE_LEN)}"
@@ -83,10 +102,21 @@ def convert(title: str, file_id: str, junit: str) -> dict[str, dict[str, Any]]:
                 if case.get(key):
                     content += block(label, case[key])
             needs[case_id] = {
-                "id": case_id, "type": "testcase", "title": case["name"], "case": case["name"], "case_name": name,
-                "case_parameter": param, "classname": case["classname"], "result": case["result"], "time": case_time(case["time"]),
-                "suite": suite["name"], "style": "tr_" + case["result"], "file": junit, "tags": tags,
-                "links": [file_id, suite_id], "content": content,
+                "id": case_id,
+                "type": "testcase",
+                "title": case["name"],
+                "case": case["name"],
+                "case_name": name,
+                "case_parameter": param,
+                "classname": case["classname"],
+                "result": case["result"],
+                "time": case_time(case["time"]),
+                "suite": suite["name"],
+                "style": "tr_" + case["result"],
+                "file": junit,
+                "tags": tags,
+                "links": [file_id, suite_id],
+                "content": content,
             }
     return needs
 
