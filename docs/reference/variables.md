@@ -66,8 +66,21 @@ directive creates, and writes a page that imports it with `needimport`. The page
 also carries the `results` links of the component's test specifications as
 `needextend` blocks: a specification links every test case whose name equals its
 title, or matches it as a regular expression when the title contains `*`. Every
-reader of needs.json sees the results, not only Sphinx, and the project can drop
-the `sphinxcontrib.test_reports` extension and the `sple_tr_link` needs function.
+reader of needs.json sees the results, not only Sphinx.
+
+Turning the option on needs these changes in `conf.py`:
+
+- Remove the `results` default from `needs_global_options` (the `SplSphinx` default
+  `[[sple_tr_link('title', 'case')]]`). Otherwise `sple_tr_link` finds the same
+  cases again and each specification lists every case twice.
+- Keep the `sphinxcontrib.test_reports` extension, or declare what it registers: the
+  need types `testfile`, `testsuite` and `testcase`, the fields `file`, `suite`,
+  `case`, `case_name`, `case_parameter`, `classname`, `result`, `time`, `suites`,
+  `cases`, `passed`, `skipped`, `failed` and `errors`, and the `tr_*` styles they
+  use. Without them `needimport` skips every need and the page stays empty.
+
+The page is a fixed `needimport`: the project's
+`tr_report_template` is no longer used, so its statistics and tables are gone.
 
 **Default:** `OFF`
 
