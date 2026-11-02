@@ -2,6 +2,7 @@
 
 import ast
 import re
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -10,6 +11,15 @@ from spl_core.report_generation.spl_sphinx import SplSphinx
 
 TEMPLATE_CONF_PY = Path("src/spl_core/kickstart/templates/project/conf.py")
 TEMPLATE_SPHINX_DOC = Path("src/spl_core/kickstart/templates/project/doc/common/sphinx_configuration.md")
+TEMPLATE_PYPROJECT = Path("src/spl_core/kickstart/templates/project/pyproject.toml")
+SPL_CORE_PYPROJECT = Path("pyproject.toml")
+
+
+def python_range(constraint: str) -> tuple[tuple[int, ...], tuple[int, ...]]:
+    """The lower and upper bound of a ">=X.Y,<A.B" Python constraint."""
+    match = re.fullmatch(r"\s*>=\s*([\d.]+)\s*,\s*<\s*([\d.]+)\s*", constraint)
+    assert match, f"Expected a '>=X.Y,<A.B' constraint, got '{constraint}'"
+    return tuple(int(part) for part in match[1].split(".")), tuple(int(part) for part in match[2].split("."))
 
 
 @pytest.mark.unit
@@ -54,3 +64,10 @@ class TestKickstartTemplateConsistency:
         available_keys = set(SplSphinx.default_extension_configs.keys())
         missing = referenced_keys - available_keys
         assert missing == set(), f"Documentation references config keys not in SplSphinx.default_extension_configs: {missing}"
+
+    def test_template_project_allows_only_pythons_spl_core_supports(self):
+        """A kickstart project installs spl-core, so it cannot allow a Python spl-core does not."""
+        template_lower, template_upper = python_range(tomllib.loads(TEMPLATE_PYPROJECT.read_text(encoding="utf-8"))["project"]["requires-python"])
+        spl_core_lower, spl_core_upper = python_range(tomllib.loads(SPL_CORE_PYPROJECT.read_text(encoding="utf-8"))["tool"]["poetry"]["dependencies"]["python"])
+        assert template_lower >= spl_core_lower
+        assert template_upper <= spl_core_upper

@@ -77,7 +77,7 @@ class SplSphinx:
     default_extensions: ClassVar[list[str]] = [
         "sphinxcontrib.mermaid",
         "sphinx_needs",
-        "sphinxcontrib.test_reports",
+        "sphinx_test_reports",
         "sphinx.ext.todo",
         "sphinxcontrib.datatemplates",
         "myst_parser",

@@ -54,7 +54,7 @@ src/spl_core/
 
 ## Tech Stack
 
-- **Language:** Python >=3.10, <3.12
+- **Language:** Python >=3.11, <3.14
 - **Package Manager:** Poetry (virtualenvs in-project: `.venv/`)
 - **Build System:** CMake + Ninja (for C/C++ variants)
 - **Key dependencies:** kconfiglib (feature models), hammocking (mock generation),
