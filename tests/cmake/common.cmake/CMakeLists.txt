@@ -74,6 +74,31 @@ if(WIN32)
     endif()
 endif()
 
+# ## test: _spl_clanguru_docs_options (Jinja raw tags are optional) #########
+# given the default configuration
+
+# when
+_spl_clanguru_docs_options(clanguru_default_options)
+
+# then: listings keep their Jinja raw tags, as before the option existed
+if(NOT clanguru_default_options STREQUAL "--format;rst;--jinja-raw-tags")
+    message(FATAL_ERROR "Failing Test case: expected '--format;rst;--jinja-raw-tags' but got '${clanguru_default_options}'.")
+endif()
+
+# given a project that renders no document through Jinja
+set(SPL_SOURCE_DOCS_JINJA_RAW_TAGS OFF)
+
+# when
+_spl_clanguru_docs_options(clanguru_plain_options)
+
+# then
+if(NOT clanguru_plain_options STREQUAL "--format;rst")
+    message(FATAL_ERROR "Failing Test case: expected '--format;rst' but got '${clanguru_plain_options}'.")
+endif()
+
+# cleanup
+unset(SPL_SOURCE_DOCS_JINJA_RAW_TAGS)
+
 # ## test: _spl_get_absolute_path #########
 # when
 _spl_get_absolute_path(absolute_path "${PROJECT_SOURCE_DIR}/some_dir")
