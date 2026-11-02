@@ -170,15 +170,18 @@ The `test` is used to tag the component test case. It shall have:
 - a `tests` tag to link the test case to the specification. One can link multiple specifications by separating them with a comma.
 - free text to describe the test case in more details.
 
-For tracing parametrized tests to test results one can use a pattern in the `test` title:
+A parametrized test has one test result per parameter, named after the test with
+the parameter's index appended (`MyCompTestSuite/MyComp.testCorrectBehavior/0`, ...).
+Its `test` selects them with a `results` filter instead of its title:
 
 ```cpp
 /*!
 * @rst
 *
-* .. test:: MyCompTestSuite/MyComp.testCorrectBehavior/*
+* .. test:: MyCompTestSuite/MyComp.testCorrectBehavior
 *    :id: TS_COMP-001
 *    :tests: SWDD_COMP-001
+*    :results: [[links_from_filter("type == 'testcase' and search('^MyCompTestSuite/MyComp.testCorrectBehavior/', case)")]]
 *
 * @endrst
 */

@@ -57,11 +57,8 @@ tr_report_template = extension_configs["tr_report_template"]
 myst_enable_extensions = extension_configs["myst_enable_extensions"]
 source_suffix = extension_configs["source_suffix"]
 
-# Import default SPL sphinx-needs configuration
+# Import default SPL sphinx-needs configuration, which also links test cases to their results
 needs_from_toml = str(files("spl_core.report_generation").joinpath("ubproject.toml"))
-# Required to enable linking between test cases and their results
-needs_functions = SplSphinx.default_needs_functions
-needs_global_options = SplSphinx.default_needs_global_options
 
 # Provide all config values to jinja
 html_context = SplSphinx.get_default_html_context()

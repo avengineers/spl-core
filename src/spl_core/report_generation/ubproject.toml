@@ -22,6 +22,9 @@ outgoing = "implements"
 [needs.links.results]
 incoming = "results from"
 outgoing = "results"
+# A test spec links the test cases named like its title. A spec for several cases,
+# such as a parametrized test, sets its results with links_from_filter instead.
+default = "[[links_from_match('case', 'title')]]"
 
 [needs.links.verifies]
 incoming = "is verified by"
