@@ -330,14 +330,15 @@ macro(spl_create_component)
 
             # add the generated files as dependency to cmake configure step
             set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_docs_config_json})
+
+            # We do not know all dependencies for generating the docs (apart from the rst files).
+            # This might cause incremental builds to not update parts of the documentation.
+            # To avoid this the command passes -E to make sphinx-build write all files new.
+            _spl_sphinx_build_command(_spl_sphinx_build SHAPE docs CONFIG ${_docs_config_json} OUTPUT_DIR ${_component_docs_html_out_dir} COMPONENT ${component_path})
             add_custom_target(
                 ${component_name}_docs
                 COMMAND ${CMAKE_COMMAND} -E make_directory ${_component_docs_out_dir}
-
-                # We do not know all dependencies for generating the docs (apart from the rst files).
-                # This might cause incremental builds to not update parts of the documentation.
-                # To avoid this we are using the -E option to make sphinx-build writing all files new.
-                COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_docs_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -E -b html ${_sphinx_source_dir} ${_component_docs_html_out_dir}
+                COMMAND ${_spl_sphinx_build}
                 BYPRODUCTS ${_component_docs_html_out_dir}/index.html
             )
 
@@ -430,10 +431,11 @@ Code Coverage
 
                 # No OUTPUT is defined to force execution of this target every time
                 # TODO: list of dependencies is not complete
+                _spl_sphinx_build_command(_spl_sphinx_build SHAPE reports CONFIG ${_reports_config_json} OUTPUT_DIR ${_component_reports_html_out_dir} COMPONENT ${component_path})
                 add_custom_target(
                     ${component_name}_report
                     COMMAND ${CMAKE_COMMAND} -E make_directory ${_component_reports_out_dir}
-                    COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_reports_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -E -b html ${_sphinx_source_dir} ${_component_reports_html_out_dir}
+                    COMMAND ${_spl_sphinx_build}
                     BYPRODUCTS ${_component_reports_html_out_dir}/index.html
                     DEPENDS ${TEST_OUT_JUNIT} ${_cov_out_html}
                 )
@@ -515,13 +517,50 @@ macro(_spl_create_docs_target)
 
     # add the generated files as dependency to cmake configure step
     set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_docs_config_json})
+    _spl_sphinx_build_command(_spl_sphinx_build SHAPE docs CONFIG ${_docs_config_json} OUTPUT_DIR ${_docs_html_out_dir})
     add_custom_target(
         docs
         COMMAND ${CMAKE_COMMAND} -E make_directory ${_docs_out_dir}
-        COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_docs_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -E -b html ${PROJECT_SOURCE_DIR} ${_docs_html_out_dir}
+        COMMAND ${_spl_sphinx_build}
         BYPRODUCTS ${_docs_html_out_dir}/index.html
     )
 endmacro()
+
+# The command that runs one Sphinx build, for the variant targets and the
+# per-component targets alike.
+#
+# SHAPE is `docs` or `reports`. COMPONENT is the component's path for the per-component builds and empty for the
+# variant builds. A project adds options of its own with SPL_SPHINX_OPTIONS (variant
+# builds) and SPL_SPHINX_COMPONENT_OPTIONS (per-component builds); `@SHAPE@` in
+# them becomes the shape and `@COMPONENT_PATH@` the component's path, so each run
+# can name a file or directory of its own, e.g. `-d;<dir>/doctrees/@COMPONENT_PATH@/@SHAPE@`.
+function(_spl_sphinx_build_command out_var)
+    cmake_parse_arguments(ARG "" "SHAPE;CONFIG;OUTPUT_DIR;COMPONENT" "" ${ARGN})
+    if(NOT ARG_SHAPE MATCHES "^(docs|reports)$")
+        message(FATAL_ERROR "_spl_sphinx_build_command: SHAPE must be 'docs' or 'reports', not '${ARG_SHAPE}'.")
+    endif()
+
+    set(_options -E -b html)
+    if(ARG_COMPONENT)
+        set(_extra_options ${SPL_SPHINX_COMPONENT_OPTIONS})
+    else()
+        set(_extra_options ${SPL_SPHINX_OPTIONS})
+    endif()
+    foreach(_option IN LISTS _extra_options)
+        string(REPLACE "@SHAPE@" "${ARG_SHAPE}" _option "${_option}")
+        string(REPLACE "@COMPONENT_PATH@" "${ARG_COMPONENT}" _option "${_option}")
+        list(APPEND _options "${_option}")
+    endforeach()
+
+    set(${out_var}
+        ${CMAKE_COMMAND} -E env
+        SPHINX_BUILD_CONFIGURATION_FILE=${ARG_CONFIG}
+        AUTOCONF_JSON_FILE=${AUTOCONF_JSON}
+        VARIANT=${VARIANT}
+        -- sphinx-build ${_options} ${PROJECT_SOURCE_DIR} ${ARG_OUTPUT_DIR}
+        PARENT_SCOPE
+    )
+endfunction()
 
 macro(_spl_create_reports_target)
     set(_reports_output_dir ${CMAKE_CURRENT_BINARY_DIR}/reports)
@@ -654,13 +693,13 @@ Code Coverage
     set(COV_OUT_VARIANT_JSON variant-coverage.json)
     set(JUNIT_OUT_VARIANT_XML variant-junit.xml)
 
+    # The command passes -E to sphinx-build to make sure all files are regenerated.
+    _spl_sphinx_build_command(_spl_sphinx_build SHAPE reports CONFIG ${_reports_config_json} OUTPUT_DIR ${_reports_html_output_dir})
     add_custom_target(
         reports
         ALL
         COMMAND ${CMAKE_COMMAND} -E make_directory ${_reports_output_dir}
-
-        # We need to call sphinx-build with -E to make sure all files are regenerated.
-        COMMAND ${CMAKE_COMMAND} -E env SPHINX_BUILD_CONFIGURATION_FILE=${_reports_config_json} AUTOCONF_JSON_FILE=${AUTOCONF_JSON} VARIANT=${VARIANT} -- sphinx-build -E -b html ${PROJECT_SOURCE_DIR} ${_reports_html_output_dir}
+        COMMAND ${_spl_sphinx_build}
         BYPRODUCTS ${_reports_html_output_dir}/index.html
         DEPENDS ${JUNIT_OUT_VARIANT_XML} ${COV_OUT_VARIANT_JSON} _components_variant_coverage_html_target source_docs
     )

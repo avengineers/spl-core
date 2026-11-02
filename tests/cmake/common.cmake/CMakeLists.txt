@@ -99,6 +99,50 @@ endif()
 # cleanup
 unset(SPL_SOURCE_DOCS_JINJA_RAW_TAGS)
 
+# ## test: _spl_sphinx_build_command (default command) #########
+# given a project with no extra Sphinx options
+set(AUTOCONF_JSON /build/kconfig/autoconf.json)
+
+# when
+_spl_sphinx_build_command(sphinx_plain_command SHAPE reports CONFIG /build/reports/config.json OUTPUT_DIR /build/reports/html)
+
+# then: the command is exactly the one the targets have always run
+set(expected_sphinx_plain_command
+    ${CMAKE_COMMAND} -E env
+    SPHINX_BUILD_CONFIGURATION_FILE=/build/reports/config.json
+    AUTOCONF_JSON_FILE=/build/kconfig/autoconf.json
+    VARIANT=mytestvariant
+    -- sphinx-build -E -b html ${PROJECT_SOURCE_DIR} /build/reports/html
+)
+if(NOT sphinx_plain_command STREQUAL expected_sphinx_plain_command)
+    message(FATAL_ERROR "Failing Test case: expected '${expected_sphinx_plain_command}' but got '${sphinx_plain_command}'.")
+endif()
+
+# cleanup
+unset(AUTOCONF_JSON)
+
+# ## test: _spl_sphinx_build_command (extra options per run) #########
+# given options for the variant runs and for the per-component runs
+set(SPL_SPHINX_OPTIONS -D spl_selection=/sel/@SHAPE@.toml)
+set(SPL_SPHINX_COMPONENT_OPTIONS -D spl_selection=/sel/@COMPONENT_PATH@/@SHAPE@.toml)
+
+# when
+_spl_sphinx_build_command(sphinx_variant_command SHAPE reports CONFIG /build/reports/config.json OUTPUT_DIR /build/reports/html)
+_spl_sphinx_build_command(sphinx_component_command SHAPE docs CONFIG /build/c/docs/config.json OUTPUT_DIR /build/c/docs/html COMPONENT components/c)
+
+# then: a variant run gets the variant options, a component run the component options,
+# each with its own shape and component path filled in
+if(NOT sphinx_variant_command MATCHES ";-D;spl_selection=/sel/reports\\.toml;[^;]+;/build/reports/html$")
+    message(FATAL_ERROR "Failing Test case: the variant reports run must name its own file, got '${sphinx_variant_command}'.")
+endif()
+if(NOT sphinx_component_command MATCHES ";-D;spl_selection=/sel/components/c/docs\\.toml;[^;]+;/build/c/docs/html$" OR sphinx_component_command MATCHES "/sel/docs\\.toml")
+    message(FATAL_ERROR "Failing Test case: the component docs run must name the component's file only, got '${sphinx_component_command}'.")
+endif()
+
+# cleanup
+unset(SPL_SPHINX_OPTIONS)
+unset(SPL_SPHINX_COMPONENT_OPTIONS)
+
 # ## test: _spl_get_absolute_path #########
 # when
 _spl_get_absolute_path(absolute_path "${PROJECT_SOURCE_DIR}/some_dir")

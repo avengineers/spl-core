@@ -38,6 +38,25 @@ Jinja, so a project they read turns it off.
 set(SPL_SOURCE_DOCS_JINJA_RAW_TAGS OFF)
 ```
 
+(SPL_SPHINX_OPTIONS)=
+
+## SPL_SPHINX_OPTIONS and SPL_SPHINX_COMPONENT_OPTIONS
+
+Options added to every `sphinx-build` spl-core runs: `SPL_SPHINX_OPTIONS` to the
+variant `docs` and `reports` builds, `SPL_SPHINX_COMPONENT_OPTIONS` to the
+per-component docs and report builds. In both, `@SHAPE@` becomes `docs` or
+`reports` and `@COMPONENT_PATH@` the component's path relative to the project
+root (empty for the variant builds), so each run can name a file or directory of
+its own, such as a configuration file passed with `-D` that a project's `conf.py`
+reads.
+
+**Default:** none
+
+```cmake
+set(SPL_SPHINX_OPTIONS -d ${CMAKE_BINARY_DIR}/doctrees/@SHAPE@)
+set(SPL_SPHINX_COMPONENT_OPTIONS -d ${CMAKE_BINARY_DIR}/doctrees/@COMPONENT_PATH@/@SHAPE@)
+```
+
 ## COMPONENT_NAMES
 
 ## PROD_SOURCES
