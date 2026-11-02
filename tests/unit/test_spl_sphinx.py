@@ -17,7 +17,7 @@ class TestSplSphinxExtensions:
         required = [
             "sphinxcontrib.mermaid",
             "sphinx_needs",
-            "sphinxcontrib.test_reports",
+            "sphinx_test_reports",
             "sphinx.ext.todo",
             "sphinxcontrib.datatemplates",
             "myst_parser",

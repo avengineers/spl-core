@@ -3,19 +3,36 @@ exclude = [".bzr", ".direnv", ".eggs", ".git", ".git-rewrite", ".hg", ".svn", ".
 respect_gitignore = false
 extend_include = ["build/**/__source_docs/**"]
 
-[needs]
-extra_links = [
-    { option = "realizes", incoming = "is realized by", outgoing = "realizes" },
-    { option = "fulfills", incoming = "is fulfilled by", outgoing = "fulfills" },
-    { option = "refines", incoming = "is refined by", outgoing = "refines" },
-    { option = "implements", incoming = "is implemented by", outgoing = "implements" },
-    { option = "results", incoming = "results from", outgoing = "results" },
-    { option = "verifies", incoming = "is verified by", outgoing = "verifies" },
-    { option = "tests", incoming = "is tested by", outgoing = "tests" },
-]
-extra_options = [
-    "integrity",
-]
+[needs.links.realizes]
+incoming = "is realized by"
+outgoing = "realizes"
+
+[needs.links.fulfills]
+incoming = "is fulfilled by"
+outgoing = "fulfills"
+
+[needs.links.refines]
+incoming = "is refined by"
+outgoing = "refines"
+
+[needs.links.implements]
+incoming = "is implemented by"
+outgoing = "implements"
+
+[needs.links.results]
+incoming = "results from"
+outgoing = "results"
+
+[needs.links.verifies]
+incoming = "is verified by"
+outgoing = "verifies"
+
+[needs.links.tests]
+incoming = "is tested by"
+outgoing = "tests"
+
+[needs.fields.integrity]
+default = ""
 
 [[needs.types]]
 directive = "arch"
