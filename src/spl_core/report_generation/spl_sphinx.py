@@ -64,13 +64,11 @@ class SplSphinx:
     - default_extension_configs: Extension-specific configurations
     """
 
-    # Needs Global Options - automatically links test results to test cases
-    # sphinx-needs 6.x requires FieldDefault format: {"default": ...}
-    default_needs_global_options: ClassVar[dict[str, dict[str, str]]] = {
-        "results": {"default": "[[sple_tr_link('title', 'case')]]"},
-    }
+    # Empty: the shared ubproject.toml links test results to test cases, so that ubCode
+    # links them too. Kept so that a conf.py that still assigns it keeps building.
+    default_needs_global_options: ClassVar[dict[str, dict[str, str]]] = {}
 
-    # Needs Functions - custom linking functions
+    # Needs Functions - for a test spec that still calls sple_tr_link itself (Sphinx only)
     default_needs_functions: ClassVar[list[Any]] = [sple_tr_link]
 
     # Default Sphinx Extensions

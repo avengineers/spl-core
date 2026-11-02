@@ -43,13 +43,9 @@ TOML file shipped with `spl_core`:
 needs_from_toml = str(files("spl_core.report_generation").joinpath("ubproject.toml"))
 ```
 
-To enable linking between test cases and their results, the following settings
-must also be configured:
-
-```python
-needs_functions = SplSphinx.default_needs_functions
-needs_global_options = SplSphinx.default_needs_global_options
-```
+The TOML file also links each test case to its results: a `test` need links the
+test results whose test case name equals its title. Sphinx and ubCode read the
+same file, so both show these links.
 
 ## HTML Context
 
