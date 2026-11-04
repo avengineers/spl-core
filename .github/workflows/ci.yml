@@ -20,6 +20,15 @@ on:
                 required: false
                 default: "rc"
 
+            force_level:
+                description:
+                    "Leave empty for a release candidate. Set patch, minor or major to make a full release of that level
+                    from develop, counted from the highest version tag - for when the computed version was released and deleted before."
+                required: false
+                type: choice
+                options: ["", "patch", "minor", "major"]
+                default: ""
+
 concurrency:
     group: ${{ github.head_ref || github.run_id }}
     cancel-in-progress: true
@@ -139,8 +148,19 @@ jobs:
 
             - name: Determine Release Type
               id: determine_release
+              env:
+                  FORCE_LEVEL: ${{ github.event.inputs.force_level }}
+                  TARGET_BRANCH: ${{ github.event.inputs.target_branch }}
               run: |
-                  if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+                  if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "$FORCE_LEVEL" ]; then
+                      if [ "$TARGET_BRANCH" != "develop" ]; then
+                          echo "::error::force_level makes a full release, which only develop may do"
+                          exit 1
+                      fi
+                      echo "semantic_release_root_options=" >> $GITHUB_ENV
+                      echo "prerelease=false" >> $GITHUB_ENV
+                      echo "publish_release=true" >> $GITHUB_ENV
+                  elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
                       echo "semantic_release_root_options=" >> $GITHUB_ENV
                       echo "prerelease=true" >> $GITHUB_ENV
                       echo "publish_release=true" >> $GITHUB_ENV
@@ -161,6 +181,7 @@ jobs:
                   root_options: ${{ env.semantic_release_root_options }}
                   prerelease_token: ${{ github.event.inputs.prerelease_token }}
                   prerelease: ${{ env.prerelease }}
+                  force: ${{ github.event.inputs.force_level }}
                   github_token: ${{ steps.app-token.outputs.token || github.token }}
 
             - name: Publish package distributions to PyPI

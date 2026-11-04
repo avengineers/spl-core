@@ -51,3 +51,16 @@ graph TD
   released blind on the strength of spl-core unit tests alone.
 - SPLED never pins a spl-core RC on its `develop` branch. RCs live only on the
   SPLED integration branch; `develop` gets the official version.
+
+## When the computed version was released before
+
+PyPI never takes a file name twice, also not after a release was deleted. When
+python-semantic-release computes a version that was released and deleted before,
+it stops with "has already been released", and nothing is published.
+
+Make the release by hand instead: run the CI workflow on `develop` with
+`force_level` set to `patch`, `minor` or `major`. python-semantic-release then
+counts from the highest version tag in the repository, release candidates
+included, and makes a full release of that level. Check the version first with
+`semantic-release --noop version --minor --print` in a clean checkout of
+`develop`.
