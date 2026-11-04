@@ -1,6 +1,24 @@
 # CHANGELOG
 
 
+## v9.1.1 (2026-11-04)
+
+### Bug Fixes
+
+- **docs**: Run Sphinx through SPL_PYTHON, not the first sphinx-build in PATH
+  ([`aab301f`](https://github.com/avengineers/spl-core/commit/aab301f938f05c1587fce1751ba9598dd9fe93cb))
+
+The documentation targets called a bare `sphinx-build`, found in PATH at build time, while kconfig,
+  hammocking and gcov_maid run through SPL_PYTHON, found at configure time. When the build
+  environment puts another virtualenv first in PATH, the two disagree. In SPLED's dev container a
+  worktree on spl-core 9.1 built its reports with the main checkout's sphinx-needs 8.5, which knows
+  no `links_from_filter`, so every pattern spec lost its results links.
+
+Refs: SPLE-2781
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+
 ## v9.1.0 (2026-11-04)
 
 ### Features
