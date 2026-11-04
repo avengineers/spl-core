@@ -1,6 +1,119 @@
 # CHANGELOG
 
 
+## v9.1.0 (2026-11-04)
+
+### Features
+
+- Build reports with sphinx-needs 9 and sphinx-test-reports 3
+  ([`2d7ec7b`](https://github.com/avengineers/spl-core/commit/2d7ec7b77c2c102833d2c0593c5f9646f6bf181b))
+
+ubCode 0.37 and 0.38 read the test-report directives, needextend and needimport themselves and
+  expect the configuration sphinx-needs 9 reads: variants in [variants] and the built-in dynamic
+  functions such as links_from_match (9.1). spl-core capped sphinx-needs below 9 and
+  sphinx-test-reports below 2, so no SPL could use either.
+
+- sphinx-needs >=9.1,<10 and sphinx-test-reports >=3.0.1,<4. Both need Python 3.11, so spl-core
+  drops Python 3.10, which reached its end of life in October 2026. - SplSphinx loads the extension
+  as `sphinx_test_reports`; the old name `sphinxcontrib.test_reports` warns and stops working in
+  4.0. - The shared ubproject.toml declares its link types under [needs.links] and `integrity` under
+  [needs.fields], which sphinx-needs 9 and ubCode read without a deprecation warning. A build writes
+  the same needs as with the old keys. - sphinx-test-reports 2.0 spells a failed result `failed`
+  instead of `failure`, so the kickstart report template listed no failed cases and counted none. It
+  filters on `failed` now.
+
+A new unit test builds a report with the kickstart project's report configuration and checks the
+  results links (exact and pattern titles) and the failed-cases table.
+
+BREAKING CHANGE: spl-core needs Python >=3.11, sphinx-needs >=9.1 and sphinx-test-reports >=3.0.1.
+  An SPL that copied the kickstart report template filters on 'failure' and must filter on 'failed';
+  an SPL that removes "sphinxcontrib.test_reports" from SplSphinx.default_extensions must remove
+  "sphinx_test_reports" instead.
+
+Refs SPLE-2781.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+- Link test results in ubproject.toml so that ubCode links them too
+  ([`a36ab1a`](https://github.com/avengineers/spl-core/commit/a36ab1a202872a5820bc93226608938b1792b22b))
+
+A test spec got its results links from the needs function sple_tr_link, which conf.py registers as
+  the default of `results`. ubCode runs no project Python, so it showed no results at all, and
+  sphinx-needs 9 warns about needs_global_options.
+
+The shared ubproject.toml now gives `results` the default [[links_from_match('case', 'title')]], a
+  sphinx-needs built-in that ubCode evaluates too: a spec links the test cases named like its title.
+  A spec for several cases, such as a parametrized test, writes its own results with
+  links_from_filter and a pattern; the component guide shows how.
+
+- The kickstart conf.py no longer sets needs_functions and needs_global_options. -
+  SplSphinx.default_needs_global_options is empty, so a conf.py that still assigns it builds without
+  warnings and gets the new default. sple_tr_link stays, for specs that call it themselves (Sphinx
+  only). - The test data's specs drop their explicit sple_tr_link calls.
+
+BREAKING CHANGE: a test spec whose title is a pattern ending in `*` no longer links its test cases
+  by default. Write `:results: [[links_from_filter("type == 'testcase' and search('^<pattern>',
+  case)")]]` on it, or call sple_tr_link on it and register SplSphinx.default_needs_functions
+  (Sphinx only).
+
+Refs SPLE-2781.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+- **docs**: Let each Sphinx run take options of its own
+  ([`1af454e`](https://github.com/avengineers/spl-core/commit/1af454ef5a812daadc48359a05cf9fcf2104ffde))
+
+SPL_SPHINX_OPTIONS adds options to the variant docs and reports builds and
+  SPL_SPHINX_COMPONENT_OPTIONS to the per-component ones; @SHAPE@ and @COMPONENT_PATH@ in them are
+  filled in per run, so every run can name a file of its own, such as a selection file that names
+  its build directory. Two builds' reports can then be built side by side.
+
+The four Sphinx invocations now share one function, so the variant and per-component targets cannot
+  drift apart. With neither variable set the command is unchanged; the CMake unit test compares it
+  element by element.
+
+Taken from avengineers/spl-core#364 (SPLE-2781).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+- **docs**: Make clanguru's Jinja raw tags optional
+  ([`c06a36e`](https://github.com/avengineers/spl-core/commit/c06a36e808b5d5a352992e41f044a719f1f53d30))
+
+The source listings clanguru generates wrap their code in Jinja `{% raw %}` / `{% endraw %}` lines,
+  because the kickstart template renders every document through a Jinja `source-read` hook and would
+  otherwise trip over braces in C code. A project without that hook had no way to turn the markers
+  off, so they rendered as text on every listing page and had to be stripped again in its conf.py.
+  ubCode and ubc render no Jinja, so every project they read is such a project.
+
+SPL_SOURCE_DOCS_JINJA_RAW_TAGS controls the flag. It defaults to ON, so existing projects build
+  exactly as before.
+
+Taken from avengineers/spl-core#364 (SPLE-2781).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+- **kconfig**: List every boolean symbol the feature model declares
+  ([`1cb240a`](https://github.com/avengineers/spl-core/commit/1cb240a0c964366fd6442dae5cb2b9e57ea63328))
+
+KConfig.config only holds the symbols KConfig would write out, so a boolean without a prompt that
+  evaluates to n is absent from it and from every file generated from it. A consumer that needs the
+  complete feature vector, for example a documentation build whose conditions name such a symbol,
+  had to reach into the private kconfiglib instance to find it.
+
+declared_boolean_symbols() returns the sorted names of every boolean the model defines, so that
+  consumer can default each of them to false before applying the configured values.
+
+Taken from avengineers/spl-core#364 (SPLE-2781).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+### BREAKING CHANGES
+
+- A test spec whose title is a pattern ending in `*` no longer links its test cases by default.
+  Write `:results: [[links_from_filter("type == 'testcase' and search('^<pattern>', case)")]]` on
+  it, or call sple_tr_link on it and register SplSphinx.default_needs_functions (Sphinx only).
+
+
 ## v8.10.2 (2026-10-14)
 
 ### Bug Fixes
