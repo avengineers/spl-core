@@ -102,17 +102,20 @@ unset(SPL_SOURCE_DOCS_JINJA_RAW_TAGS)
 # ## test: _spl_sphinx_build_command (default command) #########
 # given a project with no extra Sphinx options
 set(AUTOCONF_JSON /build/kconfig/autoconf.json)
+set(_saved_spl_python ${SPL_PYTHON})
+set(SPL_PYTHON /venv/bin/python)
 
 # when
 _spl_sphinx_build_command(sphinx_plain_command SHAPE reports CONFIG /build/reports/config.json OUTPUT_DIR /build/reports/html)
 
-# then: the command is exactly the one the targets have always run
+# then: Sphinx runs through the configured Python, like every other Python tool,
+# so the build does not depend on which sphinx-build comes first in PATH
 set(expected_sphinx_plain_command
     ${CMAKE_COMMAND} -E env
     SPHINX_BUILD_CONFIGURATION_FILE=/build/reports/config.json
     AUTOCONF_JSON_FILE=/build/kconfig/autoconf.json
     VARIANT=mytestvariant
-    -- sphinx-build -E -b html ${PROJECT_SOURCE_DIR} /build/reports/html
+    -- /venv/bin/python -m sphinx -E -b html ${PROJECT_SOURCE_DIR} /build/reports/html
 )
 if(NOT sphinx_plain_command STREQUAL expected_sphinx_plain_command)
     message(FATAL_ERROR "Failing Test case: expected '${expected_sphinx_plain_command}' but got '${sphinx_plain_command}'.")
@@ -120,6 +123,7 @@ endif()
 
 # cleanup
 unset(AUTOCONF_JSON)
+set(SPL_PYTHON ${_saved_spl_python})
 
 # ## test: _spl_sphinx_build_command (extra options per run) #########
 # given options for the variant runs and for the per-component runs
