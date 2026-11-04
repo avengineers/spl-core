@@ -534,6 +534,9 @@ endmacro()
 # builds) and SPL_SPHINX_COMPONENT_OPTIONS (per-component builds); `@SHAPE@` in
 # them becomes the shape and `@COMPONENT_PATH@` the component's path, so each run
 # can name a file or directory of its own, e.g. `-d;<dir>/doctrees/@COMPONENT_PATH@/@SHAPE@`.
+#
+# Sphinx runs through SPL_PYTHON, like hammocking and gcov_maid, so a build uses the
+# Sphinx of the environment it was configured with, whatever comes first in PATH.
 function(_spl_sphinx_build_command out_var)
     cmake_parse_arguments(ARG "" "SHAPE;CONFIG;OUTPUT_DIR;COMPONENT" "" ${ARGN})
     if(NOT ARG_SHAPE MATCHES "^(docs|reports)$")
@@ -557,7 +560,7 @@ function(_spl_sphinx_build_command out_var)
         SPHINX_BUILD_CONFIGURATION_FILE=${ARG_CONFIG}
         AUTOCONF_JSON_FILE=${AUTOCONF_JSON}
         VARIANT=${VARIANT}
-        -- sphinx-build ${_options} ${PROJECT_SOURCE_DIR} ${ARG_OUTPUT_DIR}
+        -- ${SPL_PYTHON} -m sphinx ${_options} ${PROJECT_SOURCE_DIR} ${ARG_OUTPUT_DIR}
         PARENT_SCOPE
     )
 endfunction()
