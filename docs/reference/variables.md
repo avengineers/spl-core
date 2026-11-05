@@ -57,6 +57,44 @@ set(SPL_SPHINX_OPTIONS -d ${CMAKE_BINARY_DIR}/doctrees/@SHAPE@)
 set(SPL_SPHINX_COMPONENT_OPTIONS -d ${CMAKE_BINARY_DIR}/doctrees/@COMPONENT_PATH@/@SHAPE@)
 ```
 
+(SPL_UBCODE_SELECTION_FILE)=
+
+## SPL_UBCODE_SELECTION_FILE
+
+Path, relative to the project root, of a ubCode configuration file that a test-kit
+configure writes. It selects the documents and the variant data of the configured build,
+so ubCode and `ubc` show the same variant as CMake Tools. The project's committed
+`ubproject.toml` names the file with `extend`; keep it out of git. Setting the variable
+also gives every Sphinx run `-D needs_variant_data_file`, and the runs of every component
+with a doc index a generated root page. See ADR 0005.
+
+Set the variable before `include(.../parts.cmake)`. Otherwise the components miss
+their Sphinx options and root pages. Removing the variable leaves a selection file written
+earlier in place; delete it yourself.
+
+**Default:** none (configure writes nothing into the source tree)
+
+```cmake
+set(SPL_UBCODE_SELECTION_FILE ubproject.variants.toml)
+```
+
+(SPL_PROJECT_DOCS_INCLUDE_PATTERNS)=
+
+## SPL_PROJECT_DOCS_INCLUDE_PATTERNS
+
+Include patterns for the project's own documents outside its components, such as
+`index.md` or `doc/**`. spl-core puts them before the component patterns in the
+`include_patterns` of the variant `docs` and `reports` runs. ubCode reads the same list
+through `SPL_UBCODE_SELECTION_FILE`. With that variable set, a pattern that is not
+`…/**` and does not end in `.md` or `.rst` is not read by ubCode, and a test-kit
+configure warns (see ADR 0005).
+
+**Default:** empty
+
+```cmake
+set(SPL_PROJECT_DOCS_INCLUDE_PATTERNS index.md "doc/**")
+```
+
 ## COMPONENT_NAMES
 
 ## PROD_SOURCES
