@@ -81,14 +81,14 @@ class ArtifactsArchive:
             artifacts: List of artifacts to be archived. Each entry is either:
                 - a Path (file or directory), archived under its name/relative path
                   as before, or
-                - a (Path, archive_name) tuple, where ``archive_name`` overrides the
-                  path/name the artifact is stored under inside the archive. This
-                  allows renaming files per artifact (e.g. link_out.elf -> application.elf).
+                - a (Path, archive_path_override) tuple, where ``archive_path_override``
+                  overrides the path/name the artifact is stored under inside the archive.
+                  This allows renaming files per artifact (e.g. link_out.elf -> application.elf).
         """
         for artifact in artifacts:
             if isinstance(artifact, tuple):
-                source, archive_name = artifact
-                self._add_artifact(source, archive_path_override=archive_name)
+                source, archive_path_override = artifact
+                self._add_artifact(source, archive_path_override=archive_path_override)
             else:
                 self._add_artifact(artifact)
 
@@ -222,8 +222,8 @@ class ArtifactsArchiver:
 
         Args:
             artifacts: List of artifacts (files or directories) to be archived. Each
-                entry is either a Path or a (Path, archive_name) tuple to store the
-                artifact under a custom name/relative path inside the archive.
+                entry is either a Path or a (Path, archive_path_override) tuple to store
+                the artifact under a custom name/relative path inside the archive.
             archive_name: Name of the archive to register artifacts to (defaults to "default")
 
         Raises:
