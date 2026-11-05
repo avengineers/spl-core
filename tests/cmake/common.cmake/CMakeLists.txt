@@ -399,3 +399,34 @@ endif()
 # The next macro call fails. This is an explorative test to show that compiler id "BIBI" is not supported.
 # Mocking of method "message()" sadly does not work.
 # _spl_set_test_compile_and_link_options("BIBI" "1.2.3")
+
+# ## test: _spl_write_variant_data (no KConfig model) #########
+# given a project without a feature model, so SPL_FEATURES_JSON is not set
+unset(SPL_FEATURES_JSON)
+set(_variant_data_file ${CMAKE_CURRENT_BINARY_DIR}/variant_data_without_kconfig.json)
+
+# when
+_spl_write_variant_data(${_variant_data_file} docs)
+
+# then: features is an empty object and build_config holds the variant and the target, nothing else
+file(READ ${_variant_data_file} _variant_data_content)
+string(JSON _features_type TYPE "${_variant_data_content}" features)
+string(JSON _features_length LENGTH "${_variant_data_content}" features)
+if(NOT _features_type STREQUAL "OBJECT" OR NOT _features_length EQUAL 0)
+    message(FATAL_ERROR "Failing Test case: expected 'features' to be an empty object but got '${_variant_data_content}'.")
+endif()
+
+foreach(_key_value variant=mytestvariant target=docs)
+    string(REPLACE "=" ";" _key_value ${_key_value})
+    list(GET _key_value 0 _key)
+    list(GET _key_value 1 _expected)
+    string(JSON _actual GET "${_variant_data_content}" build_config ${_key})
+    if(NOT _actual STREQUAL _expected)
+        message(FATAL_ERROR "Failing Test case: expected build_config.${_key} '${_expected}' but got '${_actual}'.")
+    endif()
+endforeach()
+
+string(JSON _build_config_length LENGTH "${_variant_data_content}" build_config)
+if(NOT _build_config_length EQUAL 2)
+    message(FATAL_ERROR "Failing Test case: expected build_config to hold only variant and target but got '${_variant_data_content}'.")
+endif()
