@@ -74,7 +74,7 @@ class ArtifactsArchive:
         self.archive_name: str = archive_name
         self.archive_artifacts: list[ArtifactsArchive.ArchiveArtifact] = []
 
-    def register(self, artifacts: list[Path | tuple[Path, str]]) -> None:
+    def register(self, artifacts: list[Path | tuple[Path, Path]]) -> None:
         """
         Register artifacts for archiving.
         Args:
@@ -92,7 +92,7 @@ class ArtifactsArchive:
             else:
                 self._add_artifact(artifact)
 
-    def _add_artifact(self, artifact_path: Path, archive_path_override: str | Path | None = None) -> None:
+    def _add_artifact(self, artifact_path: Path, archive_path_override: Path | None = None) -> None:
         """
         Add an artifact (file or directory) to the archive list.
         Args:
@@ -107,7 +107,7 @@ class ArtifactsArchive:
 
         # Calculate the relative path from out_dir for the archive
         if archive_path_override is not None:
-            archive_path = Path(archive_path_override)
+            archive_path = archive_path_override
         elif absolute_path.is_relative_to(self.out_dir.absolute()):
             archive_path = absolute_path.relative_to(self.out_dir.absolute())
         else:
@@ -216,7 +216,7 @@ class ArtifactsArchiver:
             self._target_repos[archive_name] = target_repo
         return archive
 
-    def register(self, artifacts: list[Path | tuple[Path, str]], archive_name: str = "default") -> None:
+    def register(self, artifacts: list[Path | tuple[Path, Path]], archive_name: str = "default") -> None:
         """
         Register artifacts for archiving to a specific archive.
 

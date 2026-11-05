@@ -214,7 +214,7 @@ def test_create_archive_preserves_internal_archive_paths(test_dir):
 
 
 def test_register_tuple_renames_file_in_archive(test_dir, test_files):
-    """A (Path, name) tuple stores the file under the overridden name inside the archive."""
+    """A (Path, Path) tuple stores the file under the overridden name inside the archive."""
     # Arrange
     archiver = ArtifactsArchiver()
     output_dir = test_dir / "output"
@@ -222,7 +222,7 @@ def test_register_tuple_renames_file_in_archive(test_dir, test_files):
 
     # test_files[4] is build/artifacts/output.bin -> rename it to application.bin
     original = test_files[4]
-    archiver.register([(original, "application.bin")])
+    archiver.register([(original, Path("application.bin"))])
 
     # Act
     archive_path = archiver.create_archive()
@@ -241,7 +241,7 @@ def test_register_tuple_places_file_at_custom_subpath(test_dir, test_files):
     archiver.add_archive(output_dir, "subpath.7z")
 
     # test_files[0] is readme.txt -> place it under docs/manual.txt
-    archiver.register([(test_files[0], "docs/manual.txt")])
+    archiver.register([(test_files[0], Path("docs/manual.txt"))])
 
     # Act
     archive_path = archiver.create_archive()
@@ -252,7 +252,7 @@ def test_register_tuple_places_file_at_custom_subpath(test_dir, test_files):
 
 
 def test_register_mixed_plain_and_tuple_entries(test_dir, test_files):
-    """A single register call may mix plain Path entries and (Path, name) tuples."""
+    """A single register call may mix plain Path entries and (Path, Path) tuples."""
     # Arrange
     output_dir = test_dir / "output"
     output_dir.mkdir()
@@ -268,7 +268,7 @@ def test_register_mixed_plain_and_tuple_entries(test_dir, test_files):
     archiver.register(
         [
             nested_file,  # plain Path -> keeps relative path
-            (test_files[2], "config/renamed_settings.json"),  # tuple -> custom subpath
+            (test_files[2], Path("config/renamed_settings.json")),  # tuple -> custom subpath
         ]
     )
 
@@ -294,7 +294,7 @@ def test_register_tuple_override_takes_precedence_over_out_dir(test_dir):
 
     archiver = ArtifactsArchiver()
     archiver.add_archive(output_dir, "override.7z")
-    archiver.register([(nested_file, "index.html")])
+    archiver.register([(nested_file, Path("index.html"))])
 
     # Act
     archive_path = archiver.create_archive()
@@ -313,7 +313,7 @@ def test_register_tuple_via_named_archive(test_dir, test_files):
     archiver.add_archive(output_dir, "binaries.7z", archive_name="binaries")
 
     # test_files[4] is build/artifacts/output.bin -> rename inside the named archive
-    archiver.register([(test_files[4], "firmware/app.elf")], archive_name="binaries")
+    archiver.register([(test_files[4], Path("firmware/app.elf"))], archive_name="binaries")
 
     # Act
     archive_path = archiver.create_archive("binaries")
