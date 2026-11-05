@@ -1,6 +1,23 @@
 # CHANGELOG
 
 
+## v9.1.2 (2026-11-05)
+
+### Bug Fixes
+
+- **report**: Link results by default only from test specs
+  ([`5637a6a`](https://github.com/avengineers/spl-core/commit/5637a6ae07a25cc0e1f8653d241b3961b9ad8c44))
+
+The default for `results` in ubproject.toml applied to every need, test cases included.
+  links_from_match splits names on commas, so a test case whose name has a comma linked the other
+  cases that share a part of it: SPLED's parametrized auto_off and flight_controller cases linked
+  their siblings. A predicate now limits the default to `test` needs.
+
+Refs SPLE-2781.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+
 ## v9.1.1 (2026-11-04)
 
 ### Bug Fixes
