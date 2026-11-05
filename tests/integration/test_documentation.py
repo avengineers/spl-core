@@ -1,4 +1,6 @@
+import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 from bs4 import BeautifulSoup
@@ -119,6 +121,21 @@ class TestDocumentation(SplKickstartProjectIntegrationTestBase):
                 for report_page in ["unit_test_spec.html", "unit_test_results.html", "coverage.html"]:
                     assert any(href.endswith(report_page) for href in wrapper_hrefs), f"Wrapper page for {component_path} does not nest {report_page}"
 
+        # Every Sphinx run gets a variant data file next to its config.json.
+        for target in ["docs", "reports"]:
+            self._assert_variant_data(build_dir, build_dir / target, variant, target, scope="variant", component="")
+
+        # Without opt-in nothing changes: no variants file, no root page, unchanged config.json keys, no new Sphinx variables.
+        assert not self.spl_project.artifacts.project_root_dir.joinpath("ubproject.variants.toml").exists(), "ubproject.variants.toml must not be written without opt-in"
+        for component_path in self.spl_project.components:
+            for root_page in ["root_docs.md", "root_reports.md"]:
+                assert not (build_dir / component_path / root_page).exists(), f"Generated root page {component_path}/{root_page} found without opt-in"
+        assert set(json.loads((build_dir / "docs/config.json").read_text(encoding="utf-8"))) == {"target", "include_patterns", "components_info"}
+        assert set(json.loads((build_dir / "reports/config.json").read_text(encoding="utf-8"))) == {"target", "include_patterns", "components_info", "reports_output_dir"}
+        build_ninja = (build_dir / "build.ninja").read_text(encoding="utf-8")
+        assert "needs_variant_data_file" not in build_ninja, "needs_variant_data_file must not appear without opt-in"
+        assert "root_doc" not in build_ninja, "root_doc must not appear without opt-in"
+
     def test_build_component_report(self) -> None:
         variant = "EnglishVariant"
         build_dir = self.spl_project.artifacts.get_build_dir(variant, "test")
@@ -141,6 +158,34 @@ class TestDocumentation(SplKickstartProjectIntegrationTestBase):
         table = BeautifulSoup(unit_test_spec_html.read_text(encoding="utf-8"), "html.parser").find("table", class_="NEEDS_TABLE")
         assert table is not None and table.tbody.find_all("tr", class_="need"), "Component report lists no test specifications"
         self._assert_needs_table_columns_have_links(unit_test_spec_html, columns=["Tests", "Results"])
+
+        # The component run gets its own variant data file, scoped to the component.
+        for target in ["docs", "reports"]:
+            self._assert_variant_data(build_dir, build_dir / "src/greeter" / target, variant, target, scope="component", component="src/greeter")
+
+    @staticmethod
+    def _assert_variant_data(build_dir: Path, run_out_dir: Path, variant: str, target: str, scope: str, component: str) -> None:
+        """Assert the variant_data.json written next to the config.json of a Sphinx run."""
+        variant_data_file = run_out_dir / "variant_data.json"
+        assert variant_data_file.exists(), f"{variant_data_file} not found"
+        # The features are what the KConfig step wrote for the variant, so a change of the template's KConfig needs no change here.
+        features_file = build_dir / "kconfig/features.json"
+        assert features_file.exists(), f"{features_file} not found"
+        expected_features = json.loads(features_file.read_text(encoding="utf-8"))["features"]
+        # The kickstart model declares LANG_DE, off for EnglishVariant: it must be present, not left out.
+        assert expected_features["LANG_DE"] is False, f"LANG_DE must be present and false in {features_file}"
+        expected: dict[str, Any] = {
+            "features": expected_features,
+            "build_config": {
+                "variant": variant,
+                "kit": "test",
+                "target": target,
+                "scope": scope,
+                "component": component,
+                "components": ["src/main", "src/greeter"],
+            },
+        }
+        assert json.loads(variant_data_file.read_text(encoding="utf-8")) == expected, f"Unexpected content in {variant_data_file}"
 
     @staticmethod
     def _assert_needs_have_link_option(html_file: Path, need_type_class: str, link_span_class: str) -> bool:

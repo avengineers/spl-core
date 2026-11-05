@@ -323,9 +323,24 @@ macro(spl_create_component)
             # create the config.json file. This is exported as SPHINX_BUILD_CONFIGURATION_FILE env variable
             set(_docs_config_json ${_component_docs_out_dir}/config.json)
             file(RELATIVE_PATH _rel_component_doc_dir ${_sphinx_source_dir} ${_component_doc_dir})
+            set(_docs_include_patterns "\"${_rel_component_doc_dir}/**\",\"${_rel_component_docs_out_dir}/**\"")
+            set(_component_docs_root_html ${_component_docs_html_out_dir}/index.html)
+
+            # A component run opted in to ubCode is rooted in a generated page, not in the project's index (ADR 0005).
+            # The root pages sit in the component's binary dir, outside the run output dirs that the variant runs read.
+            file(RELATIVE_PATH _rel_component_binary_dir ${_sphinx_source_dir} ${CMAKE_CURRENT_BINARY_DIR})
+            if(SPL_UBCODE_SELECTION_FILE)
+                _spl_write_component_root_page(docs "${_component_info}")
+                string(APPEND _docs_include_patterns ",\"${_rel_component_binary_dir}/root_docs.md\"")
+                set(_component_docs_root_html ${_component_docs_html_out_dir}/${_rel_component_binary_dir}/root_docs.html)
+            else()
+                # Root pages of an earlier configure with the opt-in
+                file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/root_docs.md ${CMAKE_CURRENT_BINARY_DIR}/root_reports.md)
+            endif()
+
             file(WRITE ${_docs_config_json} "{
                 \"component_info\": ${_component_info},
-                \"include_patterns\": [\"${_rel_component_doc_dir}/**\",\"${_rel_component_docs_out_dir}/**\"]
+                \"include_patterns\": [${_docs_include_patterns}]
             }")
 
             # add the generated files as dependency to cmake configure step
@@ -334,12 +349,13 @@ macro(spl_create_component)
             # We do not know all dependencies for generating the docs (apart from the rst files).
             # This might cause incremental builds to not update parts of the documentation.
             # To avoid this the command passes -E to make sphinx-build write all files new.
-            _spl_sphinx_build_command(_spl_sphinx_build SHAPE docs CONFIG ${_docs_config_json} OUTPUT_DIR ${_component_docs_html_out_dir} COMPONENT ${component_path})
+            _spl_sphinx_build_command(_spl_sphinx_build SHAPE docs CONFIG ${_docs_config_json} OUTPUT_DIR ${_component_docs_html_out_dir} COMPONENT ${component_path}
+                VARIANT_DATA ${_component_docs_out_dir}/variant_data.json ROOT_DOC ${_rel_component_binary_dir}/root_docs)
             add_custom_target(
                 ${component_name}_docs
                 COMMAND ${CMAKE_COMMAND} -E make_directory ${_component_docs_out_dir}
                 COMMAND ${_spl_sphinx_build}
-                BYPRODUCTS ${_component_docs_html_out_dir}/index.html
+                BYPRODUCTS ${_component_docs_root_html}
             )
 
             # Generate source documentation using clanguru
@@ -409,6 +425,12 @@ Code Coverage
                 if(_COMPONENT_SOURCE_DOCS_INCLUDE_PATTERN)
                     string(APPEND _reports_include_patterns ",\"${_COMPONENT_SOURCE_DOCS_INCLUDE_PATTERN}\"")
                 endif()
+                set(_component_reports_root_html ${_component_reports_html_out_dir}/index.html)
+                if(SPL_UBCODE_SELECTION_FILE)
+                    _spl_write_component_root_page(reports "${_component_info}")
+                    string(APPEND _reports_include_patterns ",\"${_rel_component_binary_dir}/root_reports.md\"")
+                    set(_component_reports_root_html ${_component_reports_html_out_dir}/${_rel_component_binary_dir}/root_reports.html)
+                endif()
                 file(WRITE ${_reports_config_json} "{
     \"component_info\": ${_component_info},
     \"include_patterns\": [${_reports_include_patterns}]
@@ -431,12 +453,13 @@ Code Coverage
 
                 # No OUTPUT is defined to force execution of this target every time
                 # TODO: list of dependencies is not complete
-                _spl_sphinx_build_command(_spl_sphinx_build SHAPE reports CONFIG ${_reports_config_json} OUTPUT_DIR ${_component_reports_html_out_dir} COMPONENT ${component_path})
+                _spl_sphinx_build_command(_spl_sphinx_build SHAPE reports CONFIG ${_reports_config_json} OUTPUT_DIR ${_component_reports_html_out_dir} COMPONENT ${component_path}
+                    VARIANT_DATA ${_component_reports_out_dir}/variant_data.json ROOT_DOC ${_rel_component_binary_dir}/root_reports)
                 add_custom_target(
                     ${component_name}_report
                     COMMAND ${CMAKE_COMMAND} -E make_directory ${_component_reports_out_dir}
                     COMMAND ${_spl_sphinx_build}
-                    BYPRODUCTS ${_component_reports_html_out_dir}/index.html
+                    BYPRODUCTS ${_component_reports_root_html}
                     DEPENDS ${TEST_OUT_JUNIT} ${_cov_out_html}
                 )
                 if(_COMPONENT_SOURCE_DOCS_INCLUDE_PATTERN)
@@ -507,7 +530,9 @@ macro(_spl_create_docs_target)
     # create the config.json file. This is exported as SPHINX_BUILD_CONFIGURATION_FILE env variable
     list(JOIN COMPONENTS_INFO "," _components_info_json)
     set(_components_info_json "[${_components_info_json}]")
-    list(JOIN COMPONENTS_SPHINX_INCLUDE_PATTERNS "\",\"" _components_sphinx_include_patterns_json)
+    # The SPL's own documents (SPL_PROJECT_DOCS_INCLUDE_PATTERNS) come first
+    set(_docs_include_patterns ${SPL_PROJECT_DOCS_INCLUDE_PATTERNS} ${COMPONENTS_SPHINX_INCLUDE_PATTERNS})
+    list(JOIN _docs_include_patterns "\",\"" _components_sphinx_include_patterns_json)
     set(_components_sphinx_include_patterns_json "[\"${_components_sphinx_include_patterns_json}\"]")
     file(WRITE ${_docs_config_json} "{
     \"target\": \"docs\",
@@ -517,7 +542,18 @@ macro(_spl_create_docs_target)
 
     # add the generated files as dependency to cmake configure step
     set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_docs_config_json})
-    _spl_sphinx_build_command(_spl_sphinx_build SHAPE docs CONFIG ${_docs_config_json} OUTPUT_DIR ${_docs_html_out_dir})
+    _spl_write_variant_data(${_docs_out_dir}/variant_data.json docs variant "")
+
+    # The component runs get their files here, once every component is known
+    foreach(_variant_data_component_info ${COMPONENTS_INFO})
+        string(JSON _variant_data_docs_output_dir GET ${_variant_data_component_info} docs_output_dir)
+        if(_variant_data_docs_output_dir)
+            string(JSON _variant_data_component_path GET ${_variant_data_component_info} path)
+            _spl_write_variant_data(${PROJECT_SOURCE_DIR}/${_variant_data_docs_output_dir}/variant_data.json docs component ${_variant_data_component_path})
+        endif()
+    endforeach()
+
+    _spl_sphinx_build_command(_spl_sphinx_build SHAPE docs CONFIG ${_docs_config_json} OUTPUT_DIR ${_docs_html_out_dir} VARIANT_DATA ${_docs_out_dir}/variant_data.json)
     add_custom_target(
         docs
         COMMAND ${CMAKE_COMMAND} -E make_directory ${_docs_out_dir}
@@ -535,10 +571,14 @@ endmacro()
 # them becomes the shape and `@COMPONENT_PATH@` the component's path, so each run
 # can name a file or directory of its own, e.g. `-d;<dir>/doctrees/@COMPONENT_PATH@/@SHAPE@`.
 #
+# VARIANT_DATA is the run's variant data file and ROOT_DOC the docname of a component
+# run's generated root page. Both reach Sphinx only when the SPL sets
+# SPL_UBCODE_SELECTION_FILE (ADR 0005); without it the command is unchanged.
+#
 # Sphinx runs through SPL_PYTHON, like hammocking and gcov_maid, so a build uses the
 # Sphinx of the environment it was configured with, whatever comes first in PATH.
 function(_spl_sphinx_build_command out_var)
-    cmake_parse_arguments(ARG "" "SHAPE;CONFIG;OUTPUT_DIR;COMPONENT" "" ${ARGN})
+    cmake_parse_arguments(ARG "" "SHAPE;CONFIG;OUTPUT_DIR;COMPONENT;VARIANT_DATA;ROOT_DOC" "" ${ARGN})
     if(NOT ARG_SHAPE MATCHES "^(docs|reports)$")
         message(FATAL_ERROR "_spl_sphinx_build_command: SHAPE must be 'docs' or 'reports', not '${ARG_SHAPE}'.")
     endif()
@@ -554,6 +594,14 @@ function(_spl_sphinx_build_command out_var)
         string(REPLACE "@COMPONENT_PATH@" "${ARG_COMPONENT}" _option "${_option}")
         list(APPEND _options "${_option}")
     endforeach()
+    if(SPL_UBCODE_SELECTION_FILE)
+        if(ARG_VARIANT_DATA)
+            list(APPEND _options -D needs_variant_data_file=${ARG_VARIANT_DATA})
+        endif()
+        if(ARG_ROOT_DOC)
+            list(APPEND _options -D root_doc=${ARG_ROOT_DOC})
+        endif()
+    endif()
 
     set(${out_var}
         ${CMAKE_COMMAND} -E env
@@ -563,6 +611,162 @@ function(_spl_sphinx_build_command out_var)
         -- ${SPL_PYTHON} -m sphinx ${_options} ${PROJECT_SOURCE_DIR} ${ARG_OUTPUT_DIR}
         PARENT_SCOPE
     )
+endfunction()
+
+# Writes the variant data file of one Sphinx run: the features of the KConfig model
+# ({} without one) and the build configuration of the run. SCOPE is `variant` or
+# `component`; COMPONENT is the component's path, empty for a variant run. The
+# features document is parsed and extended with string(JSON ... SET), so any value
+# in it stays valid JSON.
+function(_spl_write_variant_data out_file target scope component)
+    if(SPL_FEATURES_JSON AND EXISTS ${SPL_FEATURES_JSON})
+        file(READ ${SPL_FEATURES_JSON} _variant_data)
+    else()
+        set(_variant_data "{\"features\": {}}")
+    endif()
+
+    set(_components "[]")
+    foreach(_component_info ${COMPONENTS_INFO})
+        string(JSON _component_path GET ${_component_info} path)
+        string(JSON _index LENGTH "${_components}")
+        string(JSON _components SET "${_components}" ${_index} "\"${_component_path}\"")
+    endforeach()
+
+    set(_build_config "{}")
+    string(JSON _build_config SET "${_build_config}" variant "\"${VARIANT}\"")
+    string(JSON _build_config SET "${_build_config}" kit "\"${BUILD_KIT}\"")
+    string(JSON _build_config SET "${_build_config}" target "\"${target}\"")
+    string(JSON _build_config SET "${_build_config}" scope "\"${scope}\"")
+    string(JSON _build_config SET "${_build_config}" component "\"${component}\"")
+    string(JSON _build_config SET "${_build_config}" components "${_components}")
+    string(JSON _variant_data SET "${_variant_data}" build_config "${_build_config}")
+
+    file(WRITE ${out_file} "${_variant_data}")
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${out_file})
+endfunction()
+
+# The content of a component's page: its title and a toctree of its documents. The
+# variant report's wrapper pages and the root pages of the component's own runs use it.
+# SHAPE `docs` lists only the component's doc index; SHAPE `reports` adds the report
+# pages and the source docs index the component has.
+function(_spl_component_page_content out_var component_info shape)
+    string(JSON _name GET ${component_info} name)
+    string(JSON _long_name GET ${component_info} long_name)
+    string(JSON _path GET ${component_info} path)
+    string(JSON _has_reports GET ${component_info} has_reports)
+    string(JSON _reports_output_dir GET ${component_info} reports_output_dir)
+    string(JSON _source_docs_dir GET ${component_info} source_docs_dir)
+
+    if(NOT _long_name STREQUAL "")
+        set(_title "${_long_name}")
+    else()
+        set(_title "${_name}")
+    endif()
+
+    set(_content "# ${_title}
+
+```{toctree}
+:maxdepth: 2
+
+/${_path}/doc/index
+")
+    if(shape STREQUAL reports)
+        if(_has_reports)
+            string(APPEND _content "/${_reports_output_dir}/unit_test_spec
+/${_reports_output_dir}/unit_test_results
+/${_reports_output_dir}/coverage
+")
+        endif()
+        if(_source_docs_dir)
+            string(APPEND _content "/${_source_docs_dir}/index
+")
+        endif()
+    endif()
+    string(APPEND _content "```
+")
+    set(${out_var} "${_content}" PARENT_SCOPE)
+endfunction()
+
+# Writes the root page of a component's own run (ADR 0005) into the component's binary
+# dir: root_docs.md for the docs run, root_reports.md for the reports run. It lies outside
+# the run output dirs, so the variant runs do not read it.
+function(_spl_write_component_root_page shape component_info)
+    _spl_component_page_content(_content "${component_info}" ${shape})
+    set(_root_page ${CMAKE_CURRENT_BINARY_DIR}/root_${shape}.md)
+    file(WRITE ${_root_page} "${_content}")
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_root_page})
+endfunction()
+
+# A TOML basic string, with backslashes and double quotes escaped.
+function(_spl_toml_string out_var value)
+    string(REPLACE "\\" "\\\\" value "${value}")
+    string(REPLACE "\"" "\\\"" value "${value}")
+    set(${out_var} "\"${value}\"" PARENT_SCOPE)
+endfunction()
+
+# A TOML array of basic strings, one per line.
+function(_spl_toml_string_array out_var)
+    set(_array "[")
+    foreach(_value IN LISTS ARGN)
+        _spl_toml_string(_value "${_value}")
+        string(APPEND _array "\n    ${_value},")
+    endforeach()
+    string(APPEND _array "\n]")
+    set(${out_var} "${_array}" PARENT_SCOPE)
+endfunction()
+
+# Writes the ubCode selection of the configured build (ADR 0005) to
+# ${PROJECT_SOURCE_DIR}/${SPL_UBCODE_SELECTION_FILE}, when the SPL sets the variable.
+# It reads _SPL_VARIANT_REPORTS_INCLUDE_PATTERNS and _SPL_VARIANT_REPORTS_VARIANT_DATA_FILE,
+# which the macro _spl_create_reports_target sets in the caller's scope, so it is called
+# after that macro in the same scope (_spl_hook_end_of_configure). The document patterns are split by parser: a pattern
+# that names a directory (`<p>/**`) reaches the md parser as `<p>/**/*.md` and the rst
+# parser as `<p>/**/*.rst`; any other pattern reaches the parser its suffix names.
+# It appends spl-core's report_generation/ubproject.toml: its [source] table, which lets
+# ubCode read the gitignored build/ dir and the source docs, and spl-core's needs model.
+function(_spl_write_ubcode_selection)
+    if(NOT SPL_UBCODE_SELECTION_FILE)
+        return()
+    endif()
+
+    set(_md_include "")
+    set(_rst_include "")
+    foreach(_pattern IN LISTS _SPL_VARIANT_REPORTS_INCLUDE_PATTERNS)
+        if(_pattern MATCHES "/\\*\\*$")
+            list(APPEND _md_include "${_pattern}/*.md")
+            list(APPEND _rst_include "${_pattern}/*.rst")
+        elseif(_pattern MATCHES "\\.md$")
+            list(APPEND _md_include "${_pattern}")
+        elseif(_pattern MATCHES "\\.rst$")
+            list(APPEND _rst_include "${_pattern}")
+        else()
+            message(WARNING "The include pattern '${_pattern}' names neither a directory (`/**`) nor a .md or .rst file; ubCode does not read it.")
+        endif()
+    endforeach()
+    _spl_toml_string_array(_md_include_toml ${_md_include})
+    _spl_toml_string_array(_rst_include_toml ${_rst_include})
+
+    file(RELATIVE_PATH _variant_data_file ${PROJECT_SOURCE_DIR} ${_SPL_VARIANT_REPORTS_VARIANT_DATA_FILE})
+    _spl_toml_string(_variant_data_file_toml "${_variant_data_file}")
+
+    file(READ ${SPL_CORE_PYTHON_DIRECTORY}/report_generation/ubproject.toml _spl_core_ubproject)
+
+    file(WRITE ${PROJECT_SOURCE_DIR}/${SPL_UBCODE_SELECTION_FILE} "# Generated by spl-core at CMake configure. Do not edit it; keep it out of git.
+# It selects the documents and the variant data of the configured build for ubCode.
+
+[variants]
+data_file = ${_variant_data_file_toml}
+
+[parse.parsers.md]
+flavour = \"myst\"
+include = ${_md_include_toml}
+
+[parse.parsers.rst]
+include = ${_rst_include_toml}
+
+# Copied from spl-core's report_generation/ubproject.toml: [source], which lets ubCode read
+# the gitignored build/ dir and the source docs, and spl-core's needs model.
+${_spl_core_ubproject}")
 endfunction()
 
 macro(_spl_create_reports_target)
@@ -576,9 +780,12 @@ macro(_spl_create_reports_target)
     set(_components_info_json "[${_components_info_json}]")
 
     # Add the variant specific rst files (e.g, coverage.rst) and the component source
-    # docs (report content only) to the include patterns
+    # docs (report content only) to the include patterns. The SPL's own documents
+    # (SPL_PROJECT_DOCS_INCLUDE_PATTERNS) come first. _spl_write_ubcode_selection reads the same list.
     list(APPEND COMPONENTS_SPHINX_INCLUDE_PATTERNS "${_rel_reports_output_dir}/**" ${COMPONENTS_SOURCE_DOCS_INCLUDE_PATTERNS})
-    list(JOIN COMPONENTS_SPHINX_INCLUDE_PATTERNS "\",\"" _components_sphinx_include_patterns_json)
+    set(_SPL_VARIANT_REPORTS_INCLUDE_PATTERNS ${SPL_PROJECT_DOCS_INCLUDE_PATTERNS} ${COMPONENTS_SPHINX_INCLUDE_PATTERNS})
+    set(_SPL_VARIANT_REPORTS_VARIANT_DATA_FILE ${_reports_output_dir}/variant_data.json)
+    list(JOIN _SPL_VARIANT_REPORTS_INCLUDE_PATTERNS "\",\"" _components_sphinx_include_patterns_json)
     set(_components_sphinx_include_patterns_json "[\"${_components_sphinx_include_patterns_json}\"]")
     file(WRITE ${_reports_config_json} "{
     \"target\": \"reports\",
@@ -608,37 +815,7 @@ macro(_spl_create_reports_target)
         endif()
 
         string(JSON _wrapper_name GET ${component_info} name)
-        string(JSON _wrapper_long_name GET ${component_info} long_name)
-        string(JSON _wrapper_path GET ${component_info} path)
-        string(JSON _wrapper_has_reports GET ${component_info} has_reports)
-        string(JSON _wrapper_reports_output_dir GET ${component_info} reports_output_dir)
-        string(JSON _wrapper_source_docs_dir GET ${component_info} source_docs_dir)
-
-        if(NOT _wrapper_long_name STREQUAL "")
-            set(_wrapper_title "${_wrapper_long_name}")
-        else()
-            set(_wrapper_title "${_wrapper_name}")
-        endif()
-
-        set(_wrapper_content "# ${_wrapper_title}
-
-```{toctree}
-:maxdepth: 2
-
-/${_wrapper_path}/doc/index
-")
-        if(_wrapper_has_reports)
-            string(APPEND _wrapper_content "/${_wrapper_reports_output_dir}/unit_test_spec
-/${_wrapper_reports_output_dir}/unit_test_results
-/${_wrapper_reports_output_dir}/coverage
-")
-        endif()
-        if(_wrapper_source_docs_dir)
-            string(APPEND _wrapper_content "/${_wrapper_source_docs_dir}/index
-")
-        endif()
-        string(APPEND _wrapper_content "```
-")
+        _spl_component_page_content(_wrapper_content "${component_info}" reports)
 
         set(_wrapper_file ${_reports_output_dir}/${_wrapper_name}_index.md)
         file(WRITE ${_wrapper_file} "${_wrapper_content}")
@@ -663,6 +840,7 @@ Code Coverage
         string(JSON component_reports_output_dir GET ${component_info} reports_output_dir)
 
         if(component_reports_output_dir)
+            _spl_write_variant_data(${PROJECT_SOURCE_DIR}/${component_reports_output_dir}/variant_data.json reports component ${component_path})
             set(_variant_component_reports_out_dir reports/html/${component_reports_output_dir})
             set(_cov_out_html ${_variant_component_reports_out_dir}/coverage/index.html)
             set(_cov_out_json ${component_path}/coverage.json)
@@ -691,13 +869,14 @@ Code Coverage
 
     # add the generated files as dependency to cmake configure step
     set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_reports_config_json})
+    _spl_write_variant_data(${_reports_output_dir}/variant_data.json reports variant "")
 
     # These files are generated by custom commands in _spl_coverage_create_overall_report()
     set(COV_OUT_VARIANT_JSON variant-coverage.json)
     set(JUNIT_OUT_VARIANT_XML variant-junit.xml)
 
     # The command passes -E to sphinx-build to make sure all files are regenerated.
-    _spl_sphinx_build_command(_spl_sphinx_build SHAPE reports CONFIG ${_reports_config_json} OUTPUT_DIR ${_reports_html_output_dir})
+    _spl_sphinx_build_command(_spl_sphinx_build SHAPE reports CONFIG ${_reports_config_json} OUTPUT_DIR ${_reports_html_output_dir} VARIANT_DATA ${_reports_output_dir}/variant_data.json)
     add_custom_target(
         reports
         ALL

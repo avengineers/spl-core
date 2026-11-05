@@ -18,4 +18,5 @@ template
 0002-build-wrapper-lives-in-the-spl
 0003-release-job-uses-the-bot-identity-only-for-real-releases
 0004-pytest-runs-get-a-configured-console-logger
+0005-configure-writes-the-selected-variant-for-ubcode
 ```

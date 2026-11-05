@@ -57,6 +57,30 @@ depends on the target:
 `VARIANT` and `AUTOCONF_JSON_FILE` are passed as additional environment
 variables (the latter exposes the KConfig feature selection).
 
+## Files for ubCode and the variant data
+
+See {doc}`../decisions/0005-configure-writes-the-selected-variant-for-ubcode`. Configure
+writes these files next to `config.json`:
+
+| File | Where | Written | Source |
+| --- | --- | --- | --- |
+| `features.json` | `<build>/kconfig/` | when the SPL has a KConfig model | `kconfig.py --out_features_file`: every KConfig symbol and every declared boolean |
+| `variant_data.json` | next to each Sphinx run's `config.json` (variant and component, `docs` and `reports`) | always | `_spl_write_variant_data()` in `common.cmake`: `features` from `features.json` (`{}` without a model) and `build_config` with `variant`, `kit`, `target`, `scope`, `component`, `components` |
+| `root_docs.md`, `root_reports.md` | the component's binary directory, outside the run output directories | only with `SPL_UBCODE_SELECTION_FILE` | `_spl_write_component_root_page()`: the component's title and a toctree of its pages; passed to the component run with `-D root_doc` |
+| the selection file (`SPL_UBCODE_SELECTION_FILE`) | the project root | only with `SPL_UBCODE_SELECTION_FILE`, by a test-kit configure | `_spl_write_ubcode_selection()`: `[variants] data_file`, the md and rst parser `include` lists, then `report_generation/ubproject.toml` verbatim |
+
+Only with `SPL_UBCODE_SELECTION_FILE` do the Sphinx commands carry
+`-D needs_variant_data_file=<variant_data.json>`, and the component runs also
+`-D root_doc` and the root page in their `include_patterns`. Without it, the commands
+and the `config.json` files are as before, and configure removes root pages of an earlier
+configure. The variant report wrapper pages and the root pages share one toctree source,
+`_spl_component_page_content()`.
+
+The selection's parser lists come from the include patterns of the variant `reports`
+run, which start with `SPL_PROJECT_DOCS_INCLUDE_PATTERNS`. The ADR states the rule that
+splits them between the md and the rst parser, and the warning for a pattern that fits
+neither.
+
 ## From `config.json` to `html_context`
 
 `spl_core.report_generation.spl_sphinx.SplSphinx.get_default_html_context()`
