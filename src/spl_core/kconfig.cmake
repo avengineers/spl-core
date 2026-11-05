@@ -9,6 +9,9 @@ set(KCONFIG_CONFIG_FILE ${PROJECT_SOURCE_DIR}/variants/${VARIANT}/config.txt)
 if(EXISTS ${KCONFIG_MODEL_FILE})
     set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${KCONFIG_MODEL_FILE})
 
+    # Every feature of the model, read by the variant data file of each Sphinx run
+    set(SPL_FEATURES_JSON ${KCONFIG_OUT_DIR}/features.json)
+
     if(EXISTS ${KCONFIG_CONFIG_FILE})
         set(_KCONFIG_CONFIG_FILE_option --kconfig_config_file ${KCONFIG_CONFIG_FILE})
         set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${KCONFIG_CONFIG_FILE})
@@ -26,6 +29,7 @@ if(EXISTS ${KCONFIG_MODEL_FILE})
         --out_header_file ${AUTOCONF_H}
         --out_json_file ${AUTOCONF_JSON}
         --out_cmake_file ${AUTOCONF_CMAKE}
+        --out_features_file ${SPL_FEATURES_JSON}
         COMMAND_ECHO STDOUT
         RESULT_VARIABLE ret
     )
