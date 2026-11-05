@@ -323,6 +323,25 @@ def test_register_tuple_via_named_archive(test_dir, test_files):
     assert "firmware/app.elf" in stored_paths, "Named-archive tuple entry should use the overridden path"
 
 
+def test_register_accepts_prebuilt_path_list(test_dir, test_files):
+    """A list[Path] built before the call is accepted without type errors (checked by mypy)."""
+    # Arrange
+    archiver = ArtifactsArchiver()
+    output_dir = test_dir / "output"
+    archiver.add_archive(output_dir, "prebuilt.7z")
+
+    artifacts: list[Path] = [test_files[0], test_files[4]]
+    archiver.register(artifacts=artifacts)
+    archiver.get_archive("default").register(artifacts)
+
+    # Act
+    archive_path = archiver.create_archive()
+
+    # Assert
+    stored_paths = _list_archive_paths(archive_path)
+    assert {"readme.txt", "output.bin"} <= stored_paths, "Plain Path entries should be archived under their names"
+
+
 def test_create_archive_with_relative_out_dir_writes_to_correct_location(test_dir, test_files, monkeypatch):
     """Regression test: a relative out_dir must still produce the archive on disk.
 

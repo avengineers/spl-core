@@ -4,6 +4,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -74,7 +75,7 @@ class ArtifactsArchive:
         self.archive_name: str = archive_name
         self.archive_artifacts: list[ArtifactsArchive.ArchiveArtifact] = []
 
-    def register(self, artifacts: list[Path | tuple[Path, Path]]) -> None:
+    def register(self, artifacts: Sequence[Path | tuple[Path, Path]]) -> None:
         """
         Register artifacts for archiving.
         Args:
@@ -216,7 +217,7 @@ class ArtifactsArchiver:
             self._target_repos[archive_name] = target_repo
         return archive
 
-    def register(self, artifacts: list[Path | tuple[Path, Path]], archive_name: str = "default") -> None:
+    def register(self, artifacts: Sequence[Path | tuple[Path, Path]], archive_name: str = "default") -> None:
         """
         Register artifacts for archiving to a specific archive.
 
