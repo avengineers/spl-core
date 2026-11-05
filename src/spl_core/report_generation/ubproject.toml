@@ -1,7 +1,10 @@
 [source]
 exclude = [".bzr", ".direnv", ".eggs", ".git", ".git-rewrite", ".hg", ".svn", ".venv", ".vscode", "_build", "dist", "node_modules", "site-packages"]
 respect_gitignore = false
-extend_include = ["build/**/__source_docs/**"]
+
+# Present, even empty, so that ubCode reads the test-report directive and adds the test-case
+# need type that the results predicate links.
+[test_reports]
 
 [needs.links.realizes]
 incoming = "is realized by"
