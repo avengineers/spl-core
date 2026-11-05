@@ -27,7 +27,8 @@ which configures the build. The C/C++ extension follows that selection. ubCode h
 follow it too, or the editor shows one variant and the documentation another.
 
 sphinx-needs 9 and ubCode share one mechanism for the second point: a **variant data
-file**, a JSON file named by `needs.variant_data_file`, whose values the `{if}` directive
+file**, a JSON file named by `[variants] data_file` (the Sphinx option
+`needs_variant_data_file`), whose values the `{if}` directive
 reads as `var.*`. ubCode reads further configuration through `extend` in `ubproject.toml`.
 
 useblocks built a working version in their fork of SPLED (`useblocks/SPLed`, see its
@@ -46,7 +47,7 @@ prerequisite. No SPL writes a script of its own for it.**
 
 For every Sphinx run spl-core already starts — the variant's `docs` and `reports`, and
 each component's `docs` and `reports` — configure writes a `variant_data.json` next to
-that run's `config.json`:
+that run's `config.json`. It does so always, with or without `SPL_UBCODE_SELECTION_FILE`:
 
 ```json
 {
@@ -65,15 +66,29 @@ that run's `config.json`:
 - `features` holds every KConfig symbol with the variant's value. Every boolean the
   feature model declares is present, also the promptless ones KConfig leaves out when they
   are off (`KConfig.declared_boolean_symbols()`), so a condition on any of them has an
-  answer.
+  answer. The list comes from `kconfig.py --out_features_file`, which configure calls
+  next to the existing outputs and which writes `<build>/kconfig/features.json`.
+  `autoconf.h`, `autoconf.json` and `autoconf.cmake` stay as they are. An SPL without a
+  KConfig model gets `"features": {}`.
 - `build_config.components` is the variant's component list as CMake knows it after
   `parts.cmake`. `scope` is `variant`, or `component` with `component` naming the
   component's path.
-- Every Sphinx run spl-core starts gets its own file through
-  `-D needs_variant_data_file=<file>`, so runs of different builds stay independent.
-- A component's own runs get a root page that spl-core generates, passed with
-  `-D root_doc`, and include only that component's documents. The SPL's `index.md` then
-  needs no switch between a variant report and a component report.
+- `build_config` is set with `string(JSON … SET)` on the parsed features document, so a
+  value with quotes or backslashes keeps the file valid JSON.
+- Only with `SPL_UBCODE_SELECTION_FILE`, every Sphinx run spl-core starts gets its own
+  file through `-D needs_variant_data_file=<file>`, so runs of different builds stay
+  independent. Without the variable the Sphinx commands carry no such option.
+- Only with `SPL_UBCODE_SELECTION_FILE`, a component's own runs get a root page that
+  spl-core generates: `root_docs.md` and `root_reports.md` in the component's binary
+  directory. The run gets it with `-D root_doc` and in its `include_patterns`, and it
+  includes only that component's documents. The pages lie outside the run output
+  directories, so the variant runs never read them. The SPL's `index.md` then needs no
+  switch between a variant report and a component report. Without the variable, configure
+  adds nothing to the Sphinx commands or the `config.json` files. For components that have
+  a docs run, it removes root pages of an earlier configure.
+- The variant's report wrapper pages and the component root pages come from one toctree
+  source, `_spl_component_page_content()`. A component's reports-run `variant_data.json`
+  exists only when the component has reports.
 
 ### The ubCode selection
 
@@ -81,29 +96,55 @@ When the SPL sets `SPL_UBCODE_SELECTION_FILE` (a path relative to the project ro
 example `ubproject.variants.toml`), configure writes that file. The SPL's committed
 `ubproject.toml` names it with `extend`, and the SPL keeps it out of git. It holds:
 
-- `[needs] variant_data_file`: the variant-level `reports` file of this build.
-- `[parse.parsers.*] include`: the documents of this build. These are the same patterns
-  the run's `config.json` gives Sphinx, plus this build's generated pages (test
+- `[variants] data_file`: the variant-level `reports` file of this build, as a path
+  relative to the project root. See "Which key names the file" below.
+- `[parse.parsers.md]` with `flavour = "myst"` and `[parse.parsers.rst]`, each with an
+  `include` list: the documents of this build. These are the same patterns
+  the variant `reports` run's `config.json` gives Sphinx, plus this build's generated pages (test
   specifications, test results, coverage, source listings), read where the build writes
   them. ubCode 0.37 and later evaluates the `test-report` directive of the results pages
   itself, so the test cases and the `results` links reach ubCode without a converter.
-- spl-core's needs model: the need types, link types and fields of
-  `report_generation/ubproject.toml`, copied from the installed spl-core at configure.
-  The copy cannot drift, and no path into the virtualenv is involved. The SPL's committed
+- spl-core's `report_generation/ubproject.toml`, copied from the installed spl-core at
+  configure: its `[source]` table (`respect_gitignore = false` and
+  `extend_include = ["build/**/__source_docs/**"]`), which lets ubCode read the gitignored
+  `build/` dir and the source docs, and spl-core's needs model, the need types, link types
+  and fields. The copy cannot drift, and no path into the virtualenv is involved. The SPL's committed
   `ubproject.toml` declares no needs model of its own, because `extend` replaces arrays
   such as `[[needs.types]]`. Sphinx keeps reading spl-core's file through
   `needs_from_toml`.
 
+The patterns are split between the two parsers, so that the md parser does not claim
+`.rst` pages:
+
+- A pattern that ends in `/**` goes to the md parser as `/**/*.md` and to the rst parser
+  as `/**/*.rst`.
+- Any other pattern goes to the parser its suffix names (`.md` or `.rst`).
+- A pattern with neither form reaches no parser. Configure prints a WARNING that names
+  it, so a pattern is not dropped without a word.
+
 Only a test-kit configure writes the selection, because only the test kit has
 documentation runs. The prod kit builds the target binaries, and a prod configure leaves
 the selection as it was. The last test-kit configure wins. Selecting a variant in CMake
-Tools configures it, so ubCode follows the selection. Without the variable, configure writes nothing into the source
-tree, and an SPL that does not use ubCode sees no change.
+Tools configures it, so ubCode follows the selection. Without the variable, configure
+writes nothing into the source tree, and an SPL that does not use ubCode sees no change
+in its Sphinx commands.
+
+#### Which key names the file
+
+The selection uses `[variants] data_file`. In sphinx-needs 9.1 and in ubCode this is the
+current key; `[needs] variant_data_file` is their legacy location (checked in
+`needs.py`, `_load_variants_from_toml`, and in the ubCode schema). Both tools read one
+location whole: as soon as `[variants]` sets `data` or `data_file`, they ignore the
+legacy `[needs]` variant keys. So the selection wins over any `[needs] variant_data*` key
+that an SPL's committed `ubproject.toml` still sets. Sphinx itself never reads the
+selection file; it gets the file through `-D needs_variant_data_file`.
 
 The document set has one source: CMake's include patterns. Sphinx and ubCode read the same
 list, so a component the variant leaves out is missing from both. An SPL's own documents
-outside its components (`index.md`, `doc/**`) reach both through one CMake variable, so
-that `conf.py` and the committed `ubproject.toml` declare no include list of their own.
+outside its components (`index.md`, `doc/**`) reach both through
+`SPL_PROJECT_DOCS_INCLUDE_PATTERNS` (default empty), which spl-core prepends to the
+variant `docs` and `reports` include patterns, so that `conf.py` and the committed
+`ubproject.toml` declare no include list of their own.
 `extend` replaces arrays rather than merging them, so a list declared in two places would
 silently hide one of them.
 
