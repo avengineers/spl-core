@@ -3,7 +3,7 @@ import json
 import os
 import re
 from abc import ABC, abstractmethod
-from collections.abc import Generator
+from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum, auto
@@ -142,17 +142,40 @@ class HeaderWriter(FileWriter):
         return "\n".join(result)
 
 
+def _feature_values(configuration_data: ConfigurationData) -> dict[str, Any]:
+    """Maps every configured element to its json value: booleans as true/false, everything else as is."""
+    result: dict[str, Any] = {}
+    for element in configuration_data.elements:
+        if element.type is ConfigElementType.BOOL:
+            result[element.name] = True if element.value == TriState.Y else False
+        else:
+            result[element.name] = element.value
+    return result
+
+
 class JsonWriter(FileWriter):
     """Writes the ConfigurationData in json format"""
 
     def generate_content(self, configuration_data: ConfigurationData) -> str:
-        result = {}
-        for element in configuration_data.elements:
-            if element.type is ConfigElementType.BOOL:
-                result[element.name] = True if element.value == TriState.Y else False
-            else:
-                result[element.name] = element.value
-        return json.dumps({"features": result}, indent=4)
+        return json.dumps({"features": _feature_values(configuration_data)}, indent=4)
+
+
+class FeaturesWriter(FileWriter):
+    """Writes the complete feature list: every declared boolean defaults to false, the configured elements override it.
+
+    ``write()`` sets the declared booleans that ``generate_content()`` reads.
+    """
+
+    _declared_booleans: Sequence[str] = ()
+
+    def write(self, configuration_data: ConfigurationData, declared_booleans: Sequence[str] = ()) -> None:
+        self._declared_booleans = declared_booleans
+        super().write(configuration_data)
+
+    def generate_content(self, configuration_data: ConfigurationData) -> str:
+        features: dict[str, Any] = dict.fromkeys(self._declared_booleans, False)
+        features.update(_feature_values(configuration_data))
+        return json.dumps({"features": features}, indent=4)
 
 
 class CMakeWriter(FileWriter):
@@ -270,14 +293,18 @@ def main() -> None:
     parser.add_argument("--out_header_file", required=True, type=non_existing_path)
     parser.add_argument("--out_json_file", required=False, type=non_existing_path)
     parser.add_argument("--out_cmake_file", required=False, type=non_existing_path)
+    parser.add_argument("--out_features_file", required=False, type=non_existing_path)
     arguments = parser.parse_args()
-    config = KConfig(arguments.kconfig_model_file, arguments.kconfig_config_file).config
+    k_config = KConfig(arguments.kconfig_model_file, arguments.kconfig_config_file)
+    config = k_config.config
 
     HeaderWriter(arguments.out_header_file).write(config)
     if arguments.out_json_file:
         JsonWriter(arguments.out_json_file).write(config)
     if arguments.out_cmake_file:
         CMakeWriter(arguments.out_cmake_file).write(config)
+    if arguments.out_features_file:
+        FeaturesWriter(arguments.out_features_file).write(config, k_config.declared_boolean_symbols())
 
 
 if __name__ == "__main__":

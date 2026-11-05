@@ -1,4 +1,6 @@
+import json
 import os
+import sys
 import textwrap
 from pathlib import Path
 from unittest.mock import patch
@@ -567,3 +569,86 @@ def test_main():
     assert json_file.exists()
     assert cmake_file.exists()
     assert header_file.exists()
+
+
+FEATURES_MODEL = r"""
+config WITH_PROMPT
+    bool "You can select this"
+    default n
+config HELPER_ON
+    bool
+    default y
+config HELPER_OFF
+    bool
+    default n
+config NAME
+    string "Not a boolean"
+    default "John Smith"
+config LEVEL
+    tristate "Not a boolean either"
+    default y
+config QUOTED
+    string "q"
+    default "say \"hi\" C:\\x"
+"""
+
+
+@pytest.mark.unit
+def test_features_writer_lists_every_declared_boolean(tmp_path: Path) -> None:
+    """
+    The features file lists every declared boolean, also the promptless ones that are off,
+    next to the configured symbols. Quotes and backslashes survive into valid JSON.
+    """
+    from spl_core.kconfig.kconfig import FeaturesWriter
+
+    model = tmp_path / "kconfig.txt"
+    model.write_text(FEATURES_MODEL)
+    iut = KConfig(model)
+    features_file = tmp_path / "features.json"
+
+    FeaturesWriter(features_file).write(iut.config, iut.declared_boolean_symbols())
+
+    level = json.loads(JsonWriter(tmp_path / "unused.json").generate_content(iut.config))["features"]["LEVEL"]
+    assert json.loads(features_file.read_text()) == {
+        "features": {
+            "WITH_PROMPT": False,
+            "HELPER_ON": True,
+            "HELPER_OFF": False,
+            "NAME": "John Smith",
+            "LEVEL": level,
+            "QUOTED": 'say "hi" C:\\x',
+        }
+    }
+
+
+@pytest.mark.unit
+def test_main_writes_the_features_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """
+    main() writes the features file on request and leaves the json file as it was.
+    """
+    model = tmp_path / "kconfig.txt"
+    model.write_text(FEATURES_MODEL)
+    header_file = tmp_path / "gen" / "header.h"
+    json_file = tmp_path / "gen" / "autoconf.json"
+    features_file = tmp_path / "gen" / "features.json"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "kconfig",
+            "--kconfig_model_file",
+            str(model),
+            "--out_header_file",
+            str(header_file),
+            "--out_json_file",
+            str(json_file),
+            "--out_features_file",
+            str(features_file),
+        ],
+    )
+
+    main()
+
+    assert features_file.exists()
+    assert json.loads(features_file.read_text())["features"]["HELPER_OFF"] is False
+    assert "HELPER_OFF" not in json.loads(json_file.read_text())["features"]
