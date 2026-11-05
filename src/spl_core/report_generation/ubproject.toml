@@ -24,7 +24,9 @@ incoming = "results from"
 outgoing = "results"
 # A test spec links the test cases named like its title. A spec for several cases,
 # such as a parametrized test, sets its results with links_from_filter instead.
-default = "[[links_from_match('case', 'title')]]"
+# Only test specs: links_from_match splits names on commas, so on a test case the
+# default would link the other cases that share a part of its name.
+predicates = [["type == 'test'", "[[links_from_match('case', 'title')]]"]]
 
 [needs.links.verifies]
 incoming = "is verified by"
