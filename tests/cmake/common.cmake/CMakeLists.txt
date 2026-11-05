@@ -399,3 +399,37 @@ endif()
 # The next macro call fails. This is an explorative test to show that compiler id "BIBI" is not supported.
 # Mocking of method "message()" sadly does not work.
 # _spl_set_test_compile_and_link_options("BIBI" "1.2.3")
+
+# ## test: _spl_write_variant_data (no KConfig model) #########
+# given a project without a feature model, so SPL_FEATURES_JSON is not set
+unset(SPL_FEATURES_JSON)
+set(COMPONENTS_INFO "{\"path\": \"src/main\"}" "{\"path\": \"src/greeter\"}")
+set(_variant_data_file ${CMAKE_CURRENT_BINARY_DIR}/variant_data_without_kconfig.json)
+
+# when
+_spl_write_variant_data(${_variant_data_file} docs component src/greeter)
+
+# then: features is an empty object and build_config holds the build's values
+file(READ ${_variant_data_file} _variant_data_content)
+string(JSON _features_type TYPE "${_variant_data_content}" features)
+string(JSON _features_length LENGTH "${_variant_data_content}" features)
+if(NOT _features_type STREQUAL "OBJECT" OR NOT _features_length EQUAL 0)
+    message(FATAL_ERROR "Failing Test case: expected 'features' to be an empty object but got '${_variant_data_content}'.")
+endif()
+
+foreach(_key_value variant=mytestvariant kit=prod target=docs scope=component component=src/greeter)
+    string(REPLACE "=" ";" _key_value ${_key_value})
+    list(GET _key_value 0 _key)
+    list(GET _key_value 1 _expected)
+    string(JSON _actual GET "${_variant_data_content}" build_config ${_key})
+    if(NOT _actual STREQUAL _expected)
+        message(FATAL_ERROR "Failing Test case: expected build_config.${_key} '${_expected}' but got '${_actual}'.")
+    endif()
+endforeach()
+
+string(JSON _components_length LENGTH "${_variant_data_content}" build_config components)
+string(JSON _component_0 GET "${_variant_data_content}" build_config components 0)
+string(JSON _component_1 GET "${_variant_data_content}" build_config components 1)
+if(NOT _components_length EQUAL 2 OR NOT _component_0 STREQUAL "src/main" OR NOT _component_1 STREQUAL "src/greeter")
+    message(FATAL_ERROR "Failing Test case: unexpected build_config.components in '${_variant_data_content}'.")
+endif()
