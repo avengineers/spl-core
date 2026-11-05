@@ -14,13 +14,15 @@ KICKSTART_PROJECT = Path(__file__).parents[2] / "src" / "spl_core" / "kickstart"
 
 JUNIT = """<?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-  <testsuite name="greeter" tests="4" failures="1" errors="0" skipped="0" time="0.04">
+  <testsuite name="greeter" tests="6" failures="1" errors="0" skipped="0" time="0.06">
     <testcase name="GreeterTest.SaysHello" classname="greeter" time="0.01"/>
     <testcase name="GreeterTest.SaysGoodbye" classname="greeter" time="0.01">
       <failure message="expected 'Goodbye'">assert farewell() == "Goodbye"</failure>
     </testcase>
     <testcase name="LanguageTests/GreeterTest.Greets/0" classname="greeter" time="0.01"/>
     <testcase name="LanguageTests/GreeterTest.Greets/1" classname="greeter" time="0.01"/>
+    <testcase name="PoliteTests/GreeterTest.Thanks/Thanks, friend" classname="greeter" time="0.01"/>
+    <testcase name="PoliteTests/GreeterTest.Thanks/Cheers, friend" classname="greeter" time="0.01"/>
   </testsuite>
 </testsuites>
 """
@@ -123,6 +125,12 @@ class TestKickstartReport:
                 case_id(needs, "LanguageTests/GreeterTest.Greets/1"),
             ]
         )
+
+    def test_a_test_case_links_no_results(self, report):
+        # Case names with a comma share a value once split on it ("friend" here), which
+        # once linked such cases to each other.
+        needs, _ = report
+        assert {need_id: need["results"] for need_id, need in needs.items() if need["type"] == "testcase" and need["results"]} == {}
 
     def test_the_report_lists_the_failed_case(self, report):
         needs, html = report
