@@ -85,6 +85,11 @@ class ArtifactsArchive:
                 - a (Path, archive_path_override) tuple, where ``archive_path_override``
                   overrides the path/name the artifact is stored under inside the archive.
                   This allows renaming files per artifact (e.g. link_out.elf -> application.elf).
+                  It must be a relative path without ``..`` components.
+            If two entries map to the same archive path, the later one overwrites the
+            earlier one in the archive and a warning is logged.
+        Raises:
+            ValueError: If an ``archive_path_override`` is absolute, rooted, has a drive or contains ``..``.
         """
         for artifact in artifacts:
             if isinstance(artifact, tuple):
@@ -102,7 +107,15 @@ class ArtifactsArchive:
                 to store the artifact under. When provided, it takes precedence over
                 the path derived from out_dir. When None, the previous behavior is
                 preserved.
+        Raises:
+            ValueError: If ``archive_path_override`` is absolute, rooted, has a drive or contains ``..``.
         """
+        # anchor also catches "/foo" and "C:foo" on Windows, which is_absolute() misses.
+        # Such paths would make create_archive() copy the file outside the staging dir,
+        # so it would silently be missing from the archive.
+        if archive_path_override is not None and (archive_path_override.anchor or ".." in archive_path_override.parts):
+            raise ValueError(f"archive_path_override must be a relative path inside the archive without '..', got: {archive_path_override}")
+
         # Convert to absolute path first
         absolute_path = artifact_path.resolve() if not artifact_path.is_absolute() else artifact_path
 
@@ -114,6 +127,10 @@ class ArtifactsArchive:
         else:
             # If not relative to out_dir, just use the name
             archive_path = Path(absolute_path.name)
+
+        overwritten = next((artifact for artifact in reversed(self.archive_artifacts) if artifact.archive_path == archive_path), None)
+        if overwritten is not None:
+            logger.warning(f"Archive path '{archive_path}' is already registered for {overwritten.absolute_path}; {absolute_path} will overwrite it in the archive")
 
         self.archive_artifacts.append(
             self.ArchiveArtifact(

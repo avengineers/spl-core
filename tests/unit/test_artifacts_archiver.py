@@ -323,6 +323,83 @@ def test_register_tuple_via_named_archive(test_dir, test_files):
     assert "firmware/app.elf" in stored_paths, "Named-archive tuple entry should use the overridden path"
 
 
+@pytest.mark.parametrize(
+    "archive_path_override",
+    [
+        Path(Path.cwd().anchor) / "foo" / "app.elf",
+        Path("/foo/app.elf"),
+        Path("../app.elf"),
+        Path("firmware/../../app.elf"),
+    ],
+    ids=["absolute", "root_without_drive", "parent_dir", "nested_parent_dir"],
+)
+def test_register_tuple_rejects_override_outside_archive(test_dir, test_files, archive_path_override):
+    """An override that would leave the staging dir raises instead of silently dropping the file from the archive."""
+    # Arrange
+    archiver = ArtifactsArchiver()
+    archiver.add_archive(test_dir / "output", "invalid.7z")
+
+    # Act / Assert
+    with pytest.raises(ValueError, match="archive_path_override"):
+        archiver.register([(test_files[4], archive_path_override)])
+    assert archiver.get_archive("default").archive_artifacts == [], "Rejected entry must not be registered"
+
+
+def test_register_warns_when_override_reuses_archive_path(test_dir, test_files):
+    """Two overrides with the same archive path overwrite each other in the archive, so a warning names both sources."""
+    # Arrange
+    archiver = ArtifactsArchiver()
+    archiver.add_archive(test_dir / "output", "duplicate.7z")
+
+    # Act
+    with patch("spl_core.test_utils.artifacts_archiver.logger") as mock_logger:
+        archiver.register([(test_files[0], Path("app.elf")), (test_files[4], Path("app.elf"))])
+
+    # Assert
+    mock_logger.warning.assert_called_once()
+    message = mock_logger.warning.call_args[0][0]
+    assert "app.elf" in message
+    assert str(test_files[0]) in message, "Warning should name the overwritten artifact"
+    assert str(test_files[4]) in message, "Warning should name the overwriting artifact"
+
+
+def test_register_warns_when_flattened_names_collide(test_dir):
+    """Files outside out_dir are flattened to their name, so two equal names from different folders collide."""
+    # Arrange
+    first = test_dir / "a" / "app.log"
+    second = test_dir / "b" / "app.log"
+    for file in (first, second):
+        file.parent.mkdir()
+        file.write_text(file.parent.name)
+
+    archiver = ArtifactsArchiver()
+    archiver.add_archive(test_dir / "output", "flattened.7z")
+
+    # Act
+    with patch("spl_core.test_utils.artifacts_archiver.logger") as mock_logger:
+        archiver.register([first, second])
+
+    # Assert
+    mock_logger.warning.assert_called_once()
+    message = mock_logger.warning.call_args[0][0]
+    assert str(first) in message
+    assert str(second) in message
+
+
+def test_register_does_not_warn_for_distinct_archive_paths(test_dir, test_files):
+    """No warning when every artifact maps to its own archive path."""
+    # Arrange
+    archiver = ArtifactsArchiver()
+    archiver.add_archive(test_dir / "output", "distinct.7z")
+
+    # Act
+    with patch("spl_core.test_utils.artifacts_archiver.logger") as mock_logger:
+        archiver.register([*test_files, (test_files[0], Path("docs/readme.txt"))])
+
+    # Assert
+    mock_logger.warning.assert_not_called()
+
+
 def test_register_accepts_prebuilt_path_list(test_dir, test_files):
     """A list[Path] built before the call is accepted without type errors (checked by mypy)."""
     # Arrange
