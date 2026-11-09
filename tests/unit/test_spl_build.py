@@ -107,10 +107,18 @@ def test_execute_with_target_from_constructor() -> None:
         assert result == 0, "Expected execute to return 0 on success."
 
 
-def test_execute_retry_on_license_issue(spl_build: SplBuild) -> None:
+@pytest.mark.parametrize(
+    "license_error",
+    [
+        "No valid floating license",
+        "Fatal error[LMS001]: License check failed. Use the IAR License Manager to",
+        "Could not detect CMAKE_C_COMPILER_VERSION.  This should be automatic.\nCheck your product license.",
+    ],
+)
+def test_execute_retry_on_license_issue(spl_build: SplBuild, license_error: str) -> None:
     with patch("time.sleep") as mock_sleep, patch("spl_core.test_utils.spl_build.sys.platform", "win32"):
         # Setup mock outputs to simulate license failure and then success
-        failure_output = MagicMock(returncode=1, stdout="No valid floating license")
+        failure_output = MagicMock(returncode=1, stdout=license_error)
         success_output = MagicMock(returncode=0)
 
         with mock_command_execution(return_values=[failure_output, success_output]) as (mock_constructor, mock_executor):

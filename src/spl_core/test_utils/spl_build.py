@@ -173,7 +173,7 @@ class SplBuild:
             return_code = result.returncode
             if result.returncode:
                 if result.stdout:
-                    if any(error in str(result.stdout) for error in ["No valid floating license", "No valid license", "GHS_LMHOST = N/A"]):
+                    if any(error in str(result.stdout) for error in ["No valid floating license", "No valid license", "GHS_LMHOST = N/A", "License check failed", "Check your product license"]):
                         print("Probably a license issue, retrying ...")
                         time.sleep(10)
                     else:
