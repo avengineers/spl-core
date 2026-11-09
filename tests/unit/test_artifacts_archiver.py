@@ -250,6 +250,23 @@ def test_register_tuple_places_file_at_custom_subpath(test_dir, test_files):
     stored_paths = _list_archive_paths(archive_path)
     assert "docs/manual.txt" in stored_paths, "File should be stored at the overridden subpath"
 
+def test_register_tuple_and_rename_folder(test_dir, test_files):
+    """A tuple override may rename a folder inside the archive."""
+    # Arrange
+    archiver = ArtifactsArchiver()
+    output_dir = test_dir / "output"
+    archiver.add_archive(output_dir, "subpath.7z")
+
+    # test_files[0].parent is the whole temp folder -> stored as docs/
+    archiver.register([(test_files[0].parent, Path("docs"))])
+
+    # Act
+    archive_path = archiver.create_archive()
+
+    # Assert
+    stored_paths = _list_archive_paths(archive_path)
+    assert "docs" in stored_paths, "File should be stored at the overridden subpath"
+
 
 def test_register_mixed_plain_and_tuple_entries(test_dir, test_files):
     """A single register call may mix plain Path entries and (Path, Path) tuples."""
