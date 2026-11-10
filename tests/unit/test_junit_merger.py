@@ -454,7 +454,7 @@ def test_main_cli_with_variant_argument(temp_dir, sample_junit_xml_1, sample_jun
 
 
 def test_merge_removes_properties_and_system_out(temp_dir):
-    """Test that merge removes <properties> and <system-out> from testcases while preserving test results"""
+    """Test that merge removes <properties> and the <system-out> of passing testcases, but keeps the <system-out> of failing ones"""
     # Arrange - Create input file with verbose blocks
     component_dir = temp_dir / "test_component"
     component_dir.mkdir()
@@ -493,28 +493,23 @@ def test_merge_removes_properties_and_system_out(temp_dir):
     testcases = list(suite)
     assert len(testcases) == 2
 
-    # Check that properties and system-out are removed
+    # Check that properties are removed from all testcases
     for testcase in testcases:
-        # Verify system_out is None or empty
-        assert testcase.system_out is None or testcase.system_out == ""
+        assert testcase._elem.find("properties") is None, "Properties element should be removed"
 
-        # Verify properties element is not present in the XML
-        if hasattr(testcase, "_elem") and testcase._elem is not None:
-            properties_elem = testcase._elem.find("properties")
-            assert properties_elem is None, "Properties element should be removed"
-
-            # Verify system-out element is not present
-            system_out_elem = testcase._elem.find("system-out")
-            assert system_out_elem is None or (system_out_elem.text is None or system_out_elem.text.strip() == ""), "System-out element should be removed or empty"
-
-    # Verify that critical test result elements are preserved
-    failing_test = next((tc for tc in testcases if tc.name == "test_fail"), None)
-    assert failing_test is not None
-    assert failing_test.result is not None, "Failure information should be preserved"
-
-    # Verify essential attributes are preserved
+    # The passing test loses its system-out
     passing_test = next((tc for tc in testcases if tc.name == "test_pass"), None)
     assert passing_test is not None
+    assert not passing_test.system_out
+
+    # The failing test keeps its system-out, system-err and failure
+    failing_test = next((tc for tc in testcases if tc.name == "test_fail"), None)
+    assert failing_test is not None
+    assert failing_test.result, "Failure information should be preserved"
+    assert failing_test.system_out == "Verbose output from failing test"
+    assert failing_test.system_err == "Some error output that should be preserved"
+
+    # Verify essential attributes are preserved
     assert passing_test.classname == "Tests.test_pass"
     assert passing_test.time == 0.001
 
