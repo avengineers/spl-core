@@ -4,6 +4,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -74,30 +75,62 @@ class ArtifactsArchive:
         self.archive_name: str = archive_name
         self.archive_artifacts: list[ArtifactsArchive.ArchiveArtifact] = []
 
-    def register(self, artifacts: list[Path]) -> None:
+    def register(self, artifacts: Sequence[Path | tuple[Path, Path]]) -> None:
         """
         Register artifacts for archiving.
         Args:
-            artifacts: List of paths to artifacts (files or directories) to be archived.
+            artifacts: List of artifacts to be archived. Each entry is either:
+                - a Path (file or directory), archived under its name/relative path
+                  as before, or
+                - a (Path, archive_path_override) tuple, where ``archive_path_override``
+                  overrides the path/name the artifact is stored under inside the archive.
+                  This allows renaming files per artifact (e.g. link_out.elf -> application.elf).
+                  It must be a relative path without ``..`` components.
+            If two entries map to the same archive path, the later one overwrites the
+            earlier one in the archive and a warning is logged.
+        Raises:
+            ValueError: If an ``archive_path_override`` is absolute, rooted, has a drive or contains ``..``.
         """
         for artifact in artifacts:
-            self._add_artifact(artifact)
+            if isinstance(artifact, tuple):
+                source, archive_path_override = artifact
+                self._add_artifact(source, archive_path_override=archive_path_override)
+            else:
+                self._add_artifact(artifact)
 
-    def _add_artifact(self, artifact_path: Path) -> None:
+    def _add_artifact(self, artifact_path: Path, archive_path_override: Path | None = None) -> None:
         """
         Add an artifact (file or directory) to the archive list.
         Args:
             artifact_path: path to the artifact to be archived.
+            archive_path_override: optional path/name (relative to the archive root)
+                to store the artifact under. When provided, it takes precedence over
+                the path derived from out_dir. When None, the previous behavior is
+                preserved.
+        Raises:
+            ValueError: If ``archive_path_override`` is absolute, rooted, has a drive or contains ``..``.
         """
+        # anchor also catches "/foo" and "C:foo" on Windows, which is_absolute() misses.
+        # Such paths would make create_archive() copy the file outside the staging dir,
+        # so it would silently be missing from the archive.
+        if archive_path_override is not None and (archive_path_override.anchor or ".." in archive_path_override.parts):
+            raise ValueError(f"archive_path_override must be a relative path inside the archive without '..', got: {archive_path_override}")
+
         # Convert to absolute path first
         absolute_path = artifact_path.resolve() if not artifact_path.is_absolute() else artifact_path
 
         # Calculate the relative path from out_dir for the archive
-        if absolute_path.is_relative_to(self.out_dir.absolute()):
+        if archive_path_override is not None:
+            archive_path = archive_path_override
+        elif absolute_path.is_relative_to(self.out_dir.absolute()):
             archive_path = absolute_path.relative_to(self.out_dir.absolute())
         else:
             # If not relative to out_dir, just use the name
             archive_path = Path(absolute_path.name)
+
+        overwritten = next((artifact for artifact in reversed(self.archive_artifacts) if artifact.archive_path == archive_path), None)
+        if overwritten is not None:
+            logger.warning(f"Archive path '{archive_path}' is already registered for {overwritten.absolute_path}; {absolute_path} will overwrite it in the archive")
 
         self.archive_artifacts.append(
             self.ArchiveArtifact(
@@ -201,12 +234,14 @@ class ArtifactsArchiver:
             self._target_repos[archive_name] = target_repo
         return archive
 
-    def register(self, artifacts: list[Path], archive_name: str = "default") -> None:
+    def register(self, artifacts: Sequence[Path | tuple[Path, Path]], archive_name: str = "default") -> None:
         """
         Register artifacts for archiving to a specific archive.
 
         Args:
-            artifacts: List of paths to artifacts (files or directories) to be archived.
+            artifacts: List of artifacts (files or directories) to be archived. Each
+                entry is either a Path or a (Path, archive_path_override) tuple to store
+                the artifact under a custom name/relative path inside the archive.
             archive_name: Name of the archive to register artifacts to (defaults to "default")
 
         Raises:

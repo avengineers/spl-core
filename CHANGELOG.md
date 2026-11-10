@@ -1,6 +1,35 @@
 # CHANGELOG
 
 
+## v9.2.0 (2026-11-10)
+
+### Bug Fixes
+
+- Accept any sequence of artifacts in archiver register
+  ([`0ecfe5d`](https://github.com/avengineers/spl-core/commit/0ecfe5d20733c243b6355e77c92e8584c24e7b3e))
+
+- Reject archive path overrides that leave the archive, add warnings for overridden files
+  ([`c37be2c`](https://github.com/avengineers/spl-core/commit/c37be2ccaffd007c94db61cbc1124fa0e9ce14eb))
+
+### Features
+
+- Rename file and directories in artifacts archiver
+  ([`18a9611`](https://github.com/avengineers/spl-core/commit/18a961144a17ab1c1814db67333fd54b5ef13643))
+
+### Refactoring
+
+- Rename archive_name to archive_path_override in archiver
+  ([`ca7da1d`](https://github.com/avengineers/spl-core/commit/ca7da1de980a5e7e8efd7c8893752388bba61c03))
+
+- Use Path for archive path override in archiver
+  ([`ec6d9b5`](https://github.com/avengineers/spl-core/commit/ec6d9b54c86236c697c511ebdee7171ea312d2de))
+
+### Testing
+
+- Add archiver test for renaming a folder via tuple override
+  ([`726647a`](https://github.com/avengineers/spl-core/commit/726647a321e17f0f18db9afeff6c7f8c74604eb5))
+
+
 ## v9.1.2 (2026-11-05)
 
 ### Bug Fixes
