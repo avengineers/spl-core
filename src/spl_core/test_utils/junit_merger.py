@@ -86,8 +86,10 @@ class JUnitMerger:
                         if self.variant and testcase.classname:
                             testcase.classname = f"{self.variant}.{testcase.classname}"
 
-                        # Remove system-out and properties, but preserve system-err and result elements
-                        testcase.system_out = None
+                        # Remove properties, and system-out of passed or skipped testcases.
+                        # A failed testcase keeps its system-out: CTest writes the test output only there.
+                        if not (testcase.is_failure or testcase.is_error):
+                            testcase.system_out = None
                         # Clear properties by setting to empty list
                         if hasattr(testcase, "_elem") and testcase._elem is not None:
                             properties_elem = testcase._elem.find("properties")
