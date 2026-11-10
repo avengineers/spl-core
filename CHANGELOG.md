@@ -1,6 +1,16 @@
 # CHANGELOG
 
 
+## v9.2.1 (2026-11-10)
+
+### Bug Fixes
+
+- Keep system-out of failed tests in the merged variant junit xml
+  ([`051ded9`](https://github.com/avengineers/spl-core/commit/051ded9759be5dfc33f92f1141aacc450735fc77))
+
+CTest writes the test output only to system-out, so a failed test showed nothing.
+
+
 ## v9.2.0 (2026-11-10)
 
 ### Bug Fixes
