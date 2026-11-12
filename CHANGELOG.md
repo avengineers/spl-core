@@ -1,6 +1,42 @@
 # CHANGELOG
 
 
+## v9.3.0 (2026-11-12)
+
+### Documentation
+
+- Describe the ubCode selection in ADR 0005 and the architecture document
+  ([`a880c58`](https://github.com/avengineers/spl-core/commit/a880c58cb84773e6bfc8ce10be491e70d14b4c48))
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+
+- Record ADR 0005, configure writes the selected variant for ubCode
+  ([`6c88c6a`](https://github.com/avengineers/spl-core/commit/6c88c6a5cba19efffde3ce933e3249674fc3ee50))
+
+ubCode and ubc read an SPL's documentation without running Sphinx, so they see neither the variant's
+  document set nor its feature values. The ADR decides that CMake configure writes both: a variant
+  data file for every Sphinx run, and, when the SPL asks for it, one generated ubCode configuration
+  at the project root that selects the last configured test-kit build. It amends ADR 0001 for an SPL
+  that drops Jinja.
+
+Status: proposed.
+
+Refs: SPLE-2781
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+### Features
+
+- Configure writes a variant data file for every Sphinx run
+  ([`c3cceca`](https://github.com/avengineers/spl-core/commit/c3ccecafae500b3e8879e5afa56f42f4b0306713))
+
+- Configure writes the ubCode selection for the configured build
+  ([`89060b1`](https://github.com/avengineers/spl-core/commit/89060b15a0c9bb72abfec68ffeebe2cc41819f3a))
+
+- Kconfig writes the complete feature list for the variant data
+  ([`71ccd60`](https://github.com/avengineers/spl-core/commit/71ccd60c5b676bc7779fc452c563404eb0cba5cf))
+
+
 ## v9.2.1 (2026-11-10)
 
 ### Bug Fixes
