@@ -172,6 +172,8 @@ The `test` is used to tag the component test case. It shall have:
 
 A parametrized test has one test result per parameter, named after the test with
 the parameter's index appended (`MyCompTestSuite/MyComp.testCorrectBehavior/0`, ...).
+SPL Core discovers the tests with `NO_PRETTY_VALUES`, so the name holds the index and never
+a print of the parameter value. A printed value can hold raw bytes and change on every run.
 Its `test` selects them with a `results` filter instead of its title:
 
 ```cpp

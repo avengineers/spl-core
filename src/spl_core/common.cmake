@@ -1084,8 +1084,11 @@ macro(_spl_add_test_suite COMPONENT_NAME PROD_SRC TEST_SOURCES)
         pthread
     )
 
+    # NO_PRETTY_VALUES keeps the parameter index in the name of a value-parameterized
+    # test (Suite/Test/0). A printed value can hold raw bytes and change on every run.
     gtest_discover_tests(
         ${exe_name}
+        NO_PRETTY_VALUES
         PROPERTIES
         DISCOVERY_TIMEOUT 60
     )
