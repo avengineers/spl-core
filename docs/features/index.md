@@ -97,3 +97,15 @@ To use this step, you need to add it to your pypeline.yaml file as follows:
 ```
 
 It is mandatory that the CheckCIContext step is executed before the CollectPRChanges step.
+
+The step runs on every build; pypeline does not cache it.
+For a pull request, it writes `pr_changes.json` into its output directory, with these fields:
+
+- `ci_system`: the CI system, for example `JENKINS`.
+- `target_branch`: the branch the pull request merges into.
+- `current_branch`: the source branch of the pull request.
+- `commit_id`: the head commit of the source branch.
+- `changed_files`: the changed files. A renamed file is listed under its new path.
+- `renamed_files`: every rename git detects, as new path to old path. Pure moves are included.
+
+For other builds, the step writes no file.
