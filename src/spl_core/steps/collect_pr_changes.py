@@ -99,13 +99,9 @@ class CollectPRChanges(PipelineStep):
     def update_execution_context(self) -> None:
         pass
 
-    def get_config(self) -> dict[str, str] | None:
-        """
-        Get runnable configuration.
-
-        (!) Do NOT put sensitive information in the configuration. It will be stored in a file.
-        """
-        return {"latest_commit": self._get_commit_id()}
+    def get_needs_dependency_management(self) -> bool:
+        """Always run: the step is cheap, and a cached result can name the wrong target branch or the wrong changed files."""
+        return False
 
     def _get_commit_id(self, ci_context: CIContext | None = None) -> str:
         """Get the latest commit ID in the current branch."""

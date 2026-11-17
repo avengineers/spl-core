@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from py_app_dev.core.runnable import Executor
 from pypeline.domain.execution_context import ExecutionContext
 from pypeline_semantic_release.check_ci_context import CIContext, CISystem
 
@@ -24,6 +25,24 @@ def collect_pr_changes(mock_execution_context):
 
 class TestCollectPRChanges:
     """Test cases for CollectPRChanges pipeline step."""
+
+    def test_get_needs_dependency_management_is_false(self, collect_pr_changes):
+        assert collect_pr_changes.get_needs_dependency_management() is False
+        assert collect_pr_changes.needs_dependency_management is False
+
+    @patch("spl_core.steps.collect_pr_changes.SubprocessExecutor")
+    def test_runs_again_when_only_the_target_changes(self, mock_subprocess, mock_execution_context, tmp_path):
+        """A second PR build with the same source head but another target must not reuse the first result."""
+        mock_execution_context.create_artifacts_locator.return_value.build_dir = tmp_path
+        mock_execution_context.data_registry = MagicMock()
+        mock_subprocess.return_value.execute.return_value = MagicMock(returncode=0, stdout="M\tfile.c\n")
+        for target in ["develop", "release"]:
+            mock_execution_context.data_registry.find_data.return_value = [CIContext(ci_system=CISystem.JENKINS, current_branch="feature", target_branch=target, is_pull_request=True)]
+            step = CollectPRChanges(mock_execution_context, group_name="test_group")
+            step.output_dir.mkdir(parents=True, exist_ok=True)
+            Executor(step.output_dir).execute(step)
+        written = PR_Changes.from_json((tmp_path / "test_group" / "pr_changes.json").read_text(encoding="utf-8"))
+        assert written.target_branch == "release"
 
     @patch("spl_core.steps.collect_pr_changes.SubprocessExecutor")
     @patch("spl_core.steps.collect_pr_changes.CollectPRChanges._get_commit_id")
