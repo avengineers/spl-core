@@ -170,11 +170,40 @@ The `test` is used to tag the component test case. It shall have:
 - a `tests` tag to link the test case to the specification. One can link multiple specifications by separating them with a comma.
 - free text to describe the test case in more details.
 
-A parametrized test has one test result per parameter, named after the test with
-the parameter's index appended (`MyCompTestSuite/MyComp.testCorrectBehavior/0`, ...).
-Its `test` selects them with a `results` filter instead of its title:
+A parametrized test has one test result per parameter. CTest names each result after
+the test, with the printed parameter value appended. Give the parameter struct an
+`operator<<` that prints a short description:
+
+- The result is named after the description, for example
+  `MyCompTestSuite/MyComp.testCorrectBehavior/Descr0`.
+- The descriptions must be unique within the test suite. Two parameters with the same
+  description give two results with the same name.
+
+```{warning}
+A parameter struct without `operator<<` (or `PrintTo`) is printed as raw bytes, for example
+`MyCompTestSuite/MyComp.testCorrectBehavior/16-byte object <6A-63 DF-31 ...>`. The bytes
+include memory addresses, so the name changes on every run. This breaks the history of the
+test results and every filter that selects them by name.
+```
+
+Its `test` selects the results with a `results` filter on the common prefix instead of its title:
 
 ```cpp
+struct TestParam
+{
+    const char *description;
+    int value;
+};
+
+inline std::ostream &operator<<(std::ostream &os, const TestParam &param)
+{
+    return os << param.description;
+}
+
+class MyComp : public ::testing::TestWithParam<TestParam>
+{
+};
+
 /*!
 * @rst
 *
@@ -195,8 +224,8 @@ INSTANTIATE_TEST_SUITE_P(
     MyCompTestSuite,
     MyComp,
     ::testing::Values(
-        TestParam{ "Descr0", 0},
-        TestParam{ "Descr1", 0},
+        TestParam{"Descr0", 0},
+        TestParam{"Descr1", 1}
     )
 );
 ```
