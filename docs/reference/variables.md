@@ -9,6 +9,13 @@ per-component coverage JSON and HTML generation as well as variant-level report 
 
 **Default:** empty (no additional options)
 
+spl-core writes every HTML coverage report with `--html-nested --html-theme boost.blue`.
+These options need gcovr 8.7 or later. gcovr does not accept some HTML options together
+with them, and the coverage report build then fails. Do not add these options:
+
+- `--html-details`: gcovr does not combine it with `--html-nested`.
+- `--html-single-page` and `--html-static-report`: the boost theme does not support them.
+
 Example — exclude generated and third-party files from coverage:
 
 ```cmake

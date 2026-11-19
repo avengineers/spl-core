@@ -446,7 +446,7 @@ Code Coverage
                 # This will avoid the need to copy the coverage/** directory inside the component report sphinx output directory.
                 add_custom_command(
                     OUTPUT ${_cov_out_html}
-                    COMMAND ${GCOVR_EXE} --root ${PROJECT_SOURCE_DIR} --add-tracefile ${_cov_out_json} --html --html-details --output ${_cov_out_html} ${GCOVR_ADDITIONAL_OPTIONS}
+                    COMMAND ${GCOVR_EXE} --root ${PROJECT_SOURCE_DIR} --add-tracefile ${_cov_out_json} --html-nested --html-theme boost.blue --output ${_cov_out_html} ${GCOVR_ADDITIONAL_OPTIONS}
                     DEPENDS ${_cov_out_json}
                     COMMENT "Generating component coverage html report ${_cov_out_html} ..."
                 )
@@ -842,7 +842,7 @@ Code Coverage
             set(_cov_out_json ${component_path}/coverage.json)
             add_custom_command(
                 OUTPUT ${_cov_out_html}
-                COMMAND ${GCOVR_EXE} --root ${PROJECT_SOURCE_DIR} --add-tracefile ${_cov_out_json} --html --html-details --output ${_cov_out_html} ${GCOVR_ADDITIONAL_OPTIONS}
+                COMMAND ${GCOVR_EXE} --root ${PROJECT_SOURCE_DIR} --add-tracefile ${_cov_out_json} --html-nested --html-theme boost.blue --output ${_cov_out_html} ${GCOVR_ADDITIONAL_OPTIONS}
                 DEPENDS ${_cov_out_json}
                 COMMENT "Generating variant component coverage html report ${_cov_out_html} ..."
             )
@@ -853,7 +853,7 @@ Code Coverage
     set(_cov_out_variant_html reports/html/${_rel_reports_output_dir}/coverage/index.html)
     add_custom_command(
         OUTPUT ${_cov_out_variant_html}
-        COMMAND ${GCOVR_EXE} --root ${CMAKE_SOURCE_DIR} --add-tracefile \"${CMAKE_CURRENT_BINARY_DIR}/**/${COV_OUT_JSON}\" --html --html-details --output ${_cov_out_variant_html}
+        COMMAND ${GCOVR_EXE} --root ${CMAKE_SOURCE_DIR} --add-tracefile \"${CMAKE_CURRENT_BINARY_DIR}/**/${COV_OUT_JSON}\" --html-nested --html-theme boost.blue --output ${_cov_out_variant_html}
         DEPENDS ${GLOBAL_COMPONENTS_COVERAGE_JSON_LIST}
         COMMENT "Generating overall code coverage report ${_cov_out_variant_html} ..."
     )
@@ -917,7 +917,7 @@ function(_spl_coverage_create_overall_report)
         # Generate variant-level HTML coverage report
         add_custom_command(
             OUTPUT ${COV_OUT_VARIANT_HTML}
-            COMMAND ${GCOVR_EXE} --root ${CMAKE_SOURCE_DIR} --add-tracefile \"${CMAKE_CURRENT_BINARY_DIR}/**/${COV_OUT_JSON}\" --html --html-details --output ${COV_OUT_VARIANT_HTML}
+            COMMAND ${GCOVR_EXE} --root ${CMAKE_SOURCE_DIR} --add-tracefile \"${CMAKE_CURRENT_BINARY_DIR}/**/${COV_OUT_JSON}\" --html-nested --html-theme boost.blue --output ${COV_OUT_VARIANT_HTML}
             DEPENDS ${GLOBAL_COMPONENTS_COVERAGE_JSON_LIST}
             COMMENT "Generating overall code coverage report ${COV_OUT_VARIANT_HTML} ..."
         )
@@ -1062,7 +1062,7 @@ macro(_spl_add_test_suite COMPONENT_NAME PROD_SRC TEST_SOURCES)
     set(COV_OUT_HTML reports/coverage/index.html)
     add_custom_command(
         OUTPUT ${COV_OUT_HTML}
-        COMMAND ${GCOVR_EXE} --root ${CMAKE_SOURCE_DIR} --add-tracefile ${COV_OUT_JSON} --html --html-details --output ${COV_OUT_HTML} ${GCOVR_ADDITIONAL_OPTIONS}
+        COMMAND ${GCOVR_EXE} --root ${CMAKE_SOURCE_DIR} --add-tracefile ${COV_OUT_JSON} --html-nested --html-theme boost.blue --output ${COV_OUT_HTML} ${GCOVR_ADDITIONAL_OPTIONS}
         DEPENDS ${COV_OUT_JSON}
         COMMENT "Generating component ${COMPONENT_NAME} code coverage html report ${COV_OUT_HTML} ..."
     )

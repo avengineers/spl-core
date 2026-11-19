@@ -1,4 +1,5 @@
 import dataclasses
+import json
 import os
 import random
 import re
@@ -11,6 +12,7 @@ from pathlib import Path
 from time import perf_counter
 from typing import Any
 
+from bs4 import BeautifulSoup
 from py_app_dev.core.subprocess import SubprocessExecutor
 
 from spl_core.kickstart.create import KickstartProject, ProjectBuilder
@@ -18,6 +20,31 @@ from spl_core.kickstart.create import KickstartProject, ProjectBuilder
 
 def this_repository_root_dir() -> Path:
     return Path(__file__).parent.parent.absolute()
+
+
+GCOVR_TREE_DATA_ASSIGNMENT = "window.GCOVR_TREE_DATA ="
+
+
+def assert_coverage_report_has_file_tree(report_html: Path, source_file: str) -> None:
+    """Assert that a gcovr HTML report shows its files as a folder tree, with source_file in it.
+
+    The sidebar is a placeholder in the HTML; the script it loads renders the tree
+    from the data that gcovr writes into that script.
+    """
+    assert report_html.exists(), f"Coverage report {report_html} not found"
+    soup = BeautifulSoup(report_html.read_text(encoding="utf-8"), "html.parser")
+    assert soup.find("nav", id="file-tree") is not None, f"{report_html} has no file tree sidebar"
+
+    scripts = [report_html.parent / script["src"] for script in soup.find_all("script", src=True)]
+    tree_scripts = [script.read_text(encoding="utf-8") for script in scripts if script.exists() and GCOVR_TREE_DATA_ASSIGNMENT in script.read_text(encoding="utf-8")]
+    assert tree_scripts, f"No script of {report_html} holds the file tree data"
+    tree = json.loads(tree_scripts[0].split(GCOVR_TREE_DATA_ASSIGNMENT, 1)[1].strip().removesuffix(";"))
+
+    def file_names(nodes: list[dict[str, Any]]) -> list[str]:
+        return [name for node in nodes for name in (file_names(node.get("children", [])) if node["isDirectory"] else [node["name"]])]
+
+    tree_files = file_names(tree)
+    assert any(Path(name).name == source_file for name in tree_files), f"{source_file} not in the file tree of {report_html}: {tree_files}"
 
 
 class ExecutionTime(ContextDecorator):

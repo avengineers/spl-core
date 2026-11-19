@@ -10,7 +10,7 @@ both per-component and variant-level reports using [gcovr](https://gcovr.com).
 After running the `<component>_unittests` or `unittests` target, each component produces:
 
 - `coverage.json` — raw coverage data in gcovr JSON format
-- `reports/coverage/index.html` — HTML coverage report
+- `reports/coverage/index.html` — HTML coverage report, with a sidebar that shows the files as a folder tree
 
 Both files are located under `build/<Variant>/test/Debug/<component path>/`.
 
