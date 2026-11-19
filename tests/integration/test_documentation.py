@@ -5,7 +5,7 @@ from typing import Any
 import pytest
 from bs4 import BeautifulSoup
 
-from tests.utils import SplKickstartProjectIntegrationTestBase
+from tests.utils import SplKickstartProjectIntegrationTestBase, assert_coverage_report_has_file_tree
 
 
 @pytest.mark.integration
@@ -76,6 +76,10 @@ class TestDocumentation(SplKickstartProjectIntegrationTestBase):
 
                 # Coverage detail page existence — at least one detail file per component with tests
                 self._assert_coverage_detail_pages(reports_dir)
+                assert_coverage_report_has_file_tree(reports_dir / "coverage/index.html", f"{Path(component_path).name}.c")
+
+        # The variant coverage report merges all components.
+        assert_coverage_report_has_file_tree(build_dir / f"reports/html/{rel_build_dir}/reports/coverage/index.html", "greeter.c")
 
         # Per-component sidebar hierarchy (issue #332): under the PyData theme a flat
         # heading-based components page collapses into a single "Components" node.
@@ -158,6 +162,7 @@ class TestDocumentation(SplKickstartProjectIntegrationTestBase):
         table = BeautifulSoup(unit_test_spec_html.read_text(encoding="utf-8"), "html.parser").find("table", class_="NEEDS_TABLE")
         assert table is not None and table.tbody.find_all("tr", class_="need"), "Component report lists no test specifications"
         self._assert_needs_table_columns_have_links(unit_test_spec_html, columns=["Tests", "Results"])
+        assert_coverage_report_has_file_tree(build_dir / f"src/greeter/reports/html/{rel_build_dir}/src/greeter/reports/coverage/index.html", "greeter.c")
 
         # The component run gets its own variant data file.
         for target in ["docs", "reports"]:

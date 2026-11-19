@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pytest
-from utils import SplProjectIntegrationTestBase
+from utils import SplProjectIntegrationTestBase, assert_coverage_report_has_file_tree
 
 
 @pytest.mark.integration
@@ -25,7 +25,7 @@ class TestSplFeatures(SplProjectIntegrationTestBase):
         assert build_dir.joinpath("build.ninja").exists()
 
         "Expected test results for kit test shall exist"
-        assert build_dir.joinpath("src/component/reports/coverage/index.html").exists()
+        assert_coverage_report_has_file_tree(build_dir.joinpath("src/component/reports/coverage/index.html"), "component.c")
         junitxml = build_dir.joinpath("src/component/junit.xml")
         assert junitxml.exists()
         testsuite = ET.parse(junitxml).getroot()  # noqa: S314
@@ -43,6 +43,7 @@ class TestSplFeatures(SplProjectIntegrationTestBase):
         assert variant_coverage_json.exists(), "variant-coverage.json should be generated"
         variant_junit_xml = build_dir.joinpath("variant-junit.xml")
         assert variant_junit_xml.exists(), "variant-junit.xml should be generated"
+        assert_coverage_report_has_file_tree(build_dir.joinpath("reports/coverage/index.html"), "component.c")
 
         "Verify variant-level JUnit XML contains merged test results"
         variant_testsuite_root = ET.parse(variant_junit_xml).getroot()  # noqa: S314

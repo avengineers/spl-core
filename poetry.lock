@@ -1305,14 +1305,14 @@ woff = ["brotli (>=1.0.1) ; platform_python_implementation == \"CPython\"", "bro
 
 [[package]]
 name = "gcovr"
-version = "8.6"
+version = "8.8"
 description = "Generate C/C++ code coverage reports with gcov"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "gcovr-8.6-py3-none-any.whl", hash = "sha256:dbf9d87c38042752ad6f530aa8210427e22b526611bb7b7bfed0e81977d1f1ef"},
-    {file = "gcovr-8.6.tar.gz", hash = "sha256:b2e7042abca9321cadbab8a06eb34d19f801b831557b28cdc30a029313de8b9e"},
+    {file = "gcovr-8.8-py3-none-any.whl", hash = "sha256:a5c3e3d4a9c8ab4a95aa8e4b072fcaec7962b1d9fb2add3f10645f649ef29545"},
+    {file = "gcovr-8.8.tar.gz", hash = "sha256:0320230a432c033c1a41f34ba943082f450008c789bee05d414e532f380fd788"},
 ]
 
 [package.dependencies]
@@ -1322,7 +1322,7 @@ lxml = "*"
 pygments = ">=2.13.0"
 
 [package.extras]
-dev = ["bandit[toml]", "build", "cmake", "coverage", "mypy", "nox", "pre-commit", "pygments (==2.19.2)", "pyinstaller (>=6.16.0,<6.17.0)", "pylint (<4.0.0)", "pytest", "pytest-check", "pytest-cov", "pytest-env", "pytest-timeout", "pytest-xdist", "pywin32 ; sys_platform == \"win32\"", "requests", "ruff (>=0.13.2,<0.14.0)", "tomli (>=1.1.0) ; python_version < \"3.11\"", "twine", "wheel", "yamllint", "yaxmldiff"]
+dev = ["bandit[toml]", "build", "cmake", "coverage", "mypy", "nox", "pre-commit", "pygments (==2.21.0)", "pyinstaller (>=6.16.0,<6.17.0)", "pylint (<4.0.0)", "pytest", "pytest-check", "pytest-cov", "pytest-env", "pytest-timeout", "pytest-xdist", "pywin32 ; sys_platform == \"win32\"", "requests", "ruff (>=0.16.7,<0.17.0)", "tomli (>=1.1.0) ; python_version < \"3.11\"", "twine", "wheel", "yamllint", "yaxmldiff", "zizmor (>=1.31.1,<1.32.0)"]
 
 [[package]]
 name = "gitdb"
@@ -4568,4 +4568,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.14"
-content-hash = "1217e0cb64448b34c6182f0e3f24b8db5d3d7493ea82fbf70f6f60b2faab4c97"
+content-hash = "7dc2379eb67cee1798c54ff0362e3381ed632d94ecefd3ffa62213dba38d37f7"
