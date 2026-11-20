@@ -1,6 +1,45 @@
 # CHANGELOG
 
 
+## v10.0.0 (2026-11-20)
+
+### Documentation
+
+- Name parameterized test results by a printed description (SPLE-2814)
+  ([`bb9f5b7`](https://github.com/avengineers/spl-core/commit/bb9f5b7694dbc4254e8be27ba9860010f9a314f3))
+
+The docs promised index names (Suite/Test/0), but CTest appends the printed parameter value. A
+  struct without a printer prints as raw bytes that hold memory addresses, so its test names change
+  on every run. Recommend an operator<< that prints a unique description, as in the SPLED
+  flight_controller example, and fix the example, which did not compile.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+### Features
+
+- **coverage**: Show HTML coverage reports as a browsable file tree
+  ([`45a202c`](https://github.com/avengineers/spl-core/commit/45a202c331ea9daf494c5514119c8cfb4c21b1a4))
+
+gcovr writes every HTML coverage report with --html-nested and the boost.blue theme, so the sidebar
+  of each report shows the files as a folder tree. The boost theme came with gcovr 8.7, so the gcovr
+  floor moves from 8.6 to 8.7.
+
+The integration tests check the file tree in all five HTML coverage reports: per component, per
+  variant, in the component report and in the variant report.
+
+BREAKING CHANGE: gcovr 8.7 or later is required. GCOVR_ADDITIONAL_OPTIONS must not contain
+  --html-details, --html-single-page or --html-static-report: gcovr rejects them together with
+  --html-nested and the boost theme, and the coverage report build fails. Co-Authored-By: Claude
+  Opus 5.5 <noreply@anthropic.com>
+
+### BREAKING CHANGES
+
+- **coverage**: Gcovr 8.7 or later is required. GCOVR_ADDITIONAL_OPTIONS must not contain
+  --html-details, --html-single-page or --html-static-report: gcovr rejects them together with
+  --html-nested and the boost theme, and the coverage report build fails. Co-Authored-By: Claude
+  Opus 5.5 <noreply@anthropic.com>
+
+
 ## v9.3.0 (2026-11-12)
 
 ### Documentation
