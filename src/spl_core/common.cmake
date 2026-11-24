@@ -851,9 +851,10 @@ Code Coverage
     endforeach()
 
     set(_cov_out_variant_html reports/html/${_rel_reports_output_dir}/coverage/index.html)
+    _spl_coverage_tracefile_args(_tracefile_args)
     add_custom_command(
         OUTPUT ${_cov_out_variant_html}
-        COMMAND ${GCOVR_EXE} --root ${CMAKE_SOURCE_DIR} --add-tracefile \"${CMAKE_CURRENT_BINARY_DIR}/**/${COV_OUT_JSON}\" --html-nested --html-theme boost.blue --output ${_cov_out_variant_html}
+        COMMAND ${GCOVR_EXE} --root ${CMAKE_SOURCE_DIR} ${_tracefile_args} --html-nested --html-theme boost.blue --output ${_cov_out_variant_html}
         DEPENDS ${GLOBAL_COMPONENTS_COVERAGE_JSON_LIST}
         COMMENT "Generating overall code coverage report ${_cov_out_variant_html} ..."
     )
@@ -889,6 +890,18 @@ endmacro(_spl_set_coverage_create_overall_report_is_necessary)
 
 set(COV_OUT_JSON coverage.json)
 
+# Turn the coverage.json files of the components in the current build into gcovr arguments:
+# --add-tracefile;<file>;--add-tracefile;<file>... A glob over the build folder would also
+# read files that an earlier build left behind. Call it only when the component list is
+# complete, that is at the end of the configure phase.
+function(_spl_coverage_tracefile_args out_var)
+    set(_args "")
+    foreach(_json IN LISTS GLOBAL_COMPONENTS_COVERAGE_JSON_LIST)
+        list(APPEND _args --add-tracefile "${_json}")
+    endforeach()
+    set(${out_var} "${_args}" PARENT_SCOPE)
+endfunction()
+
 function(_spl_coverage_create_overall_report)
     if(_SPL_COVERAGE_CREATE_OVERALL_REPORT_IS_NECESSARY)
         set(COV_OUT_VARIANT_HTML reports/coverage/index.html)
@@ -898,10 +911,12 @@ function(_spl_coverage_create_overall_report)
         # Sanitize variant name for use in test suite names (replace / with _)
         _spl_slash_to_underscore(VARIANT_SANITIZED ${VARIANT})
 
+        _spl_coverage_tracefile_args(_tracefile_args)
+
         # Generate variant-level merged coverage JSON
         add_custom_command(
             OUTPUT ${COV_OUT_VARIANT_JSON}
-            COMMAND ${GCOVR_EXE} --root ${CMAKE_SOURCE_DIR} --add-tracefile \"${CMAKE_CURRENT_BINARY_DIR}/**/${COV_OUT_JSON}\" --json-summary-pretty --output ${COV_OUT_VARIANT_JSON}
+            COMMAND ${GCOVR_EXE} --root ${CMAKE_SOURCE_DIR} ${_tracefile_args} --json-summary-pretty --output ${COV_OUT_VARIANT_JSON}
             DEPENDS ${GLOBAL_COMPONENTS_COVERAGE_JSON_LIST}
             COMMENT "Generating variant-level merged coverage JSON ${COV_OUT_VARIANT_JSON} ..."
         )
@@ -917,7 +932,7 @@ function(_spl_coverage_create_overall_report)
         # Generate variant-level HTML coverage report
         add_custom_command(
             OUTPUT ${COV_OUT_VARIANT_HTML}
-            COMMAND ${GCOVR_EXE} --root ${CMAKE_SOURCE_DIR} --add-tracefile \"${CMAKE_CURRENT_BINARY_DIR}/**/${COV_OUT_JSON}\" --html-nested --html-theme boost.blue --output ${COV_OUT_VARIANT_HTML}
+            COMMAND ${GCOVR_EXE} --root ${CMAKE_SOURCE_DIR} ${_tracefile_args} --html-nested --html-theme boost.blue --output ${COV_OUT_VARIANT_HTML}
             DEPENDS ${GLOBAL_COMPONENTS_COVERAGE_JSON_LIST}
             COMMENT "Generating overall code coverage report ${COV_OUT_VARIANT_HTML} ..."
         )
