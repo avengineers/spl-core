@@ -1,6 +1,21 @@
 # CHANGELOG
 
 
+## v10.0.1 (2026-11-24)
+
+### Bug Fixes
+
+- **coverage**: Read only the current build's coverage.json files in the variant reports (SPLE-2855)
+  ([`69a54f8`](https://github.com/avengineers/spl-core/commit/69a54f8a705578077debc4b947f3a8ea60e517ef))
+
+The glob read every coverage.json below the build folder, including files of moved or removed
+  component folders written by an older gcovr. An incremental build after a gcovr update then failed
+  with a format version error. The variant reports now take the files of the components in the
+  current build.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+
 ## v10.0.0 (2026-11-20)
 
 ### Documentation
