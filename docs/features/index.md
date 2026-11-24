@@ -34,6 +34,10 @@ The `coverage.json` generation depends on the `gcovr` executable itself. This me
 CMake automatically regenerates coverage data when gcovr is updated, preventing
 format version mismatches in incremental builds.
 
+The variant coverage reports read only the `coverage.json` files of the components in the
+current build. A `coverage.json` that an earlier build left in the build folder, for
+example in the folder of a moved or removed component, does not reach the variant reports.
+
 ## Component Report
 
 To support the {ref}`component <glossary_component>` development, SPL Core provides features to:
