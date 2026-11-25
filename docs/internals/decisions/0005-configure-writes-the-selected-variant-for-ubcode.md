@@ -1,6 +1,6 @@
 # 0005 — CMake configure writes the selected variant for ubCode
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-11-04
 - Deciders: SPL Core maintainers, Product Owner
 
