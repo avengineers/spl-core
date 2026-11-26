@@ -1,3 +1,4 @@
+import ast
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -22,11 +23,20 @@ class PR_Changes(DataClassJSONMixin):
     renamed_files: dict[str, str] = field(default_factory=dict)
 
 
+def _unquote_path(path: str) -> str:
+    """Decode a path that git quoted (non-ASCII as octal UTF-8 bytes, C escapes), independent of the locale."""
+    if path.startswith('"') and path.endswith('"'):
+        decoded: bytes = ast.literal_eval("b" + path)
+        return decoded.decode("utf-8")
+    return path
+
+
 class CollectPRChanges(PipelineStep):
     """Collect changed files from a pull request."""
 
     def run(self) -> None:
         logger.info(f"{self.get_name()}")
+        output_file = self.get_outputs()[0]
         ci_contexts = self.execution_context.data_registry.find_data(CIContext)
         if len(ci_contexts) > 0:
             ci_context = ci_contexts[0]
@@ -34,7 +44,6 @@ class CollectPRChanges(PipelineStep):
             if ci_context.is_pull_request:
                 logger.info(f"Collecting PR changes between branch {ci_context.target_branch} and {ci_context.current_branch}")
                 changed_files, renamed_files = self._get_changed_files(ci_context.target_branch, ci_context.current_branch)
-                output_file = self.get_outputs()[0]
                 output_file.parent.mkdir(parents=True, exist_ok=True)
                 output_file.write_text(
                     json.dumps(
@@ -50,6 +59,9 @@ class CollectPRChanges(PipelineStep):
                     )
                 )
                 logger.info(f"PR changes saved to {output_file}")
+                return
+        # A file from an earlier PR build in a shared workspace would describe the wrong change
+        output_file.unlink(missing_ok=True)
 
     def _get_changed_files(self, target_branch: str, current_branch: str) -> tuple[list[str], dict[str, str]]:
         """Get the changed files of the PR, and its renames as new path -> old path."""
@@ -89,7 +101,7 @@ class CollectPRChanges(PipelineStep):
                             # Every status line has a tab; lines without one are git warnings (stderr is merged into stdout)
                             if "\t" not in line:
                                 continue
-                            fields = line.split("\t")
+                            fields = [_unquote_path(f) for f in line.split("\t")]
                             changed_files.append(fields[-1])
                             if fields[0].startswith("R"):
                                 renamed_files[fields[-1]] = fields[1]

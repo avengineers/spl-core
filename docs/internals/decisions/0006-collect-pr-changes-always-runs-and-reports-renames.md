@@ -44,6 +44,13 @@ consumer decides what a rename means.**
   commands. `-M` is explicit, so a `diff.renames=false` setting cannot change the result. Lines
   without a tab are skipped: git warnings arrive in the same output, because stderr is merged into
   stdout.
+- Paths that git quotes (non-ASCII bytes as octal escapes, C escapes) are decoded in Python into
+  plain UTF-8 strings. `core.quotePath=false` is not used: git then writes raw UTF-8, and the
+  subprocess output is decoded with the locale encoding (for example cp1252 on Windows), which
+  garbles the path.
+- On a build that is not a pull request, the step removes an existing `pr_changes.json`. In a
+  shared CI workspace, a file from an earlier pull request build would otherwise stay and describe
+  another change.
 
 ## Alternatives considered
 
@@ -55,8 +62,9 @@ consumer decides what a rename means.**
 
 ## Consequences
 
-- Positive: the file always matches the current pull request. A consumer can find the baseline of a
-  moved file under its old path.
+- Positive: the file always matches the current pull request, and only a pull request build has
+  one. A consumer can find the baseline of a moved file under its old path, and can compare paths
+  with real file names, non-ASCII ones included.
 - Positive: old files without `renamed_files` still load. A consumer with an older spl-core ignores
   the new key, because mashumaro ignores unknown keys.
 - Negative / trade-offs: the executor stores no run info for this step. Its log says "does not need

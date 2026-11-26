@@ -108,4 +108,6 @@ For a pull request, it writes `pr_changes.json` into its output directory, with 
 - `changed_files`: the changed files. A renamed file is listed under its new path.
 - `renamed_files`: every rename git detects, as new path to old path. Pure moves are included.
 
-For other builds, the step writes no file.
+Paths are plain UTF-8 strings: the step decodes the paths that git quotes, such as non-ASCII ones.
+
+For other builds, the step writes no file and removes one that an earlier build left.

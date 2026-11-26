@@ -45,6 +45,21 @@ class TestCollectPRChanges:
         written = PR_Changes.from_json((tmp_path / "test_group" / "pr_changes.json").read_text(encoding="utf-8"))
         assert written.target_branch == "release"
 
+    @pytest.mark.parametrize("ci_contexts", [[], [CIContext(ci_system=CISystem.JENKINS, current_branch="develop", target_branch="", is_pull_request=False)]])
+    def test_run_outside_a_pr_removes_an_earlier_file(self, mock_execution_context, tmp_path, ci_contexts):
+        """A file left by an earlier PR build in a shared workspace must not survive a non-PR build."""
+        mock_execution_context.create_artifacts_locator.return_value.build_dir = tmp_path
+        mock_execution_context.data_registry = MagicMock()
+        mock_execution_context.data_registry.find_data.return_value = ci_contexts
+        step = CollectPRChanges(mock_execution_context, group_name="test_group")
+        output_file = step.get_outputs()[0]
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        output_file.write_text("{}")
+
+        step.run()
+
+        assert not output_file.exists()
+
     @patch("spl_core.steps.collect_pr_changes.SubprocessExecutor")
     @patch("spl_core.steps.collect_pr_changes.CollectPRChanges._get_commit_id")
     @patch("spl_core.steps.collect_pr_changes.CollectPRChanges.get_outputs")
@@ -204,17 +219,17 @@ class TestCollectPRChanges:
 
     @patch("spl_core.steps.collect_pr_changes.SubprocessExecutor")
     def test_get_changed_files_parses_status_and_renames(self, mock_subprocess, collect_pr_changes):
-        """Each status gives its last path; renames also map new path to old path; lines without a tab are git warnings."""
+        """Each status gives its last path; renames also map new path to old path; quoted paths are decoded; lines without a tab are git warnings."""
         stdout = (
             "warning: exhaustive rename detection was skipped due to too many files.\n"
-            'M\tm.c\nA\ta.c\nD\td.c\nR100\told/r.c\tsrc/r.c\nR087\told/e.c\tsrc/e.c\nR100\t"\\303\\274.c"\t"src/\\303\\274.c"\nM\tdir/my file.c\n'
+            'M\tm.c\nA\ta.c\nD\td.c\nR100\told/r.c\tsrc/r.c\nR087\told/e.c\tsrc/e.c\nR100\t"\\303\\274.c"\t"src/\\303\\274.c"\nM\tdir/my file.c\nA\t"x\\"y.c"\n'
         )
         mock_subprocess.return_value.execute.return_value = MagicMock(returncode=0, stdout=stdout)
 
         changed, renamed = collect_pr_changes._get_changed_files("develop", "feature")
 
-        assert changed == ["m.c", "a.c", "d.c", "src/r.c", "src/e.c", '"src/\\303\\274.c"', "dir/my file.c"]
-        assert renamed == {"src/r.c": "old/r.c", "src/e.c": "old/e.c", '"src/\\303\\274.c"': '"\\303\\274.c"'}
+        assert changed == ["m.c", "a.c", "d.c", "src/r.c", "src/e.c", "src/ü.c", "dir/my file.c", 'x"y.c']
+        assert renamed == {"src/r.c": "old/r.c", "src/e.c": "old/e.c", "src/ü.c": "ü.c"}
 
     def test_pr_changes_without_renamed_files_loads(self):
         data = {"ci_system": "JENKINS", "target_branch": "develop", "current_branch": "feature", "commit_id": "abc", "changed_files": ["a.c"]}
