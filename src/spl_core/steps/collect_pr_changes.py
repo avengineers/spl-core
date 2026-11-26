@@ -1,5 +1,6 @@
+import ast
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from mashumaro.mixins.json import DataClassJSONMixin
@@ -18,6 +19,16 @@ class PR_Changes(DataClassJSONMixin):
     current_branch: str
     commit_id: str
     changed_files: list[str]
+    #: new path -> old path, for every rename git detects (pure moves included)
+    renamed_files: dict[str, str] = field(default_factory=dict)
+
+
+def _unquote_path(path: str) -> str:
+    """Decode a path that git quoted (non-ASCII as octal UTF-8 bytes, C escapes), independent of the locale."""
+    if path.startswith('"') and path.endswith('"'):
+        decoded: bytes = ast.literal_eval("b" + path)
+        return decoded.decode("utf-8")
+    return path
 
 
 class CollectPRChanges(PipelineStep):
@@ -25,27 +36,35 @@ class CollectPRChanges(PipelineStep):
 
     def run(self) -> None:
         logger.info(f"{self.get_name()}")
+        output_file = self.get_outputs()[0]
         ci_contexts = self.execution_context.data_registry.find_data(CIContext)
         if len(ci_contexts) > 0:
             ci_context = ci_contexts[0]
             logger.info(f"CI context: {ci_context}")
             if ci_context.is_pull_request:
                 logger.info(f"Collecting PR changes between branch {ci_context.target_branch} and {ci_context.current_branch}")
-                changed_files = self._get_changed_files(ci_context.target_branch, ci_context.current_branch)
-                output_file = self.get_outputs()[0]
+                changed_files, renamed_files = self._get_changed_files(ci_context.target_branch, ci_context.current_branch)
                 output_file.parent.mkdir(parents=True, exist_ok=True)
                 output_file.write_text(
                     json.dumps(
                         PR_Changes(
-                            ci_system=ci_context.ci_system.name, target_branch=ci_context.target_branch, current_branch=ci_context.current_branch, commit_id=self._get_commit_id(ci_context), changed_files=changed_files
+                            ci_system=ci_context.ci_system.name,
+                            target_branch=ci_context.target_branch,
+                            current_branch=ci_context.current_branch,
+                            commit_id=self._get_commit_id(ci_context),
+                            changed_files=changed_files,
+                            renamed_files=renamed_files,
                         ).to_dict(),
                         indent=2,
                     )
                 )
                 logger.info(f"PR changes saved to {output_file}")
+                return
+        # A file from an earlier PR build in a shared workspace would describe the wrong change
+        output_file.unlink(missing_ok=True)
 
-    def _get_changed_files(self, target_branch: str, current_branch: str) -> list[str]:
-        """Get list of changed files in the current branch/PR"""
+    def _get_changed_files(self, target_branch: str, current_branch: str) -> tuple[list[str], dict[str, str]]:
+        """Get the changed files of the PR, and its renames as new path -> old path."""
         # Fetch both branches to ensure they exist locally
         logger.info(f"Fetching branches: {target_branch} and {current_branch}")
 
@@ -53,20 +72,20 @@ class CollectPRChanges(PipelineStep):
         result = SubprocessExecutor(["git", "fetch", "origin", target_branch]).execute(handle_errors=False)
         if not result or result.returncode != 0:
             logger.warning(f"Failed to fetch target branch {target_branch}")
-            return []
+            return [], {}
 
         # Fetch the current branch
         result = SubprocessExecutor(["git", "fetch", "origin", current_branch]).execute(handle_errors=False)
         if not result or result.returncode != 0:
             logger.warning(f"Failed to fetch current branch {current_branch}")
-            return []
+            return [], {}
 
         # Try different git diff approaches in order of preference
         diff_commands = [
-            ["git", "diff", "--name-only", f"origin/{target_branch}...origin/{current_branch}"],
-            ["git", "diff", "--name-only", f"origin/{target_branch}", f"origin/{current_branch}"],
-            ["git", "diff", "--name-only", f"{target_branch}...{current_branch}"],
-            ["git", "diff", "--name-only", f"{target_branch}", f"{current_branch}"],
+            ["git", "diff", "--name-status", "-M", f"origin/{target_branch}...origin/{current_branch}"],
+            ["git", "diff", "--name-status", "-M", f"origin/{target_branch}", f"origin/{current_branch}"],
+            ["git", "diff", "--name-status", "-M", f"{target_branch}...{current_branch}"],
+            ["git", "diff", "--name-status", "-M", f"{target_branch}", f"{current_branch}"],
         ]
 
         for cmd in diff_commands:
@@ -76,16 +95,25 @@ class CollectPRChanges(PipelineStep):
 
                 if result and result.returncode == 0:
                     if result.stdout.strip():
-                        files = [line.strip() for line in result.stdout.strip().split("\n") if line.strip()]
-                        logger.info(f"Found {len(files)} changed files")
-                        return files
+                        changed_files: list[str] = []
+                        renamed_files: dict[str, str] = {}
+                        for line in result.stdout.splitlines():
+                            # Every status line has a tab; lines without one are git warnings (stderr is merged into stdout)
+                            if "\t" not in line:
+                                continue
+                            fields = [_unquote_path(f) for f in line.split("\t")]
+                            changed_files.append(fields[-1])
+                            if fields[0].startswith("R"):
+                                renamed_files[fields[-1]] = fields[1]
+                        logger.info(f"Found {len(changed_files)} changed files, {len(renamed_files)} renamed")
+                        return changed_files, renamed_files
                     else:
                         logger.warning("No changed files found")
-                        return []
+                        return [], {}
             except Exception as e:
                 logger.warning(f"Command failed: {' '.join(cmd)} - {e}")
                 continue
-        return []
+        return [], {}
 
     def get_inputs(self) -> list[Path]:
         return []
@@ -99,13 +127,9 @@ class CollectPRChanges(PipelineStep):
     def update_execution_context(self) -> None:
         pass
 
-    def get_config(self) -> dict[str, str] | None:
-        """
-        Get runnable configuration.
-
-        (!) Do NOT put sensitive information in the configuration. It will be stored in a file.
-        """
-        return {"latest_commit": self._get_commit_id()}
+    def get_needs_dependency_management(self) -> bool:
+        """Always run: the step is cheap, and a cached result can name the wrong target branch or the wrong changed files."""
+        return False
 
     def _get_commit_id(self, ci_context: CIContext | None = None) -> str:
         """Get the latest commit ID in the current branch."""

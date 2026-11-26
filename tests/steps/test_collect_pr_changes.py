@@ -1,6 +1,8 @@
+import json
 from unittest.mock import MagicMock, patch
 
 import pytest
+from py_app_dev.core.runnable import Executor
 from pypeline.domain.execution_context import ExecutionContext
 from pypeline_semantic_release.check_ci_context import CIContext, CISystem
 
@@ -25,6 +27,39 @@ def collect_pr_changes(mock_execution_context):
 class TestCollectPRChanges:
     """Test cases for CollectPRChanges pipeline step."""
 
+    def test_get_needs_dependency_management_is_false(self, collect_pr_changes):
+        assert collect_pr_changes.get_needs_dependency_management() is False
+        assert collect_pr_changes.needs_dependency_management is False
+
+    @patch("spl_core.steps.collect_pr_changes.SubprocessExecutor")
+    def test_runs_again_when_only_the_target_changes(self, mock_subprocess, mock_execution_context, tmp_path):
+        """A second PR build with the same source head but another target must not reuse the first result."""
+        mock_execution_context.create_artifacts_locator.return_value.build_dir = tmp_path
+        mock_execution_context.data_registry = MagicMock()
+        mock_subprocess.return_value.execute.return_value = MagicMock(returncode=0, stdout="M\tfile.c\n")
+        for target in ["develop", "release"]:
+            mock_execution_context.data_registry.find_data.return_value = [CIContext(ci_system=CISystem.JENKINS, current_branch="feature", target_branch=target, is_pull_request=True)]
+            step = CollectPRChanges(mock_execution_context, group_name="test_group")
+            step.output_dir.mkdir(parents=True, exist_ok=True)
+            Executor(step.output_dir).execute(step)
+        written = PR_Changes.from_json((tmp_path / "test_group" / "pr_changes.json").read_text(encoding="utf-8"))
+        assert written.target_branch == "release"
+
+    @pytest.mark.parametrize("ci_contexts", [[], [CIContext(ci_system=CISystem.JENKINS, current_branch="develop", target_branch="", is_pull_request=False)]])
+    def test_run_outside_a_pr_removes_an_earlier_file(self, mock_execution_context, tmp_path, ci_contexts):
+        """A file left by an earlier PR build in a shared workspace must not survive a non-PR build."""
+        mock_execution_context.create_artifacts_locator.return_value.build_dir = tmp_path
+        mock_execution_context.data_registry = MagicMock()
+        mock_execution_context.data_registry.find_data.return_value = ci_contexts
+        step = CollectPRChanges(mock_execution_context, group_name="test_group")
+        output_file = step.get_outputs()[0]
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        output_file.write_text("{}")
+
+        step.run()
+
+        assert not output_file.exists()
+
     @patch("spl_core.steps.collect_pr_changes.SubprocessExecutor")
     @patch("spl_core.steps.collect_pr_changes.CollectPRChanges._get_commit_id")
     @patch("spl_core.steps.collect_pr_changes.CollectPRChanges.get_outputs")
@@ -40,7 +75,7 @@ class TestCollectPRChanges:
 
         mock_result = MagicMock()
         mock_result.returncode = 0
-        mock_result.stdout = "file1.py\nfile2.py\nfile3.txt\n"
+        mock_result.stdout = "M\tfile1.py\nA\tfile2.py\nR100\told.txt\tfile3.txt\n"
 
         mock_subprocess_instance = MagicMock()
         mock_subprocess_instance.execute.return_value = mock_result
@@ -58,16 +93,25 @@ class TestCollectPRChanges:
         assert output_json.exists()
         output_json_content = output_json.read_text(encoding="utf-8")
         actual_pr_changes = PR_Changes.from_json(output_json_content)
-        assert actual_pr_changes == PR_Changes(ci_system="JENKINS", target_branch="main", current_branch="feature-branch", commit_id="abc123", changed_files=["file1.py", "file2.py", "file3.txt"])
+        assert actual_pr_changes == PR_Changes(
+            ci_system="JENKINS",
+            target_branch="main",
+            current_branch="feature-branch",
+            commit_id="abc123",
+            changed_files=["file1.py", "file2.py", "file3.txt"],
+            renamed_files={"file3.txt": "old.txt"},
+        )
+        assert "renamed_files" in json.loads(output_json_content)
 
     @pytest.mark.parametrize(
         "stdout, expected_result",
         [
-            ("file1.py\nfile2.py\nfile3.txt\n", ["file1.py", "file2.py", "file3.txt"]),
-            ("", []),
-            ("   \n\n  \n", []),  # Whitespace only
-            ("  file1.py  \n\nfile2.py\n  \nfile3.txt  \n", ["file1.py", "file2.py", "file3.txt"]),  # Mixed whitespace
-            ("src/module.py\ntests/test_module.py\n", ["src/module.py", "tests/test_module.py"]),
+            ("M\tfile1.py\nA\tfile2.py\nD\tfile3.txt\n", (["file1.py", "file2.py", "file3.txt"], {})),
+            ("", ([], {})),
+            ("   \n\n  \n", ([], {})),  # Whitespace only
+            ("M\tfile1.py\n\n  \nA\tfile2.py\n", (["file1.py", "file2.py"], {})),  # Blank and whitespace-only lines are skipped
+            ("M\t file1.py \n", ([" file1.py "], {})),  # Spaces belong to the path and are kept
+            ("M\tsrc/module.py\nA\ttests/test_module.py\n", (["src/module.py", "tests/test_module.py"], {})),
         ],
     )
     @patch("spl_core.steps.collect_pr_changes.SubprocessExecutor")
@@ -90,7 +134,7 @@ class TestCollectPRChanges:
         assert mock_subprocess.call_count == 3
         mock_subprocess.assert_any_call(["git", "fetch", "origin", "feature-branch"])
         mock_subprocess.assert_any_call(["git", "fetch", "origin", "develop"])
-        mock_subprocess.assert_any_call(["git", "diff", "--name-only", "origin/develop...origin/feature-branch"])
+        mock_subprocess.assert_any_call(["git", "diff", "--name-status", "-M", "origin/develop...origin/feature-branch"])
         assert mock_subprocess_instance.execute.call_count == 3
 
     @patch("spl_core.steps.collect_pr_changes.SubprocessExecutor")
@@ -109,7 +153,17 @@ class TestCollectPRChanges:
         result = collect_pr_changes._get_changed_files("main", "feature-branch")
 
         # Assert
-        assert result == []
+        assert result == ([], {})
+
+    @patch("spl_core.steps.collect_pr_changes.SubprocessExecutor")
+    def test_get_changed_files_current_branch_fetch_failure(self, mock_subprocess, collect_pr_changes):
+        """Test _get_changed_files returns empty results when only the fetch of the current branch fails."""
+        mock_subprocess.return_value.execute.side_effect = [MagicMock(returncode=0), MagicMock(returncode=1)]
+
+        result = collect_pr_changes._get_changed_files("main", "feature-branch")
+
+        assert result == ([], {})
+        assert mock_subprocess.call_count == 2
 
     @patch("spl_core.steps.collect_pr_changes.logger")
     @patch("spl_core.steps.collect_pr_changes.SubprocessExecutor")
@@ -136,7 +190,7 @@ class TestCollectPRChanges:
         result = collect_pr_changes._get_changed_files("main", "feature-branch")
 
         # Assert
-        assert result == []
+        assert result == ([], {})
         assert mock_logger.warning.call_count == 4
         error_call_args = mock_logger.warning.call_args[0][0]
         assert "Git command failed" in error_call_args
@@ -144,10 +198,10 @@ class TestCollectPRChanges:
         assert mock_subprocess.call_count == 6
         mock_subprocess.assert_any_call(["git", "fetch", "origin", "feature-branch"])
         mock_subprocess.assert_any_call(["git", "fetch", "origin", "main"])
-        mock_subprocess.assert_any_call(["git", "diff", "--name-only", "origin/main...origin/feature-branch"])
-        mock_subprocess.assert_any_call(["git", "diff", "--name-only", "origin/main", "origin/feature-branch"])
-        mock_subprocess.assert_any_call(["git", "diff", "--name-only", "main...feature-branch"])
-        mock_subprocess.assert_any_call(["git", "diff", "--name-only", "main", "feature-branch"])
+        mock_subprocess.assert_any_call(["git", "diff", "--name-status", "-M", "origin/main...origin/feature-branch"])
+        mock_subprocess.assert_any_call(["git", "diff", "--name-status", "-M", "origin/main", "origin/feature-branch"])
+        mock_subprocess.assert_any_call(["git", "diff", "--name-status", "-M", "main...feature-branch"])
+        mock_subprocess.assert_any_call(["git", "diff", "--name-status", "-M", "main", "feature-branch"])
 
     @patch("spl_core.steps.collect_pr_changes.SubprocessExecutor")
     def test_get_changed_files_none_result(self, mock_subprocess, collect_pr_changes):
@@ -161,7 +215,25 @@ class TestCollectPRChanges:
         result = collect_pr_changes._get_changed_files("main", "feature-branch")
 
         # Assert
-        assert result == []
+        assert result == ([], {})
+
+    @patch("spl_core.steps.collect_pr_changes.SubprocessExecutor")
+    def test_get_changed_files_parses_status_and_renames(self, mock_subprocess, collect_pr_changes):
+        """Each status gives its last path; renames also map new path to old path; quoted paths are decoded; lines without a tab are git warnings."""
+        stdout = (
+            "warning: exhaustive rename detection was skipped due to too many files.\n"
+            'M\tm.c\nA\ta.c\nD\td.c\nR100\told/r.c\tsrc/r.c\nR087\told/e.c\tsrc/e.c\nR100\t"\\303\\274.c"\t"src/\\303\\274.c"\nM\tdir/my file.c\nA\t"x\\"y.c"\n'
+        )
+        mock_subprocess.return_value.execute.return_value = MagicMock(returncode=0, stdout=stdout)
+
+        changed, renamed = collect_pr_changes._get_changed_files("develop", "feature")
+
+        assert changed == ["m.c", "a.c", "d.c", "src/r.c", "src/e.c", "src/ü.c", "dir/my file.c", 'x"y.c']
+        assert renamed == {"src/r.c": "old/r.c", "src/e.c": "old/e.c", "src/ü.c": "ü.c"}
+
+    def test_pr_changes_without_renamed_files_loads(self):
+        data = {"ci_system": "JENKINS", "target_branch": "develop", "current_branch": "feature", "commit_id": "abc", "changed_files": ["a.c"]}
+        assert PR_Changes.from_dict(data).renamed_files == {}
 
     @patch("spl_core.steps.collect_pr_changes.SubprocessExecutor")
     def test_get_commit_id_with_ci_context(self, mock_subprocess, collect_pr_changes):
